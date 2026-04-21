@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <title>Ball Finder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink:    #0b0e17;
+      --deep:   #0e1420;
+      --slate:  #141c2e;
+      --card:   #1a2238;
+      --border: rgba(255,255,255,0.07);
+      --gold:   #e8a830;
+      --gold2:  #c88820;
+      --goldf:  #f4c060;
+      --blue:   #3a7bd5;
+      --blue2:  #2860b8;
+      --white:  #eef2f8;
+      --muted:  #6a7a96;
+      --ok:     #28c96a;
+      --warn:   #e8a030;
+      --danger: #e84040;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', sans-serif;
+      overflow: hidden;
+      background: var(--ink);
+      color: var(--white);
+    }
+
+    .screen { display: none; width: 100%; height: 100%; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* ════════════════════════════
+       HOME
+    ════════════════════════════ */
+    #homeScreen {
+      background: var(--deep);
+      position: relative;
+      overflow: hidden;
+      justify-content: flex-end;
+    }
+
+    .atmo {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .atmo-glow-gold {
+      position: absolute;
+      top: -8%;
+      right: -12%;
+      width: 55vw; height: 55vw;
+      max-width: 380px; max-height: 380px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(232,168,48,0.14) 0%, transparent 68%);
+    }
+
+    .atmo-glow-blue {
+      position: absolute;
+      top: 20%;
+      left: -18%;
+      width: 50vw; height: 50vw;
+      max-width: 320px; max-height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(58,123,213,0.10) 0%, transparent 68%);
+    }
+
+    .atmo-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 42px 42px;
+    }
+
+    .horizon {
+      position: absolute;
+      top: 44%;
+      left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(232,168,48,0.25) 35%, rgba(232,168,48,0.25) 65%, transparent);
+    }
+
+    .fairway-wrap {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 58%;
+    }
+
+    .fairway-wrap svg {
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+
+    .hero-ball {
+      position: absolute;
+      left: 50%; top: 36%;
+      transform: translate(-50%, -50%);
+      z-index: 3;
+    }
+
+    .ball-shadow {
+      position: absolute;
+      bottom: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 56px; height: 10px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.5);
+      filter: blur(6px);
+      animation: shadowPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes shadowPulse {
+      0%,100% { transform: translateX(-50%) scaleX(0.8); opacity: 0.5; }
+      50%      { transform: translateX(-50%) scaleX(1.1); opacity: 0.25; }
+    }
+
+    .ball-sphere {
+      width: 68px; height: 68px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 36% 30%, #ffffff 0%, #e8eee8 48%, #c4d4c4 100%);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.3),
+        0 0 28px rgba(232,168,48,0.30),
+        0 12px 30px rgba(0,0,0,0.55);
+      animation: ballFloat 3s ease-in-out infinite;
+      position: relative;
+    }
+
+    .ball-sphere::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background-image: radial-gradient(circle, rgba(0,0,0,0.07) 1px, transparent 1px);
+      background-size: 9px 9px;
+      background-position: 4px 4px;
+    }
+
+    @keyframes ballFloat {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-12px); }
+    }
+
+    .scan-ring {
+      position: absolute;
+      left: 50%; top: 36%;
+      transform: translate(-50%, -50%);
+      width: 128px; height: 128px;
+      z-index: 2;
+    }
+
+    .scan-ring svg { width: 100%; height: 100%; animation: ringRotate 12s linear infinite; }
+
+    @keyframes ringRotate {
+      to { transform: rotate(360deg); }
+    }
+
+    .ring-inner {
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      border: 1px solid rgba(232,168,48,0.2);
+    }
+
+    .corner-marks {
+      position: absolute;
+      left: 50%; top: 36%;
+      transform: translate(-50%, -50%);
+      width: 160px; height: 160px;
+      z-index: 2;
+    }
+
+    .corner-marks::before,
+    .corner-marks::after,
+    .cm-b::before,
+    .cm-b::after {
+      content: '';
+      position: absolute;
+      width: 14px; height: 14px;
+      border-color: rgba(232,168,48,0.6);
+      border-style: solid;
+    }
+
+    .corner-marks::before { top: 0; left: 0; border-width: 2px 0 0 2px; }
+    .corner-marks::after  { top: 0; right: 0; border-width: 2px 2px 0 0; }
+    .cm-b::before { bottom: 0; left: 0; border-width: 0 0 2px 2px; }
+    .cm-b::after  { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+
+    .home-panel {
+      position: relative;
+      z-index: 4;
+      padding: 30px 26px calc(env(safe-area-inset-bottom,0px) + 36px);
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      background: linear-gradient(0deg, var(--deep) 72%, transparent);
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .eyebrow-line {
+      width: 28px; height: 2px;
+      background: var(--gold);
+      border-radius: 2px;
+    }
+
+    .eyebrow-text {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .home-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(3.6rem, 15vw, 5.8rem);
+      font-weight: 800;
+      line-height: 0.88;
+      letter-spacing: -0.01em;
+      color: var(--white);
+    }
+
+    .home-title span {
+      color: var(--gold);
+      display: block;
+    }
+
+    .home-sub {
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 32ch;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .stat-item {
+      flex: 1;
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      border-right: 1px solid var(--border);
+    }
+
+    .stat-item:last-child { border-right: none; }
+
+    .stat-val {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -0.02em;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .start-btn {
+      appearance: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border-radius: 16px;
+      padding: 20px 28px;
+      color: var(--ink);
+      background: linear-gradient(135deg, var(--goldf) 0%, var(--gold) 55%, var(--gold2) 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.3),
+        0 14px 28px rgba(200,136,32,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      transition: transform 0.13s, box-shadow 0.13s;
+    }
+
+    .start-btn:active {
+      transform: scale(0.97);
+      box-shadow: 0 6px 12px rgba(200,136,32,0.2);
+    }
+
+    .home-panel > * {
+      opacity: 0;
+      transform: translateY(16px);
+      animation: riseUp 0.5s ease forwards;
+    }
+    .home-panel > *:nth-child(1) { animation-delay: 0.04s; }
+    .home-panel > *:nth-child(2) { animation-delay: 0.10s; }
+    .home-panel > *:nth-child(3) { animation-delay: 0.17s; }
+    .home-panel > *:nth-child(4) { animation-delay: 0.24s; }
+    .home-panel > *:nth-child(5) { animation-delay: 0.31s; }
+
+    @keyframes riseUp { to { opacity: 1; transform: none; } }
+
+    /* ════════════════════════════
+       CAMERA
+    ════════════════════════════ */
+    #cameraScreen {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      overflow: hidden;
+    }
+
+    .viewer {
+      position: absolute;
+      inset: 0;
+    }
+
+    canvas {
+      width: 100%; height: 100%;
+      display: block;
+      background: #000;
+      touch-action: none;
+      object-fit: cover;
+    }
+
+    video { display: none; }
+
+    .hud {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .hud-top {
+      position: absolute;
+      top: calc(env(safe-area-inset-top,0px) + 14px);
+      left: 16px; right: 16px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .glass-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 15px;
+      border-radius: 14px;
+      background: rgba(11,14,23,0.62);
+      border: 1px solid rgba(255,255,255,0.10);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--ok);
+      box-shadow: 0 0 8px var(--ok);
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.25; }
+    }
+
+    .hud-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--white);
+    }
+
+    .zoom-badge {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--gold);
+    }
+
+    .mode-tag {
+      position: absolute;
+      left: 16px;
+      bottom: calc(env(safe-area-inset-bottom,0px) + 148px);
+      padding: 7px 12px;
+      border-radius: 9px;
+      background: rgba(11,14,23,0.55);
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      pointer-events: auto;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .reticle {
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%,-50%);
+      width: 92px; height: 92px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .reticle.active { opacity: 1; }
+
+    .ret-outer {
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.88);
+      box-shadow: 0 0 20px rgba(255,255,255,0.2), inset 0 0 20px rgba(255,255,255,0.05);
+      animation: retPop 0.3s ease forwards;
+    }
+
+    .ret-inner {
+      position: absolute; inset: 13px;
+      border-radius: 50%;
+      border: 1px solid rgba(232,168,48,0.7);
+    }
+
+    @keyframes retPop {
+      0% { transform: scale(0.82); opacity: 0; }
+      70% { transform: scale(1.05); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .scan-sweep {
+      position: absolute;
+      left: 20%; right: 20%;
+      top: 50%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(232,168,48,0.9) 50%, transparent);
+      box-shadow: 0 0 10px rgba(232,168,48,0.5);
+      opacity: 0;
+    }
+
+    .scan-sweep.active {
+      opacity: 1;
+      animation: sweep 0.65s ease-in-out forwards;
+    }
+
+    @keyframes sweep {
+      0%   { transform: translateY(-48px); opacity: 0; }
+      20%  { opacity: 1; }
+      80%  { opacity: 1; }
+      100% { transform: translateY(48px); opacity: 0; }
+    }
+
+    .cam-bottom {
+      position: absolute;
+      left: 16px; right: 16px;
+      bottom: calc(env(safe-area-inset-bottom,0px) + 20px);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .cam-actions {
+      display: flex;
+      gap: 10px;
+      pointer-events: auto;
+    }
+
+    .btn-ghost {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 14px;
+      padding: 15px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: rgba(255,255,255,0.75);
+      background: rgba(11,14,23,0.60);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      white-space: nowrap;
+      transition: background 0.13s;
+    }
+
+    .btn-ghost:active { background: rgba(30,40,60,0.80); }
+
+    .btn-found {
+      flex: 1;
+      appearance: none;
+      border: none;
+      border-radius: 14px;
+      padding: 15px 20px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      cursor: pointer;
+      color: var(--ink);
+      background: linear-gradient(135deg, var(--goldf) 0%, var(--gold) 55%, var(--gold2) 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.28),
+        0 10px 22px rgba(200,136,32,0.40);
+      transition: transform 0.12s;
+    }
+
+    .btn-found:active { transform: scale(0.97); }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════ HOME ══════════════ -->
+  <section class="screen active" id="homeScreen">
+
+    <div class="atmo">
+      <div class="atmo-glow-gold"></div>
+      <div class="atmo-glow-blue"></div>
+      <div class="atmo-grid"></div>
+      <div class="horizon"></div>
+    </div>
+
+    <div class="fairway-wrap">
+      <svg viewBox="0 0 390 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice">
+        <defs>
+          <linearGradient id="rough" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#12281a"/>
+            <stop offset="100%" stop-color="#0a1610"/>
+          </linearGradient>
+          <linearGradient id="fairway" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1e5c30"/>
+            <stop offset="100%" stop-color="#122018"/>
+          </linearGradient>
+          <linearGradient id="green" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#267840"/>
+            <stop offset="100%" stop-color="#1a5028"/>
+          </linearGradient>
+          <radialGradient id="glow" cx="50%" cy="40%" r="50%">
+            <stop offset="0%" stop-color="rgba(232,168,48,0.10)"/>
+            <stop offset="100%" stop-color="transparent"/>
+          </radialGradient>
+        </defs>
+
+        <ellipse cx="195" cy="420" rx="340" ry="250" fill="url(#rough)"/>
+        <ellipse cx="195" cy="400" rx="200" ry="170" fill="url(#fairway)"/>
+        <ellipse cx="195" cy="380" rx="120" ry="100" fill="url(#green)"/>
+        <ellipse cx="195" cy="360" rx="340" ry="250" fill="url(#glow)"/>
+
+        <g opacity="0.06" stroke="#fff" stroke-width="1">
+          <line x1="50"  y1="280" x2="340" y2="296"/>
+          <line x1="50"  y1="304" x2="340" y2="320"/>
+          <line x1="50"  y1="328" x2="340" y2="344"/>
+          <line x1="110" y1="260" x2="116" y2="380"/>
+          <line x1="152" y1="258" x2="158" y2="380"/>
+          <line x1="194" y1="256" x2="200" y2="380"/>
+          <line x1="236" y1="258" x2="242" y2="380"/>
+          <line x1="276" y1="262" x2="282" y2="380"/>
+        </g>
+
+        <line x1="194" y1="270" x2="194" y2="320" stroke="rgba(255,255,255,0.6)" stroke-width="1.8"/>
+        <polygon points="194,270 220,280 194,290" fill="#e8a830" opacity="0.9"/>
+        <ellipse cx="194" cy="321" rx="6" ry="2.2" fill="rgba(0,0,0,0.4)"/>
+
+        <circle cx="255" cy="302" r="5.5" fill="#fff" opacity="0.55"/>
+        <circle cx="144" cy="294" r="4"   fill="#fff" opacity="0.35"/>
+        <circle cx="218" cy="328" r="3.5" fill="#fff" opacity="0.28"/>
+      </svg>
+    </div>
+
+    <div class="scan-ring">
+      <div class="ring-inner"></div>
+      <svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="64" cy="64" r="58" stroke="rgba(232,168,48,0.35)" stroke-width="1.5" stroke-dasharray="6 4"/>
+        <circle cx="64" cy="64" r="46" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>
+      </svg>
+    </div>
+    <div class="corner-marks"><div class="cm-b"></div></div>
+    <div class="hero-ball">
+      <div class="ball-sphere"></div>
+      <div class="ball-shadow"></div>
+    </div>
+
+    <div class="home-panel">
+      <div class="eyebrow">
+        <div class="eyebrow-line"></div>
+        <div class="eyebrow-text">Golf Vision · Détection terrain</div>
+      </div>
+
+      <h1 class="home-title">BALL<span>FINDER</span></h1>
+
+      <p class="home-sub">Repérez votre balle dans l'herbe en quelques secondes grâce à la détection visuelle intelligente.</p>
+
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-val">IA</div>
+          <div class="stat-label">Détection blanche</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val">×3.2</div>
+          <div class="stat-label">Zoom max</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val">0</div>
+          <div class="stat-label">Faux positifs</div>
+        </div>
+      </div>
+
+      <button class="start-btn" id="startExperienceBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M5 12a7 7 0 1 0 14 0A7 7 0 0 0 5 12Z" stroke="#0b0e17" stroke-width="1.8"/>
+          <path d="M10.5 9.5l4 2.5-4 2.5V9.5Z" fill="#0b0e17"/>
+        </svg>
+        Lancer la recherche
+      </button>
+    </div>
+  </section>
+
+  <!-- ══════════════ CAMERA ══════════════ -->
+  <section class="screen" id="cameraScreen">
+    <div class="viewer">
+      <canvas id="canvas"></canvas>
+      <video id="video" playsinline autoplay muted></video>
+
+      <div class="hud">
+        <div class="hud-top">
+          <div class="glass-pill">
+            <div class="live-dot"></div>
+            <div class="hud-title">BALL FINDER</div>
+          </div>
+          <div class="glass-pill">
+            <div class="zoom-badge" id="zoomPill">× 1.0</div>
+          </div>
+        </div>
+
+        <button class="mode-tag" id="tintAdjustBtn">🌱 Filtre : Auto</button>
+
+        <div class="reticle" id="focusRing">
+          <div class="ret-outer"></div>
+          <div class="ret-inner"></div>
+        </div>
+        <div class="scan-sweep" id="scanLine"></div>
+      </div>
+
+      <div class="cam-bottom">
+        <div class="cam-actions">
+          <button class="btn-ghost" id="zoomOutBtn">↙ Dézoomer</button>
+          <button class="btn-found" id="ballFoundBtn">✓ Balle trouvée</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const homeScreen   = document.getElementById("homeScreen");
+    const cameraScreen = document.getElementById("cameraScreen");
+    const video        = document.getElementById("video");
+    const canvas       = document.getElementById("canvas");
+    const ctx          = canvas.getContext("2d", { willReadFrequently: true });
+    const zoomPill     = document.getElementById("zoomPill");
+    const focusRing    = document.getElementById("focusRing");
+    const scanLine     = document.getElementById("scanLine");
+    const tintAdjustBtn = document.getElementById("tintAdjustBtn");
+
+    let stream = null, videoTrack = null, rafId = null, frameCounter = 0;
+    let latestRawFrame = null, latestDetectedCandidates = [];
+    let exclusionZones = [], inspectionState = null, pinchState = null;
+    let zoomState = { scale: 1, targetScale: 1, centerX: .5, centerY: .5 };
+    let cameraZoomSupport = null, pendingStrictAnalysis = null;
+
+    let tracks = [];
+    let nextTrackId = 1;
+
+    const PROCESS_SCALE = .55;
+    const MIN_ZOOM = 1, MAX_ZOOM = 3.2, STRICT_ANALYSIS_DELAY_MS = 220;
+    const MAX_EXCLUSIONS = 40;
+
+    const SHOW_THRESHOLD = 0.62;
+    const TRACK_DECAY = 0.06;
+    const TRACK_GAIN = 0.18;
+    const TRACK_MAX_MISSED = 14;
+
+    const rawCanvas = document.createElement("canvas");
+    const rawCtx = rawCanvas.getContext("2d", { willReadFrequently: true });
+
+    const scaledCanvas = document.createElement("canvas");
+    const scaledCtx = scaledCanvas.getContext("2d", { willReadFrequently: true });
+
+    const cropCanvas = document.createElement("canvas");
+    const cropCtx = cropCanvas.getContext("2d", { willReadFrequently: true });
+
+    let grassProfile = {
+      gOverR: 1.0,
+      gOverB: 1.0,
+      lum: 120,
+      chroma: 20
+    };
+
+    let tintModeIndex = 0;
+    const tintModes = [
+      { label: "Auto", strength: 1.00 },
+      { label: "Doux", strength: 0.85 },
+      { label: "Moyen", strength: 1.10 },
+      { label: "Fort", strength: 1.30 },
+      { label: "Max", strength: 1.55 }
+    ];
+    let userTintStrength = tintModes[tintModeIndex].strength;
+
+    function setStatus() {}
+    function setHint() {}
+
+    function updateTintButton() {
+      const mode = tintModes[tintModeIndex];
+      tintAdjustBtn.textContent = `🌱 Filtre : ${mode.label}`;
+      userTintStrength = mode.strength;
+    }
+
+    function cycleTintMode() {
+      tintModeIndex = (tintModeIndex + 1) % tintModes.length;
+      updateTintButton();
+    }
+
+    function showScreen(n) {
+      homeScreen.classList.toggle("active", n === "home");
+      cameraScreen.classList.toggle("active", n === "camera");
+    }
+
+    function clamp(v) { return v < 0 ? 0 : v > 255 ? 255 : v; }
+
+    function updateZoomUi() {
+      zoomPill.textContent = `× ${zoomState.scale.toFixed(1)}`;
+    }
+
+    function pulseScan() {
+      focusRing.classList.remove("active");
+      scanLine.classList.remove("active");
+      void focusRing.offsetWidth;
+      focusRing.classList.add("active");
+      scanLine.classList.add("active");
+      setTimeout(() => {
+        focusRing.classList.remove("active");
+        scanLine.classList.remove("active");
+      }, 760);
+    }
+
+    function rgbToHsv(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+      let h = 0;
+      const s = mx === 0 ? 0 : d / mx, v = mx;
+      if (d) {
+        switch (mx) {
+          case r: h = ((g - b) / d) % 6; break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h *= 60;
+        if (h < 0) h += 360;
+      }
+      return { h, s, v };
+    }
+
+    function luminance(r, g, b) {
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    }
+
+    function chroma(r, g, b) {
+      return Math.max(r, g, b) - Math.min(r, g, b);
+    }
+
+    function isExcluded(x, y) {
+      for (const z of exclusionZones) {
+        if (Math.hypot(x - z.x, y - z.y) <= z.radius) return true;
+      }
+      return false;
+    }
+
+    function getCanvasNorm(cx, cy) {
+      const r = canvas.getBoundingClientRect();
+      return {
+        x: Math.max(0, Math.min(1, (cx - r.left) / r.width)),
+        y: Math.max(0, Math.min(1, (cy - r.top) / r.height))
+      };
+    }
+
+    function getDigitalZoomCrop(fw, fh) {
+      const cw = Math.floor(fw / zoomState.scale), ch = Math.floor(fh / zoomState.scale);
+      const cx = zoomState.centerX * fw, cy = zoomState.centerY * fh;
+      return {
+        sx: Math.max(0, Math.min(fw - cw, Math.floor(cx - cw / 2))),
+        sy: Math.max(0, Math.min(fh - ch, Math.floor(cy - ch / 2))),
+        cropW: cw,
+        cropH: ch
+      };
+    }
+
+    function screenToFrame(cx, cy) {
+      const pos = getCanvasNorm(cx, cy), fw = canvas.width, fh = canvas.height;
+      if (zoomState.scale <= 1.001 || cameraZoomSupport?.usingNativeZoom) {
+        return { x: Math.floor(pos.x * fw), y: Math.floor(pos.y * fh) };
+      }
+      const { sx, sy, cropW, cropH } = getDigitalZoomCrop(fw, fh);
+      return {
+        x: Math.floor(sx + pos.x * cropW),
+        y: Math.floor(sy + pos.y * cropH)
+      };
+    }
+
+    async function setupCameraZoomSupport() {
+      cameraZoomSupport = { supported: false, usingNativeZoom: false, min: 1, max: 1, step: .1 };
+      if (!videoTrack?.getCapabilities) return;
+      try {
+        const c = videoTrack.getCapabilities();
+        if (c?.zoom !== undefined) {
+          cameraZoomSupport = {
+            supported: true,
+            usingNativeZoom: true,
+            min: c.zoom.min ?? 1,
+            max: c.zoom.max ?? 3,
+            step: c.zoom.step ?? .1
+          };
+        }
+      } catch {}
+    }
+
+    async function applyNativeZoom() {
+      if (!cameraZoomSupport?.usingNativeZoom || !videoTrack?.applyConstraints) return;
+      try {
+        await videoTrack.applyConstraints({
+          advanced: [{
+            zoom: Math.max(cameraZoomSupport.min, Math.min(cameraZoomSupport.max, zoomState.targetScale))
+          }]
+        });
+      } catch {
+        cameraZoomSupport.usingNativeZoom = false;
+      }
+    }
+
+    function updateZoom() {
+      zoomState.scale += (zoomState.targetScale - zoomState.scale) * .22;
+      if (Math.abs(zoomState.scale - zoomState.targetScale) < .01) zoomState.scale = zoomState.targetScale;
+      updateZoomUi();
+    }
+
+    function scheduleStrictAnalysis() {
+      if (pendingStrictAnalysis) clearTimeout(pendingStrictAnalysis);
+      if (zoomState.targetScale <= 1.35 || !latestRawFrame) return;
+      pendingStrictAnalysis = setTimeout(() => {
+        analyzeAt(
+          Math.floor(zoomState.centerX * latestRawFrame.width),
+          Math.floor(zoomState.centerY * latestRawFrame.height)
+        );
+      }, STRICT_ANALYSIS_DELAY_MS);
+    }
+
+    function downscaleFrame(frameData, w, h, scale) {
+      const pW = Math.max(120, Math.floor(w * scale));
+      const pH = Math.max(90, Math.floor(h * scale));
+
+      rawCanvas.width = w;
+      rawCanvas.height = h;
+      rawCtx.putImageData(frameData, 0, 0);
+
+      scaledCanvas.width = pW;
+      scaledCanvas.height = pH;
+      scaledCtx.clearRect(0, 0, pW, pH);
+      scaledCtx.drawImage(rawCanvas, 0, 0, pW, pH);
+
+      const img = scaledCtx.getImageData(0, 0, pW, pH);
+      return { img, pW, pH };
+    }
+
+    function calibrateGrass(frameData, w, h) {
+      let sumR = 0, sumG = 0, sumB = 0, sumCh = 0, count = 0;
+      const yStart = Math.floor(h * 0.58);
+      const yEnd = Math.floor(h * 0.92);
+
+      for (let y = yStart; y < yEnd; y += 4) {
+        for (let x = 0; x < w; x += 4) {
+          const i = (y * w + x) * 4;
+          const r = frameData.data[i], g = frameData.data[i + 1], b = frameData.data[i + 2];
+          const mx = Math.max(r, g, b), mn = Math.min(r, g, b), ch = mx - mn, lum = luminance(r, g, b);
+          const isWhite = mx > 190 && ch < 30;
+          if (isWhite) continue;
+
+          const plausibleGrass =
+            g > 32 &&
+            g >= r * 0.84 &&
+            g >= b * 0.88 &&
+            ch > 6 &&
+            lum > 18 &&
+            lum < 210;
+
+          if (!plausibleGrass) continue;
+
+          sumR += r; sumG += g; sumB += b; sumCh += ch; count++;
+        }
+      }
+
+      if (count > 40) {
+        const avgR = sumR / count, avgG = sumG / count, avgB = sumB / count, avgCh = sumCh / count;
+        grassProfile = {
+          gOverR: avgR > 1 ? avgG / avgR : 1.0,
+          gOverB: avgB > 1 ? avgG / avgB : 1.0,
+          lum: luminance(avgR, avgG, avgB),
+          chroma: avgCh
+        };
+      }
+    }
+
+    function segmentMasks(frameData, w, h, scale = PROCESS_SCALE, strict = false) {
+      const { img, pW, pH } = downscaleFrame(frameData, w, h, scale);
+      const d = img.data;
+
+      const whiteMask  = new Uint8Array(pW * pH);
+      const yellowMask = new Uint8Array(pW * pH);
+      const greenMask  = new Uint8Array(pW * pH);
+
+      const whiteT = strict ? 198 : 188;
+      const maxChroma = strict ? 42 : 50;
+      const tintBoost = userTintStrength;
+
+      for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+        const r = d[i], g = d[i + 1], b = d[i + 2];
+        const mx = Math.max(r, g, b), mn = Math.min(r, g, b), ch = mx - mn;
+
+        if (
+          mx >= whiteT &&
+          ch <= maxChroma &&
+          Math.abs(r - g) <= 34 &&
+          Math.abs(g - b) <= 34 &&
+          Math.abs(r - b) <= 38
+        ) {
+          whiteMask[p] = 255;
+        }
+
+        if (
+          g > (40 * tintBoost) &&
+          g > r * (1.0 + 0.04 * tintBoost) &&
+          g > b * (1.02 + 0.06 * tintBoost) &&
+          (g - Math.max(r, b)) >= (6 * tintBoost)
+        ) {
+          greenMask[p] = 255;
+        }
+
+        if (
+          r > 105 && g > 100 && b < 145 &&
+          r > b + 12 && g > b + 8 &&
+          Math.abs(r - g) < 58
+        ) {
+          yellowMask[p] = 255;
+        }
+      }
+
+      const radius = strict ? 2 : 3;
+      const yellowReject = strict ? 2 : 3;
+      for (let y = radius; y < pH - radius; y++) {
+        for (let x = radius; x < pW - radius; x++) {
+          const idx = y * pW + x;
+          if (!whiteMask[idx]) continue;
+          let yn = 0;
+          for (let dy = -radius; dy <= radius; dy++) {
+            const row = (y + dy) * pW;
+            for (let dx = -radius; dx <= radius; dx++) {
+              if (yellowMask[row + x + dx]) yn++;
+            }
+          }
+          if (yn >= yellowReject) whiteMask[idx] = 0;
+        }
+      }
+
+      return { d, pW, pH, whiteMask, yellowMask, greenMask };
+    }
+
+    function extractComponents(mask, W, H) {
+      const visited = new Uint8Array(mask.length);
+      const q = new Int32Array(mask.length);
+      const out = [];
+
+      for (let st = 0; st < mask.length; st++) {
+        if (!mask[st] || visited[st]) continue;
+
+        let qS = 0, qE = 0;
+        q[qE++] = st; visited[st] = 1;
+
+        let area = 0, minX = W, maxX = 0, minY = H, maxY = 0, sumX = 0, sumY = 0, perimeter = 0;
+
+        while (qS < qE) {
+          const idx = q[qS++], x = idx % W, y = (idx / W) | 0;
+          area++; sumX += x; sumY += y;
+          if (x < minX) minX = x; if (x > maxX) maxX = x;
+          if (y < minY) minY = y; if (y > maxY) maxY = y;
+
+          let boundary = false;
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              if (!dx && !dy) continue;
+              const xx = x + dx, yy = y + dy;
+              if (xx < 0 || xx >= W || yy < 0 || yy >= H) { boundary = true; continue; }
+              const n = yy * W + xx;
+              if (!mask[n]) boundary = true;
+              else if (!visited[n]) { visited[n] = 1; q[qE++] = n; }
+            }
+          }
+          if (boundary) perimeter++;
+        }
+
+        if (area < 3 || area > 3000) continue;
+
+        const width = maxX - minX + 1, height = maxY - minY + 1, aspect = width / height;
+        const fill = area / (width * height);
+        const radiusEstimate = Math.max(width, height) * 0.5;
+        const circularity = perimeter > 0 ? (4 * Math.PI * area) / (perimeter * perimeter) : 0;
+
+        out.push({
+          area, minX, maxX, minY, maxY, width, height,
+          cx: sumX / area, cy: sumY / area,
+          aspect, fill, perimeter, circularity, radiusEstimate
+        });
+      }
+      return out;
+    }
+
+    function ringContinuity(mask, W, H, cx, cy, r, samples = 24) {
+      let hits = 0, transitions = 0, prev = null;
+      for (let k = 0; k < samples; k++) {
+        const a = 2 * Math.PI * k / samples;
+        const x = Math.round(cx + r * Math.cos(a));
+        const y = Math.round(cy + r * Math.sin(a));
+        const v = (x >= 0 && x < W && y >= 0 && y < H) ? (mask[y * W + x] ? 1 : 0) : 0;
+        hits += v;
+        if (prev !== null && v !== prev) transitions++;
+        prev = v;
+      }
+      return { continuity: hits / samples, roughness: transitions / samples };
+    }
+
+    function sampleLocalStats(data, W, H, cx, cy, rInner, rOuter, whiteMask, greenMask, yellowMask) {
+      let count = 0, lumSum = 0, lumSq = 0, white = 0, green = 0, yellow = 0, chromaSum = 0;
+      const x0 = Math.max(0, Math.floor(cx - rOuter)), x1 = Math.min(W - 1, Math.ceil(cx + rOuter));
+      const y0 = Math.max(0, Math.floor(cy - rOuter)), y1 = Math.min(H - 1, Math.ceil(cy + rOuter));
+      const rIn2 = rInner * rInner, rOut2 = rOuter * rOuter;
+
+      for (let y = y0; y <= y1; y++) {
+        for (let x = x0; x <= x1; x++) {
+          const dx = x - cx, dy = y - cy, d2 = dx * dx + dy * dy;
+          if (d2 < rIn2 || d2 > rOut2) continue;
+
+          const idx = y * W + x, i4 = idx * 4;
+          const r = data[i4], g = data[i4 + 1], b = data[i4 + 2];
+          const L = luminance(r, g, b), C = chroma(r, g, b);
+
+          count++; lumSum += L; lumSq += L * L; chromaSum += C;
+          if (whiteMask[idx]) white++;
+          if (greenMask[idx]) green++;
+          if (yellowMask[idx]) yellow++;
+        }
+      }
+
+      if (!count) {
+        return { count: 0, meanLum: 0, varLum: 0, meanChroma: 0, whiteRatio: 0, greenRatio: 0, yellowRatio: 0 };
+      }
+
+      const meanLum = lumSum / count;
+      return {
+        count,
+        meanLum,
+        varLum: Math.max(0, lumSq / count - meanLum * meanLum),
+        meanChroma: chromaSum / count,
+        whiteRatio: white / count,
+        greenRatio: green / count,
+        yellowRatio: yellow / count
+      };
+    }
+
+    function sigmoidLike(v, min, max) {
+      if (v <= min) return 0;
+      if (v >= max) return 1;
+      return (v - min) / (max - min);
+    }
+
+    function scoreCandidate(comp, d, W, H, whiteMask, greenMask, yellowMask, strict = false) {
+      const cx = comp.cx, cy = comp.cy, r = Math.max(1.6, Math.min(18, comp.radiusEstimate));
+      const center = sampleLocalStats(d, W, H, cx, cy, 0, r * 0.9, whiteMask, greenMask, yellowMask);
+      const ring1  = sampleLocalStats(d, W, H, cx, cy, r * 1.0, r * 1.85, whiteMask, greenMask, yellowMask);
+      const ring2  = sampleLocalStats(d, W, H, cx, cy, r * 1.85, r * 2.8, whiteMask, greenMask, yellowMask);
+      const cont = ringContinuity(whiteMask, W, H, cx, cy, Math.max(1.2, r * 0.9), comp.area <= 12 ? 16 : 24);
+
+      const yNorm = cy / H;
+      const verticalPrior = Math.max(0, Math.min(1, (yNorm - 0.12) / 0.72));
+
+      const whiteScore = sigmoidLike(center.meanLum, 185, 255) * (1 - sigmoidLike(center.meanChroma, 20, 65));
+      const roundScore = comp.area <= 12
+        ? sigmoidLike(1 - Math.abs(1 - comp.aspect), 0.15, 0.85)
+        : 0.5 * sigmoidLike(comp.circularity, 0.18, 0.82) + 0.5 * sigmoidLike(comp.fill, 0.18, 0.80);
+      const compactScore = comp.area <= 12
+        ? sigmoidLike(comp.fill, 0.10, 0.55)
+        : 0.55 * sigmoidLike(comp.fill, 0.30, 0.86) + 0.45 * sigmoidLike(comp.circularity, 0.22, 0.88);
+      const contrast = center.meanLum - ring1.meanLum;
+      const contrastScore = sigmoidLike(contrast, 10, 70);
+      const greenContextScore = 0.55 * sigmoidLike(ring1.greenRatio, 0.10, 0.65) + 0.45 * sigmoidLike(ring2.greenRatio, 0.12, 0.70);
+      const centerUniformityScore = 1 - sigmoidLike(center.varLum, 220, 1900);
+      const edgeContinuityScore = 0.6 * sigmoidLike(cont.continuity, 0.25, 0.92) + 0.4 * (1 - sigmoidLike(cont.roughness, 0.12, 0.70));
+      const yellowPenalty = Math.max(sigmoidLike(ring1.yellowRatio, 0.03, 0.18), sigmoidLike(center.yellowRatio, 0.02, 0.12));
+      const ringWhitePenalty = sigmoidLike(ring1.whiteRatio, 0.15, 0.45);
+      const topFramePenalty = 1 - verticalPrior;
+
+      if (comp.area > 400 && comp.fill > 0.75) return null;
+      if (comp.aspect < 0.28 || comp.aspect > 2.3) return null;
+      if (center.meanLum < 150) return null;
+
+      let score =
+        0.20 * whiteScore +
+        0.15 * roundScore +
+        0.12 * compactScore +
+        0.15 * contrastScore +
+        0.13 * greenContextScore +
+        0.10 * centerUniformityScore +
+        0.07 * edgeContinuityScore +
+        0.08 * verticalPrior
+        - 0.16 * yellowPenalty
+        - 0.12 * ringWhitePenalty
+        - 0.05 * topFramePenalty;
+
+      if (comp.area <= 12) score += 0.06 * contrastScore + 0.05 * greenContextScore - 0.02 * roundScore;
+      if (comp.area > 30) score += 0.04 * roundScore + 0.03 * compactScore;
+
+      score = Math.max(0, Math.min(1, score));
+
+      return {
+        score,
+        detail: {
+          yellowPenalty,
+          ringWhitePenalty
+        }
+      };
+    }
+
+    function detectCandidates(frameData, w, h, scale = PROCESS_SCALE, strict = false) {
+      const { d, pW, pH, whiteMask, yellowMask, greenMask } = segmentMasks(frameData, w, h, scale, strict);
+      const comps = extractComponents(whiteMask, pW, pH);
+      const out = [];
+
+      for (const comp of comps) {
+        const s = scoreCandidate(comp, d, pW, pH, whiteMask, greenMask, yellowMask, strict);
+        if (!s) continue;
+
+        const threshold = (strict ? 0.32 : 0.38) + (userTintStrength - 1) * 0.08;
+        if (s.score < threshold) continue;
+
+        const fx = comp.cx / pW * w, fy = comp.cy / pH * h;
+        if (isExcluded(fx, fy)) continue;
+
+        out.push({
+          x: fx,
+          y: fy,
+          radius: Math.max(4, comp.radiusEstimate / pW * w),
+          score: s.score,
+          area: comp.area,
+          sourceScale: scale,
+          detail: s.detail
+        });
+      }
+
+      return out;
+    }
+
+    function fuseCandidates(cands, distFactor = 1.8) {
+      if (!cands.length) return cands;
+      cands.sort((a, b) => b.score - a.score);
+      const fused = [];
+
+      for (const c of cands) {
+        let merged = false;
+        for (const f of fused) {
+          const maxD = Math.max(12, Math.max(c.radius, f.radius) * distFactor);
+          if (Math.hypot(c.x - f.x, c.y - f.y) <= maxD) {
+            const w1 = f.score + 0.001, w2 = c.score + 0.001, sum = w1 + w2;
+            f.x = (f.x * w1 + c.x * w2) / sum;
+            f.y = (f.y * w1 + c.y * w2) / sum;
+            f.radius = (f.radius * w1 + c.radius * w2) / sum;
+            f.score = Math.max(f.score, c.score);
+            f.area = Math.max(f.area, c.area);
+            merged = true;
+            break;
+          }
+        }
+        if (!merged) fused.push({ ...c });
+      }
+
+      return fused;
+    }
+
+    function detectMultiScale(frameData, w, h, strict = false) {
+      const scales = strict ? [0.9, 1.0] : [0.45, 0.60, 0.82];
+      let all = [];
+      for (const sc of scales) all = all.concat(detectCandidates(frameData, w, h, sc, strict));
+      return fuseCandidates(all, strict ? 1.5 : 1.9);
+    }
+
+    function findBestTrackMatch(track, candidates, used) {
+      let bestIdx = -1, bestCost = Infinity;
+
+      for (let i = 0; i < candidates.length; i++) {
+        if (used[i]) continue;
+        const c = candidates[i];
+        const d = Math.hypot(c.x - track.x, c.y - track.y);
+        const maxD = Math.max(14, track.radius * 2.4);
+        if (d > maxD) continue;
+
+        const rDiff = Math.abs(c.radius - track.radius) / Math.max(track.radius, 1);
+        const sDiff = Math.abs(c.score - track.score);
+        const cost = d * 0.6 + rDiff * 18 + sDiff * 12;
+
+        if (cost < bestCost) {
+          bestCost = cost;
+          bestIdx = i;
+        }
+      }
+      return bestIdx;
+    }
+
+    function updateTracks(candidates) {
+      const used = new Uint8Array(candidates.length);
+
+      for (const t of tracks) {
+        const idx = findBestTrackMatch(t, candidates, used);
+        if (idx >= 0) {
+          const c = candidates[idx];
+          used[idx] = 1;
+
+          const prevX = t.x, prevY = t.y;
+          t.x = 0.72 * t.x + 0.28 * c.x;
+          t.y = 0.72 * t.y + 0.28 * c.y;
+          t.radius = 0.78 * t.radius + 0.22 * c.radius;
+          t.score = 0.68 * t.score + 0.32 * c.score;
+          t.vx = t.x - prevX;
+          t.vy = t.y - prevY;
+          t.age++;
+          t.missed = 0;
+          t.lastSeen = performance.now();
+          t.confidence = Math.min(1, t.confidence + TRACK_GAIN + c.score * 0.05);
+          t.lastDetail = c.detail;
+        } else {
+          t.x += t.vx * 0.25;
+          t.y += t.vy * 0.25;
+          t.missed++;
+          t.age++;
+          t.confidence = Math.max(0, t.confidence - TRACK_DECAY);
+        }
+      }
+
+      for (let i = 0; i < candidates.length; i++) {
+        if (used[i]) continue;
+        const c = candidates[i];
+        tracks.push({
+          id: nextTrackId++,
+          x: c.x,
+          y: c.y,
+          radius: c.radius,
+          score: c.score,
+          confidence: Math.max(0.16, c.score * 0.45),
+          age: 1,
+          missed: 0,
+          vx: 0,
+          vy: 0,
+          lastSeen: performance.now(),
+          lastDetail: c.detail
+        });
+      }
+
+      tracks = tracks.filter(t => t.missed <= TRACK_MAX_MISSED && t.confidence > 0.03);
+    }
+
+    function getVisibleTracks() {
+      return tracks.filter(t => {
+        if (t.confidence < SHOW_THRESHOLD) return false;
+        if (t.score < 0.34) return false;
+        if (isExcluded(t.x, t.y)) return false;
+        return true;
+      });
+    }
+
+    function drawTrackHighlight(t) {
+      const r = Math.max(8, Math.min(42, t.radius * 1.35));
+      const alpha = Math.max(0.18, Math.min(0.95, t.confidence));
+      const grad = ctx.createRadialGradient(t.x, t.y, r * 0.18, t.x, t.y, r * 1.55);
+      grad.addColorStop(0, `rgba(255,255,255,${0.34 * alpha})`);
+      grad.addColorStop(0.35, `rgba(255,255,255,${0.22 * alpha})`);
+      grad.addColorStop(1, `rgba(255,255,255,0)`);
+
+      ctx.save();
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, r * 1.55, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = `rgba(255,255,255,${0.72 * alpha})`;
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, r, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = `rgba(232,168,48,${0.70 * alpha})`;
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, r * 1.28, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function applyGreenTint(data) {
+      const gR = grassProfile.gOverR;
+      const gB = grassProfile.gOverB;
+      const baseLum = grassProfile.lum;
+      const baseChroma = Math.max(8, grassProfile.chroma);
+      const tintStrength = Math.max(0.6, Math.min(1.8, userTintStrength));
+
+      const redMul   = 1.10 + 0.28 * tintStrength;
+      const greenMul = 0.24 - 0.10 * tintStrength;
+      const blueMul  = 0.70 - 0.12 * tintStrength;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i + 1], b = data[i + 2];
+        const mx = Math.max(r, g, b), mn = Math.min(r, g, b), ch = mx - mn, lum = luminance(r, g, b);
+
+        const isWhiteish =
+          mx > 188 &&
+          ch < 32 &&
+          Math.abs(r - g) < 26 &&
+          Math.abs(g - b) < 26;
+
+        if (isWhiteish) continue;
+
+        const grassLike =
+          g > 30 &&
+          g >= r * Math.max(0.88, gR * 0.82) &&
+          g >= b * Math.max(0.92, gB * 0.82) &&
+          ch > Math.max(7, baseChroma * 0.42) &&
+          lum < Math.max(188, baseLum * 1.42);
+
+        if (grassLike) {
+          data[i]     = clamp(r * redMul);
+          data[i + 1] = clamp(g * Math.max(0.08, greenMul));
+          data[i + 2] = clamp(b * Math.max(0.44, blueMul));
+        }
+      }
+    }
+
+    function renderProcessedFrame(pf, fw, fh) {
+      rawCanvas.width = fw;
+      rawCanvas.height = fh;
+      rawCtx.putImageData(pf, 0, 0);
+
+      if (cameraZoomSupport?.usingNativeZoom || zoomState.scale <= 1.02) {
+        ctx.clearRect(0, 0, fw, fh);
+        ctx.drawImage(rawCanvas, 0, 0);
+        return;
+      }
+
+      const { sx, sy, cropW, cropH } = getDigitalZoomCrop(fw, fh);
+      ctx.clearRect(0, 0, fw, fh);
+      ctx.drawImage(rawCanvas, sx, sy, cropW, cropH, 0, 0, fw, fh);
+    }
+
+    function analyzeAt(x, y) {
+      if (!latestRawFrame) return;
+
+      pulseScan();
+
+      const fw = latestRawFrame.width, fh = latestRawFrame.height;
+      const cW = Math.floor(fw / 2.35), cH = Math.floor(fh / 2.35);
+      const sx = Math.max(0, Math.min(fw - cW, Math.floor(x - cW / 2)));
+      const sy = Math.max(0, Math.min(fh - cH, Math.floor(y - cH / 2)));
+
+      rawCanvas.width = fw;
+      rawCanvas.height = fh;
+      rawCtx.putImageData(latestRawFrame, 0, 0);
+
+      cropCanvas.width = cW;
+      cropCanvas.height = cH;
+      cropCtx.clearRect(0, 0, cW, cH);
+      cropCtx.drawImage(rawCanvas, sx, sy, cW, cH, 0, 0, cW, cH);
+
+      const crop = cropCtx.getImageData(0, 0, cW, cH);
+      const strictCands = detectMultiScale(crop, cW, cH, true)
+        .map(c => ({ ...c, x: c.x + sx, y: c.y + sy }))
+        .filter(c => Math.hypot(c.x - x, c.y - y) <= Math.max(60, c.radius * 2.8))
+        .sort((a, b) => b.score - a.score);
+
+      if (!strictCands.length) {
+        exclusionZones.push({ x, y, radius: 28 });
+        if (exclusionZones.length > MAX_EXCLUSIONS) exclusionZones.shift();
+        inspectionState = { until: performance.now() + 1000 };
+        return;
+      }
+
+      const best = strictCands[0];
+      const d = best.detail || {};
+      const daisyLikelihood = (d.yellowPenalty ?? 0) * 0.65 + (d.ringWhitePenalty ?? 0) * 0.35;
+
+      if (best.score >= 0.58 && daisyLikelihood < 0.28) {
+        tracks.push({
+          id: nextTrackId++,
+          x: best.x,
+          y: best.y,
+          radius: best.radius,
+          score: Math.max(0.62, best.score),
+          confidence: 0.78,
+          age: 1,
+          missed: 0,
+          vx: 0,
+          vy: 0,
+          lastSeen: performance.now(),
+          lastDetail: best.detail
+        });
+      } else if (daisyLikelihood >= 0.28 || (d.ringWhitePenalty ?? 0) > 0.32) {
+        exclusionZones.push({ x: best.x, y: best.y, radius: Math.max(26, best.radius * 2.0) });
+        if (exclusionZones.length > MAX_EXCLUSIONS) exclusionZones.shift();
+      }
+
+      inspectionState = { until: performance.now() + 1000 };
+    }
+
+    function processFrame() {
+      if (!video.videoWidth || !video.videoHeight) {
+        rafId = requestAnimationFrame(processFrame);
+        return;
+      }
+
+      const fw = video.videoWidth, fh = video.videoHeight;
+      if (canvas.width !== fw || canvas.height !== fh) {
+        canvas.width = fw;
+        canvas.height = fh;
+      }
+
+      rawCanvas.width = fw;
+      rawCanvas.height = fh;
+      rawCtx.drawImage(video, 0, 0, fw, fh);
+      const full = rawCtx.getImageData(0, 0, fw, fh);
+      latestRawFrame = new ImageData(new Uint8ClampedArray(full.data), fw, fh);
+
+      frameCounter++;
+
+      if (frameCounter % 10 === 0) calibrateGrass(full, fw, fh);
+
+      if (frameCounter % 2 === 1) {
+        latestDetectedCandidates = detectMultiScale(full, fw, fh, false);
+        updateTracks(latestDetectedCandidates);
+      } else {
+        updateTracks([]);
+      }
+
+      const pf = new ImageData(new Uint8ClampedArray(full.data), fw, fh);
+      applyGreenTint(pf.data);
+
+      updateZoom();
+      renderProcessedFrame(pf, fw, fh);
+
+      const visibleTracks = getVisibleTracks().sort((a, b) => b.confidence - a.confidence);
+      for (const t of visibleTracks) drawTrackHighlight(t);
+
+      if (inspectionState && inspectionState.until > performance.now()) {
+        ctx.strokeStyle = 'rgba(232,168,48,0.65)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(18, 18, fw - 36, fh - 36);
+      } else {
+        inspectionState = null;
+      }
+
+      rafId = requestAnimationFrame(processFrame);
+    }
+
+    function handlePointerDown(e) {
+      canvas.setPointerCapture?.(e.pointerId);
+      const pos = getCanvasNorm(e.clientX, e.clientY);
+      if (!pinchState) pinchState = { pointers: new Map(), moved: false };
+      pinchState.pointers.set(e.pointerId, {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        x: pos.x,
+        y: pos.y
+      });
+
+      if (pinchState.pointers.size === 2) {
+        const pts = [...pinchState.pointers.values()];
+        pinchState.initialDistance = Math.hypot(
+          pts[0].clientX - pts[1].clientX,
+          pts[0].clientY - pts[1].clientY
+        );
+        pinchState.initialScale = zoomState.targetScale;
+        zoomState.centerX = (pts[0].x + pts[1].x) / 2;
+        zoomState.centerY = (pts[0].y + pts[1].y) / 2;
+      }
+    }
+
+    async function handlePointerMove(e) {
+      if (!pinchState || !pinchState.pointers.has(e.pointerId)) return;
+      const pos = getCanvasNorm(e.clientX, e.clientY);
+      const prev = pinchState.pointers.get(e.pointerId);
+
+      if (Math.abs(prev.clientX - e.clientX) > 4 || Math.abs(prev.clientY - e.clientY) > 4) {
+        pinchState.moved = true;
+      }
+
+      pinchState.pointers.set(e.pointerId, {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        x: pos.x,
+        y: pos.y
+      });
+
+      if (pinchState.pointers.size === 2) {
+        const pts = [...pinchState.pointers.values()];
+        const dist = Math.hypot(
+          pts[0].clientX - pts[1].clientX,
+          pts[0].clientY - pts[1].clientY
+        );
+        zoomState.targetScale = Math.max(
+          MIN_ZOOM,
+          Math.min(MAX_ZOOM, pinchState.initialScale * (dist / pinchState.initialDistance))
+        );
+        zoomState.centerX = (pts[0].x + pts[1].x) / 2;
+        zoomState.centerY = (pts[0].y + pts[1].y) / 2;
+        if (cameraZoomSupport?.usingNativeZoom) await applyNativeZoom();
+      }
+    }
+
+    function nearestVisibleTrack(x, y) {
+      const visible = getVisibleTracks();
+      let best = null, bestD = Infinity;
+      for (const t of visible) {
+        const d = Math.hypot(t.x - x, t.y - y);
+        if (d < Math.max(36, t.radius * 2.5) && d < bestD) {
+          best = t;
+          bestD = d;
+        }
+      }
+      return best;
+    }
+
+    function handlePointerUp(e) {
+      if (!pinchState) return;
+
+      const ptr = pinchState.pointers.get(e.pointerId);
+      const hadTwo = pinchState.pointers.size === 2;
+      pinchState.pointers.delete(e.pointerId);
+
+      if (!hadTwo && ptr && !pinchState.moved) {
+        const pos = screenToFrame(e.clientX, e.clientY);
+        if (pos) {
+          const t = nearestVisibleTrack(pos.x, pos.y);
+          if (t) analyzeAt(Math.round(t.x), Math.round(t.y));
+        }
+      }
+
+      if (zoomState.targetScale > 1.35 && pinchState.pointers.size < 2 && latestRawFrame) {
+        scheduleStrictAnalysis();
+      }
+
+      if (pinchState.pointers.size === 0) pinchState = null;
+    }
+
+    async function startCamera() {
+      try {
+        if (!navigator.mediaDevices?.getUserMedia) return;
+
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+
+        videoTrack = stream.getVideoTracks()[0] || null;
+        video.srcObject = stream;
+        await video.play();
+        await setupCameraZoomSupport();
+
+        latestRawFrame = null;
+        latestDetectedCandidates = [];
+        frameCounter = 0;
+        tracks = [];
+        exclusionZones = [];
+        grassProfile = { gOverR: 1.0, gOverB: 1.0, lum: 120, chroma: 20 };
+        tintModeIndex = 0;
+        userTintStrength = tintModes[tintModeIndex].strength;
+        updateTintButton();
+        zoomState = { scale: 1, targetScale: 1, centerX: .5, centerY: .5 };
+        inspectionState = null;
+        updateZoomUi();
+
+        if (rafId) cancelAnimationFrame(rafId);
+        processFrame();
+      } catch (err) {}
+    }
+
+    function stopCamera() {
+      if (pendingStrictAnalysis) {
+        clearTimeout(pendingStrictAnalysis);
+        pendingStrictAnalysis = null;
+      }
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+      videoTrack = null;
+      cameraZoomSupport = null;
+      latestRawFrame = null;
+      latestDetectedCandidates = [];
+      frameCounter = 0;
+      inspectionState = null;
+      tracks = [];
+      exclusionZones = [];
+      grassProfile = { gOverR: 1.0, gOverB: 1.0, lum: 120, chroma: 20 };
+      tintModeIndex = 0;
+      userTintStrength = tintModes[tintModeIndex].strength;
+      updateTintButton();
+      zoomState = { scale: 1, targetScale: 1, centerX: .5, centerY: .5 };
+      updateZoomUi();
+    }
+
+    async function resetZoom() {
+      zoomState.targetScale = 1;
+      if (cameraZoomSupport?.usingNativeZoom) await applyNativeZoom();
+    }
+
+    document.getElementById("startExperienceBtn").addEventListener("click", async () => {
+      showScreen("camera");
+      await startCamera();
+    });
+
+    document.getElementById("ballFoundBtn").addEventListener("click", () => {
+      stopCamera();
+      showScreen("home");
+    });
+
+    document.getElementById("zoomOutBtn").addEventListener("click", resetZoom);
+    document.getElementById("tintAdjustBtn").addEventListener("click", cycleTintMode);
+
+    canvas.addEventListener("pointerdown", handlePointerDown);
+    canvas.addEventListener("pointermove", handlePointerMove);
+    canvas.addEventListener("pointerup", handlePointerUp);
+    canvas.addEventListener("pointercancel", handlePointerUp);
+    window.addEventListener("beforeunload", stopCamera);
+
+    updateTintButton();
+    updateZoomUi();
+  </script>
+
+</body>
+</html>
