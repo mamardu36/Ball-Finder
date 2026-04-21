@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Ball Finder · Collecte IA</title>
+  <style>
+    :root {
+      --bg: #0b0e17;
+      --panel: #141c2e;
+      --panel-2: #1a2238;
+      --line: rgba(255,255,255,0.08);
+      --text: #eef2f8;
+      --muted: #8a97b0;
+      --gold: #e8a830;
+      --gold2: #c88820;
+      --ok: #28c96a;
+      --danger: #e84040;
+      --blue: #3a7bd5;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .sub {
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 860px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    .card-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      font-weight: 700;
+    }
+
+    .card-body {
+      padding: 16px;
+    }
+
+    .viewer {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #000;
+      border: 1px solid var(--line);
+    }
+
+    video, canvas.preview {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      background: #000;
+    }
+
+    video.hidden, canvas.hidden {
+      display: none;
+    }
+
+    .status {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      min-height: 18px;
+    }
+
+    .actions, .labels, .tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+    }
+
+    button:hover {
+      filter: brightness(1.06);
+    }
+
+    .primary {
+      color: #111;
+      background: linear-gradient(135deg, #f4c060 0%, var(--gold) 55%, var(--gold2) 100%);
+    }
+
+    .ok {
+      background: rgba(40, 201, 106, 0.16);
+      border-color: rgba(40, 201, 106, 0.35);
+    }
+
+    .danger {
+      background: rgba(232, 64, 64, 0.16);
+      border-color: rgba(232, 64, 64, 0.35);
+    }
+
+    .blue {
+      background: rgba(58, 123, 213, 0.16);
+      border-color: rgba(58, 123, 213, 0.35);
+    }
+
+    .ghost {
+      background: transparent;
+    }
+
+    .selected {
+      outline: 2px solid var(--gold);
+      outline-offset: 0;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .stat {
+      padding: 14px;
+      border-radius: 14px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+    }
+
+    .stat-num {
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .field {
+      margin-top: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    .last-file {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 12px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">Ball Finder · Collecte dataset IA</div>
+    <div class="sub">
+      Prends une photo, choisis <strong>balle</strong> ou <strong>pas_balle</strong>, puis télécharge le fichier.
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-head">Caméra / Capture</div>
+        <div class="card-body">
+          <div class="viewer">
+            <video id="video" playsinline autoplay muted></video>
+            <canvas id="previewCanvas" class="preview hidden"></canvas>
+          </div>
+
+          <div class="status" id="statusText">Caméra inactive.</div>
+
+          <div class="actions">
+            <button id="startBtn" class="primary">Démarrer caméra</button>
+            <button id="captureBtn" class="blue" disabled>Prendre photo</button>
+            <button id="retakeBtn" class="ghost" disabled>Reprendre</button>
+          </div>
+
+          <div class="labels">
+            <button id="ballBtn" class="ok" disabled>Label : balle</button>
+            <button id="notBallBtn" class="danger" disabled>Label : pas_balle</button>
+            <button id="saveBtn" class="primary" disabled>Télécharger image</button>
+          </div>
+
+          <div class="tools">
+            <button id="deleteLastBtn" class="ghost" disabled>Supprimer dernière</button>
+            <button id="stopBtn" class="ghost" disabled>Arrêter caméra</button>
+          </div>
+
+          <div class="last-file" id="lastFileBox">Dernier fichier : aucun</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">Organisation dataset</div>
+        <div class="card-body">
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-num" id="ballCount">0</div>
+              <div class="stat-label">Images “balle”</div>
+            </div>
+            <div class="stat">
+              <div class="stat-num" id="notBallCount">0</div>
+              <div class="stat-label">Images “pas_balle”</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="prefixInput">Préfixe session</label>
+            <input id="prefixInput" type="text" value="ballfinder" />
+            <div class="hint">
+              Sert à nommer les fichiers. Exemple : <code>ballfinder_balle_0001.jpg</code>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="formatSelect">Format export</label>
+            <select id="formatSelect">
+              <option value="image/jpeg">JPEG</option>
+              <option value="image/png">PNG</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="qualitySelect">Qualité JPEG</label>
+            <select id="qualitySelect">
+              <option value="0.92">Haute</option>
+              <option value="0.85" selected>Moyenne</option>
+              <option value="0.75">Légère</option>
+            </select>
+            <div class="hint">
+              Pour le dataset, JPEG moyenne suffit souvent.
+            </div>
+          </div>
+
+          <div class="hint" style="margin-top:16px;">
+            Conseils :
+            <br>• mélange soleil / ombre
+            <br>• balle proche / loin
+            <br>• herbe verte / sèche
+            <br>• prends aussi des faux positifs : fleurs, objets blancs, reflets
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const video = document.getElementById("video");
+    const previewCanvas = document.getElementById("previewCanvas");
+    const previewCtx = previewCanvas.getContext("2d", { willReadFrequently: true });
+
+    const statusText = document.getElementById("statusText");
+    const ballCountEl = document.getElementById("ballCount");
+    const notBallCountEl = document.getElementById("notBallCount");
+    const lastFileBox = document.getElementById("lastFileBox");
+
+    const startBtn = document.getElementById("startBtn");
+    const captureBtn = document.getElementById("captureBtn");
+    const retakeBtn = document.getElementById("retakeBtn");
+    const ballBtn = document.getElementById("ballBtn");
+    const notBallBtn = document.getElementById("notBallBtn");
+    const saveBtn = document.getElementById("saveBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const deleteLastBtn = document.getElementById("deleteLastBtn");
+
+    const prefixInput = document.getElementById("prefixInput");
+    const formatSelect = document.getElementById("formatSelect");
+    const qualitySelect = document.getElementById("qualitySelect");
+
+    let stream = null;
+    let capturedBlob = null;
+    let selectedLabel = null;
+    let lastSaved = null;
+
+    let counters = {
+      balle: Number(localStorage.getItem("collect_balle_count") || 0),
+      pas_balle: Number(localStorage.getItem("collect_pas_balle_count") || 0)
+    };
+
+    function setStatus(text) {
+      statusText.textContent = text;
+    }
+
+    function updateCounters() {
+      ballCountEl.textContent = counters.balle;
+      notBallCountEl.textContent = counters.pas_balle;
+      localStorage.setItem("collect_balle_count", String(counters.balle));
+      localStorage.setItem("collect_pas_balle_count", String(counters.pas_balle));
+    }
+
+    function pad4(n) {
+      return String(n).padStart(4, "0");
+    }
+
+    function extensionFromMime(mime) {
+      return mime === "image/png" ? "png" : "jpg";
+    }
+
+    function buildFileName(label, mime) {
+      const prefix = (prefixInput.value || "ballfinder")
+        .trim()
+        .replace(/\s+/g, "_")
+        .replace(/[^a-zA-Z0-9_-]/g, "")
+        || "ballfinder";
+
+      const nextIndex = label === "balle" ? counters.balle + 1 : counters.pas_balle + 1;
+      const ext = extensionFromMime(mime);
+      return `${prefix}_${label}_${pad4(nextIndex)}.${ext}`;
+    }
+
+    function resetSelectionUI() {
+      ballBtn.classList.remove("selected");
+      notBallBtn.classList.remove("selected");
+    }
+
+    function setSelectedLabel(label) {
+      selectedLabel = label;
+      resetSelectionUI();
+      if (label === "balle") ballBtn.classList.add("selected");
+      if (label === "pas_balle") notBallBtn.classList.add("selected");
+      saveBtn.disabled = !capturedBlob || !selectedLabel;
+    }
+
+    function setLiveMode() {
+      video.classList.remove("hidden");
+      previewCanvas.classList.add("hidden");
+
+      captureBtn.disabled = false;
+      retakeBtn.disabled = true;
+      ballBtn.disabled = true;
+      notBallBtn.disabled = true;
+      saveBtn.disabled = true;
+
+      selectedLabel = null;
+      resetSelectionUI();
+      capturedBlob = null;
+    }
+
+    function setPreviewMode() {
+      video.classList.add("hidden");
+      previewCanvas.classList.remove("hidden");
+
+      captureBtn.disabled = true;
+      retakeBtn.disabled = false;
+      ballBtn.disabled = false;
+      notBallBtn.disabled = false;
+      saveBtn.disabled = !selectedLabel;
+    }
+
+    async function startCamera() {
+      try {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          setStatus("Caméra non supportée sur cet appareil.");
+          return;
+        }
+
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          },
+          audio: false
+        });
+
+        video.srcObject = stream;
+        await video.play();
+
+        setLiveMode();
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        setStatus("Caméra active. Prends une photo.");
+      } catch (err) {
+        setStatus(`Erreur caméra : ${err.message || err.name}`);
+      }
+    }
+
+    function stopCamera() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+      video.srcObject = null;
+
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      captureBtn.disabled = true;
+      retakeBtn.disabled = true;
+      ballBtn.disabled = true;
+      notBallBtn.disabled = true;
+      saveBtn.disabled = true;
+
+      setStatus("Caméra arrêtée.");
+    }
+
+    function capturePhoto() {
+      if (!video.videoWidth || !video.videoHeight) {
+        setStatus("Caméra pas encore prête.");
+        return;
+      }
+
+      previewCanvas.width = video.videoWidth;
+      previewCanvas.height = video.videoHeight;
+      previewCtx.drawImage(video, 0, 0, previewCanvas.width, previewCanvas.height);
+
+      const mime = formatSelect.value;
+      const quality = Number(qualitySelect.value);
+
+      previewCanvas.toBlob((blob) => {
+        if (!blob) {
+          setStatus("Impossible de créer l’image.");
+          return;
+        }
+
+        capturedBlob = blob;
+        selectedLabel = null;
+        resetSelectionUI();
+        setPreviewMode();
+        setStatus("Photo capturée. Choisis un label.");
+      }, mime, quality);
+    }
+
+    function retakePhoto() {
+      if (!stream) {
+        setStatus("Redémarre la caméra.");
+        return;
+      }
+      setLiveMode();
+      setStatus("Nouvelle capture prête.");
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function saveLabeledImage() {
+      if (!capturedBlob || !selectedLabel) {
+        setStatus("Choisis une image et un label.");
+        return;
+      }
+
+      const mime = capturedBlob.type || formatSelect.value;
+      const fileName = buildFileName(selectedLabel, mime);
+
+      downloadBlob(capturedBlob, fileName);
+
+      if (selectedLabel === "balle") counters.balle += 1;
+      else counters.pas_balle += 1;
+
+      updateCounters();
+      deleteLastBtn.disabled = false;
+      lastSaved = {
+        label: selectedLabel,
+        fileName
+      };
+      lastFileBox.textContent = `Dernier fichier : ${fileName}`;
+      setStatus(`Téléchargé : ${fileName}`);
+
+      if (stream) {
+        setLiveMode();
+      }
+    }
+
+    function deleteLastSavedCounter() {
+      if (!lastSaved) return;
+
+      if (lastSaved.label === "balle" && counters.balle > 0) counters.balle -= 1;
+      if (lastSaved.label === "pas_balle" && counters.pas_balle > 0) counters.pas_balle -= 1;
+
+      updateCounters();
+      lastFileBox.textContent = `Dernier fichier supprimé du compteur : ${lastSaved.fileName}`;
+      setStatus("Compteur corrigé. Supprime aussi le fichier téléchargé si besoin.");
+      lastSaved = null;
+      deleteLastBtn.disabled = true;
+    }
+
+    startBtn.addEventListener("click", startCamera);
+    stopBtn.addEventListener("click", stopCamera);
+    captureBtn.addEventListener("click", capturePhoto);
+    retakeBtn.addEventListener("click", retakePhoto);
+    ballBtn.addEventListener("click", () => setSelectedLabel("balle"));
+    notBallBtn.addEventListener("click", () => setSelectedLabel("pas_balle"));
+    saveBtn.addEventListener("click", saveLabeledImage);
+    deleteLastBtn.addEventListener("click", deleteLastSavedCounter);
+
+    window.addEventListener("beforeunload", stopCamera);
+
+    updateCounters();
+  </script>
+</body>
+</html>
