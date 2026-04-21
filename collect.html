@@ -18,7 +18,6 @@
       --danger: #e84040;
       --blue: #3a7bd5;
     }
-
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -26,53 +25,42 @@
       background: var(--bg);
       color: var(--text);
     }
-
     .wrap {
       max-width: 980px;
       margin: 0 auto;
       padding: 16px;
     }
-
     .title {
       font-size: 28px;
       font-weight: 700;
       margin-bottom: 6px;
     }
-
     .sub {
       color: var(--muted);
       margin-bottom: 18px;
     }
-
     .grid {
       display: grid;
       grid-template-columns: 1.2fr 0.8fr;
       gap: 16px;
     }
-
     @media (max-width: 860px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
+      .grid { grid-template-columns: 1fr; }
     }
-
     .card {
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 18px;
       overflow: hidden;
     }
-
     .card-head {
       padding: 14px 16px;
       border-bottom: 1px solid var(--line);
       font-weight: 700;
     }
-
     .card-body {
       padding: 16px;
     }
-
     .viewer {
       position: relative;
       width: 100%;
@@ -82,7 +70,6 @@
       background: #000;
       border: 1px solid var(--line);
     }
-
     video, canvas.preview {
       width: 100%;
       height: 100%;
@@ -90,25 +77,20 @@
       object-fit: cover;
       background: #000;
     }
-
-    video.hidden, canvas.hidden {
-      display: none;
-    }
-
+    .hidden { display: none !important; }
     .status {
       margin-top: 10px;
       color: var(--muted);
       font-size: 14px;
       min-height: 18px;
+      line-height: 1.4;
     }
-
     .actions, .labels, .tools {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       margin-top: 14px;
     }
-
     button {
       border: none;
       cursor: pointer;
@@ -120,69 +102,57 @@
       background: var(--panel-2);
       border: 1px solid var(--line);
     }
-
-    button:hover {
-      filter: brightness(1.06);
+    button:hover { filter: brightness(1.06); }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
-
     .primary {
       color: #111;
       background: linear-gradient(135deg, #f4c060 0%, var(--gold) 55%, var(--gold2) 100%);
     }
-
     .ok {
       background: rgba(40, 201, 106, 0.16);
       border-color: rgba(40, 201, 106, 0.35);
     }
-
     .danger {
       background: rgba(232, 64, 64, 0.16);
       border-color: rgba(232, 64, 64, 0.35);
     }
-
     .blue {
       background: rgba(58, 123, 213, 0.16);
       border-color: rgba(58, 123, 213, 0.35);
     }
-
     .ghost {
       background: transparent;
     }
-
     .selected {
       outline: 2px solid var(--gold);
-      outline-offset: 0;
     }
-
     .stats {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 10px;
       margin-top: 8px;
     }
-
     .stat {
       padding: 14px;
       border-radius: 14px;
       background: var(--panel-2);
       border: 1px solid var(--line);
     }
-
     .stat-num {
       font-size: 24px;
       font-weight: 800;
     }
-
     .stat-label {
       color: var(--muted);
       font-size: 13px;
       margin-top: 4px;
     }
-
     .field {
       margin-top: 14px;
     }
-
     label {
       display: block;
       margin-bottom: 8px;
@@ -190,7 +160,6 @@
       font-size: 14px;
       font-weight: 700;
     }
-
     input[type="text"], select {
       width: 100%;
       padding: 12px 14px;
@@ -200,14 +169,12 @@
       color: var(--text);
       font-size: 14px;
     }
-
     .hint {
       color: var(--muted);
       font-size: 13px;
       margin-top: 8px;
       line-height: 1.5;
     }
-
     .last-file {
       margin-top: 14px;
       padding: 12px;
@@ -224,7 +191,7 @@
   <div class="wrap">
     <div class="title">Ball Finder · Collecte dataset IA</div>
     <div class="sub">
-      Prends une photo, choisis <strong>balle</strong> ou <strong>pas_balle</strong>, puis télécharge le fichier.
+      Prends une photo, choisis <strong>balle</strong> ou <strong>pas_balle</strong>, puis enregistre-la.
     </div>
 
     <div class="grid">
@@ -232,7 +199,7 @@
         <div class="card-head">Caméra / Capture</div>
         <div class="card-body">
           <div class="viewer">
-            <video id="video" playsinline autoplay muted></video>
+            <video id="video" playsinline muted></video>
             <canvas id="previewCanvas" class="preview hidden"></canvas>
           </div>
 
@@ -247,11 +214,11 @@
           <div class="labels">
             <button id="ballBtn" class="ok" disabled>Label : balle</button>
             <button id="notBallBtn" class="danger" disabled>Label : pas_balle</button>
-            <button id="saveBtn" class="primary" disabled>Télécharger image</button>
+            <button id="saveBtn" class="primary" disabled>Enregistrer image</button>
           </div>
 
           <div class="tools">
-            <button id="deleteLastBtn" class="ghost" disabled>Supprimer dernière</button>
+            <button id="deleteLastBtn" class="ghost" disabled>Annuler dernier compteur</button>
             <button id="stopBtn" class="ghost" disabled>Arrêter caméra</button>
           </div>
 
@@ -276,15 +243,12 @@
           <div class="field">
             <label for="prefixInput">Préfixe session</label>
             <input id="prefixInput" type="text" value="ballfinder" />
-            <div class="hint">
-              Sert à nommer les fichiers. Exemple : <code>ballfinder_balle_0001.jpg</code>
-            </div>
           </div>
 
           <div class="field">
             <label for="formatSelect">Format export</label>
             <select id="formatSelect">
-              <option value="image/jpeg">JPEG</option>
+              <option value="image/jpeg" selected>JPEG</option>
               <option value="image/png">PNG</option>
             </select>
           </div>
@@ -296,14 +260,16 @@
               <option value="0.85" selected>Moyenne</option>
               <option value="0.75">Légère</option>
             </select>
-            <div class="hint">
-              Pour le dataset, JPEG moyenne suffit souvent.
-            </div>
+          </div>
+
+          <div class="hint">
+            Sur iPhone/Safari, le bouton “Enregistrer image” ouvrira souvent l’image dans un nouvel onglet :
+            fais ensuite <strong>appui long → Enregistrer dans Photos</strong>.
           </div>
 
           <div class="hint" style="margin-top:16px;">
             Conseils :
-            <br>• mélange soleil / ombre
+            <br>• soleil / ombre
             <br>• balle proche / loin
             <br>• herbe verte / sèche
             <br>• prends aussi des faux positifs : fleurs, objets blancs, reflets
@@ -369,8 +335,7 @@
       const prefix = (prefixInput.value || "ballfinder")
         .trim()
         .replace(/\s+/g, "_")
-        .replace(/[^a-zA-Z0-9_-]/g, "")
-        || "ballfinder";
+        .replace(/[^a-zA-Z0-9_-]/g, "") || "ballfinder";
 
       const nextIndex = label === "balle" ? counters.balle + 1 : counters.pas_balle + 1;
       const ext = extensionFromMime(mime);
@@ -414,6 +379,10 @@
       ballBtn.disabled = false;
       notBallBtn.disabled = false;
       saveBtn.disabled = !selectedLabel;
+    }
+
+    function isIOS() {
+      return /iPhone|iPad|iPod/i.test(navigator.userAgent);
     }
 
     async function startCamera() {
@@ -498,6 +467,20 @@
       setStatus("Nouvelle capture prête.");
     }
 
+    function openBlobForManualSave(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, "_blank");
+
+      if (!win) {
+        setStatus("Popup bloquée. Autorise les popups puis réessaie.");
+        return;
+      }
+
+      lastFileBox.textContent = `Dernier fichier : ${filename}`;
+      setStatus("Image ouverte. Sur iPhone : appui long sur l’image puis “Enregistrer dans Photos”.");
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
+
     function downloadBlob(blob, filename) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -518,7 +501,13 @@
       const mime = capturedBlob.type || formatSelect.value;
       const fileName = buildFileName(selectedLabel, mime);
 
-      downloadBlob(capturedBlob, fileName);
+      if (isIOS()) {
+        openBlobForManualSave(capturedBlob, fileName);
+      } else {
+        downloadBlob(capturedBlob, fileName);
+        lastFileBox.textContent = `Dernier fichier : ${fileName}`;
+        setStatus(`Téléchargé : ${fileName}`);
+      }
 
       if (selectedLabel === "balle") counters.balle += 1;
       else counters.pas_balle += 1;
@@ -529,8 +518,6 @@
         label: selectedLabel,
         fileName
       };
-      lastFileBox.textContent = `Dernier fichier : ${fileName}`;
-      setStatus(`Téléchargé : ${fileName}`);
 
       if (stream) {
         setLiveMode();
@@ -544,8 +531,8 @@
       if (lastSaved.label === "pas_balle" && counters.pas_balle > 0) counters.pas_balle -= 1;
 
       updateCounters();
-      lastFileBox.textContent = `Dernier fichier supprimé du compteur : ${lastSaved.fileName}`;
-      setStatus("Compteur corrigé. Supprime aussi le fichier téléchargé si besoin.");
+      lastFileBox.textContent = `Dernier fichier annulé du compteur : ${lastSaved.fileName}`;
+      setStatus("Compteur corrigé. Supprime aussi l’image enregistrée si besoin.");
       lastSaved = null;
       deleteLastBtn.disabled = true;
     }
