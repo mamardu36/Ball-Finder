@@ -6,22 +6,23 @@
   <title>Ball Finder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
   <style>
     :root {
-      --ink:    #0b0e17;
-      --deep:   #0e1420;
-      --slate:  #141c2e;
-      --card:   #1a2238;
+      --ink: #0b0e17;
+      --deep: #0e1420;
+      --slate: #141c2e;
+      --card: #1a2238;
       --border: rgba(255,255,255,0.07);
-      --gold:   #e8a830;
-      --gold2:  #c88820;
-      --goldf:  #f4c060;
-      --blue:   #3a7bd5;
-      --blue2:  #2860b8;
-      --white:  #eef2f8;
-      --muted:  #6a7a96;
-      --ok:     #28c96a;
-      --warn:   #e8a030;
+      --gold: #e8a830;
+      --gold2: #c88820;
+      --goldf: #f4c060;
+      --blue: #3a7bd5;
+      --blue2: #2860b8;
+      --white: #eef2f8;
+      --muted: #6a7a96;
+      --ok: #28c96a;
+      --warn: #e8a030;
       --danger: #e84040;
     }
 
@@ -303,7 +304,7 @@
     .home-panel {
       position: relative;
       z-index: 4;
-      padding: 30px 26px calc(env(safe-area-inset-bottom, 0px) + 36px);
+      padding: 30px 26px calc(env(safe-area-inset-bottom,0px) + 36px);
       display: flex;
       flex-direction: column;
       gap: 22px;
@@ -355,42 +356,6 @@
       color: var(--muted);
       line-height: 1.6;
       max-width: 32ch;
-    }
-
-    .stats-row {
-      display: flex;
-      gap: 0;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
-      background: rgba(255,255,255,0.03);
-    }
-
-    .stat-item {
-      flex: 1;
-      padding: 14px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      border-right: 1px solid var(--border);
-    }
-
-    .stat-item:last-child {
-      border-right: none;
-    }
-
-    .stat-val {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--white);
-      letter-spacing: -0.02em;
-    }
-
-    .stat-label {
-      font-size: 0.72rem;
-      color: var(--muted);
-      font-weight: 500;
     }
 
     .start-btn {
@@ -448,10 +413,6 @@
       animation-delay: 0.24s;
     }
 
-    .home-panel > *:nth-child(5) {
-      animation-delay: 0.31s;
-    }
-
     @keyframes riseUp {
       to {
         opacity: 1;
@@ -496,7 +457,7 @@
 
     .hud-top {
       position: absolute;
-      top: calc(env(safe-area-inset-top, 0px) + 14px);
+      top: calc(env(safe-area-inset-top,0px) + 14px);
       left: 16px;
       right: 16px;
       display: flex;
@@ -553,32 +514,11 @@
       color: var(--gold);
     }
 
-    .mode-tag {
-      position: absolute;
-      left: 16px;
-      bottom: calc(env(safe-area-inset-bottom, 0px) + 148px);
-      padding: 7px 12px;
-      border-radius: 9px;
-      background: rgba(11,14,23,0.55);
-      border: 1px solid rgba(255,255,255,0.08);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      pointer-events: auto;
-      appearance: none;
-      cursor: pointer;
-    }
-
     .reticle {
       position: absolute;
       left: 50%;
       top: 50%;
-      transform: translate(-50%, -50%);
+      transform: translate(-50%,-50%);
       width: 92px;
       height: 92px;
       opacity: 0;
@@ -668,7 +608,7 @@
       position: absolute;
       left: 16px;
       right: 16px;
-      bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+      bottom: calc(env(safe-area-inset-bottom,0px) + 20px);
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -774,37 +714,10 @@
           </radialGradient>
         </defs>
 
-        <ellipse
-          cx="195"
-          cy="420"
-          rx="340"
-          ry="250"
-          fill="url(#rough)"
-        />
-
-        <ellipse
-          cx="195"
-          cy="400"
-          rx="200"
-          ry="170"
-          fill="url(#fairway)"
-        />
-
-        <ellipse
-          cx="195"
-          cy="380"
-          rx="120"
-          ry="100"
-          fill="url(#green)"
-        />
-
-        <ellipse
-          cx="195"
-          cy="360"
-          rx="340"
-          ry="250"
-          fill="url(#glow)"
-        />
+        <ellipse cx="195" cy="420" rx="340" ry="250" fill="url(#rough)"/>
+        <ellipse cx="195" cy="400" rx="200" ry="170" fill="url(#fairway)"/>
+        <ellipse cx="195" cy="380" rx="120" ry="100" fill="url(#green)"/>
+        <ellipse cx="195" cy="360" rx="340" ry="250" fill="url(#glow)"/>
 
         <g opacity="0.06" stroke="#fff" stroke-width="1">
           <line x1="50" y1="280" x2="340" y2="296"/>
@@ -840,29 +753,9 @@
           fill="rgba(0,0,0,0.4)"
         />
 
-        <circle
-          cx="255"
-          cy="302"
-          r="5.5"
-          fill="#fff"
-          opacity="0.55"
-        />
-
-        <circle
-          cx="144"
-          cy="294"
-          r="4"
-          fill="#fff"
-          opacity="0.35"
-        />
-
-        <circle
-          cx="218"
-          cy="328"
-          r="3.5"
-          fill="#fff"
-          opacity="0.28"
-        />
+        <circle cx="255" cy="302" r="5.5" fill="#fff" opacity="0.55"/>
+        <circle cx="144" cy="294" r="4" fill="#fff" opacity="0.35"/>
+        <circle cx="218" cy="328" r="3.5" fill="#fff" opacity="0.28"/>
       </svg>
     </div>
 
@@ -903,7 +796,6 @@
     </div>
 
     <div class="home-panel">
-
       <div class="eyebrow">
         <div class="eyebrow-line"></div>
         <div class="eyebrow-text">
@@ -921,12 +813,7 @@
       </p>
 
       <button class="start-btn" id="startExperienceBtn">
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-        >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
           <path
             d="M5 12a7 7 0 1 0 14 0A7 7 0 0 0 5 12Z"
             stroke="#0b0e17"
@@ -941,7 +828,6 @@
 
         Lancer la recherche
       </button>
-
     </div>
   </section>
 
@@ -949,38 +835,20 @@
 
   <section class="screen" id="cameraScreen">
     <div class="viewer">
-
       <canvas id="canvas"></canvas>
-
-      <video
-        id="video"
-        playsinline
-        autoplay
-        muted
-      ></video>
+      <video id="video" playsinline autoplay muted></video>
 
       <div class="hud">
-
         <div class="hud-top">
-
           <div class="glass-pill">
             <div class="live-dot"></div>
-            <div class="hud-title">
-              BALL FINDER
-            </div>
+            <div class="hud-title">BALL FINDER</div>
           </div>
 
           <div class="glass-pill">
-            <div class="zoom-badge" id="zoomPill">
-              × 1.0
-            </div>
+            <div class="zoom-badge" id="zoomPill">× 1.0</div>
           </div>
-
         </div>
-
-        <button class="mode-tag" id="tintAdjustBtn">
-          🌱 Filtre : Auto
-        </button>
 
         <div class="reticle" id="focusRing">
           <div class="ret-outer"></div>
@@ -988,12 +856,10 @@
         </div>
 
         <div class="scan-sweep" id="scanLine"></div>
-
       </div>
 
       <div class="cam-bottom">
         <div class="cam-actions">
-
           <button class="btn-ghost" id="zoomOutBtn">
             ↙ Dézoomer
           </button>
@@ -1001,10 +867,8 @@
           <button class="btn-found" id="ballFoundBtn">
             ✓ Balle trouvée
           </button>
-
         </div>
       </div>
-
     </div>
   </section>
 
@@ -1024,7 +888,6 @@
     const zoomPill = document.getElementById("zoomPill");
     const focusRing = document.getElementById("focusRing");
     const scanLine = document.getElementById("scanLine");
-    const tintAdjustBtn = document.getElementById("tintAdjustBtn");
 
     let stream = null;
     let videoTrack = null;
@@ -1097,52 +960,11 @@
       chroma: 20
     };
 
-    let tintModeIndex = 0;
-
-    const tintModes = [
-      {
-        label: "Auto",
-        strength: 1.00
-      },
-      {
-        label: "Doux",
-        strength: 0.85
-      },
-      {
-        label: "Moyen",
-        strength: 1.10
-      },
-      {
-        label: "Fort",
-        strength: 1.30
-      },
-      {
-        label: "Max",
-        strength: 1.55
-      }
-    ];
-
-    let userTintStrength = tintModes[tintModeIndex].strength;
+    const userTintStrength = 1.0;
 
     function setStatus() {}
 
     function setHint() {}
-
-    function updateTintButton() {
-      const mode = tintModes[tintModeIndex];
-
-      tintAdjustBtn.textContent =
-        `🌱 Filtre : ${mode.label}`;
-
-      userTintStrength = mode.strength;
-    }
-
-    function cycleTintMode() {
-      tintModeIndex =
-        (tintModeIndex + 1) % tintModes.length;
-
-      updateTintButton();
-    }
 
     function showScreen(name) {
       homeScreen.classList.toggle(
@@ -3113,9 +2935,7 @@
       );
 
       ctx.save();
-
       ctx.fillStyle = gradient;
-
       ctx.beginPath();
 
       ctx.arc(
@@ -4014,7 +3834,6 @@
         video.srcObject = stream;
 
         await video.play();
-
         await setupCameraZoomSupport();
 
         latestRawFrame = null;
@@ -4029,15 +3848,6 @@
           lum: 120,
           chroma: 20
         };
-
-        tintModeIndex = 0;
-
-        userTintStrength =
-          tintModes[
-            tintModeIndex
-          ].strength;
-
-        updateTintButton();
 
         zoomState = {
           scale: 1,
@@ -4057,7 +3867,15 @@
         }
 
         processFrame();
-      } catch (error) {}
+      } catch (error) {
+        console.error(
+          "Impossible de démarrer la caméra :",
+          error
+        );
+
+        stopCamera();
+        showScreen("home");
+      }
     }
 
     function stopCamera() {
@@ -4102,15 +3920,6 @@
         lum: 120,
         chroma: 20
       };
-
-      tintModeIndex = 0;
-
-      userTintStrength =
-        tintModes[
-          tintModeIndex
-        ].strength;
-
-      updateTintButton();
 
       zoomState = {
         scale: 1,
@@ -4166,15 +3975,6 @@
         resetZoom
       );
 
-    document
-      .getElementById(
-        "tintAdjustBtn"
-      )
-      .addEventListener(
-        "click",
-        cycleTintMode
-      );
-
     canvas.addEventListener(
       "pointerdown",
       handlePointerDown
@@ -4200,7 +4000,6 @@
       stopCamera
     );
 
-    updateTintButton();
     updateZoomUi();
   </script>
 
