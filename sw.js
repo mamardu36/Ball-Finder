@@ -1,4 +1,4 @@
-const CACHE_NAME = "ball-finder-v3";
+const CACHE_NAME = "ball-finder-v4";
 
 const ASSETS = [
   "./",
@@ -41,10 +41,10 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        const responseCopy = response.clone();
+        const copy = response.clone();
 
         caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseCopy);
+          cache.put(event.request, copy);
         });
 
         return response;
