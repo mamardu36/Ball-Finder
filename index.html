@@ -826,12 +826,12 @@ const greenEvidence =
 const dryEvidenceAllowed =
 dryBladeRatio >= 0.085 &&
 dryCoverage >= 0.30 &&
-colorSpread >= 0.020;
+colorSpread >= 0.032;
 const dryEvidence = dryEvidenceAllowed
 ? (
 0.50 * clamp01((dryBladeRatio - 0.085) / 0.18) +
 0.31 * clamp01((dryCoverage - 0.30) / 0.48) +
-0.19 * clamp01((colorSpread - 0.020) / 0.075)
+0.19 * clamp01((colorSpread - 0.032) / 0.075)
 )
 : 0;
 const rawSceneConfidence = clamp01(Math.max(greenEvidence, dryEvidence));
@@ -878,7 +878,118 @@ terrainModel.ready = true;
 buildTerrainLut();
 }
 
-function updateTemporalVegetationMask(candidateMask, width, height) {
+function expandVegetationMask(seedMask, affinityMask, data, width, height) {
+const allowed = new Uint8Array(width * height);
+for (let index = 0; index < allowed.length; index++) {
+if (seedMask[index]) {
+allowed[index] = 255;
+continue;
+}
+const dataIndex = index * 4;
+const r = data[dataIndex];
+const g = data[dataIndex + 1];
+const b = data[dataIndex + 2];
+const feature = getColorFeatures(r, g, b);
+const affinity = affinityMask[index] / 255;
+const relaxedGreen = strictGreenPrior(feature) >= 0.24;
+const relaxedDry =
+terrainModel.allowDryTerrain &&
+dryGrassColorPrior(feature) >= 0.34;
+if (
+affinity >= 0.25 &&
+(relaxedGreen || relaxedDry)
+) {
+allowed[index] = 255;
+}
+}
+let grown = new Uint8Array(seedMask);
+for (let pass = 0; pass < 5; pass++) {
+const next = new Uint8Array(grown);
+for (let y = 1; y < height - 1; y++) {
+for (let x = 1; x < width - 1; x++) {
+const index = y * width + x;
+if (grown[index] || !allowed[index]) continue;
+let directNeighbours = 0;
+let wideNeighbours = 0;
+for (let dy = -1; dy <= 1; dy++) {
+for (let dx = -1; dx <= 1; dx++) {
+if (!dx && !dy) continue;
+if (grown[(y + dy) * width + x + dx]) {
+directNeighbours++;
+}
+}
+}
+for (let dy = -2; dy <= 2; dy++) {
+for (let dx = -2; dx <= 2; dx++) {
+if (!dx && !dy) continue;
+if (grown[(y + dy) * width + x + dx]) {
+wideNeighbours++;
+}
+}
+}
+const affinity = affinityMask[index] / 255;
+if (
+directNeighbours >= 2 ||
+(directNeighbours >= 1 && affinity >= 0.54) ||
+(wideNeighbours >= 7 && affinity >= 0.34)
+) {
+next[index] = 255;
+}
+}
+}
+grown = next;
+}
+for (let pass = 0; pass < 3; pass++) {
+const next = new Uint8Array(grown);
+for (let y = 2; y < height - 2; y++) {
+for (let x = 2; x < width - 2; x++) {
+const index = y * width + x;
+let closeNeighbours = 0;
+let wideNeighbours = 0;
+for (let dy = -1; dy <= 1; dy++) {
+for (let dx = -1; dx <= 1; dx++) {
+if (!dx && !dy) continue;
+if (grown[(y + dy) * width + x + dx]) {
+closeNeighbours++;
+}
+}
+}
+for (let dy = -2; dy <= 2; dy++) {
+for (let dx = -2; dx <= 2; dx++) {
+if (!dx && !dy) continue;
+if (grown[(y + dy) * width + x + dx]) {
+wideNeighbours++;
+}
+}
+}
+if (
+!grown[index] &&
+allowed[index] &&
+(closeNeighbours >= 5 || wideNeighbours >= 15)
+) {
+next[index] = 255;
+}
+if (
+grown[index] &&
+closeNeighbours === 0 &&
+wideNeighbours < 3
+) {
+next[index] = 0;
+}
+}
+}
+grown = next;
+}
+return grown;
+}
+
+function updateTemporalVegetationMask(
+candidateMask,
+affinityMask,
+data,
+width,
+height
+) {
 const key = `${width}x${height}`;
 let history = vegetationHistories.get(key);
 if (!history) {
@@ -888,18 +999,23 @@ confirmed: new Uint8Array(width * height)
 };
 vegetationHistories.set(key, history);
 }
-const enabled = terrainModel.tintEnabled && terrainModel.sceneConfidence >= 0.48;
+const enabled =
+terrainModel.tintEnabled &&
+terrainModel.sceneConfidence >= 0.48;
 for (let index = 0; index < candidateMask.length; index++) {
 let confidence = history.confidence[index];
 if (enabled && candidateMask[index]) {
-confidence = Math.min(255, confidence + 54);
+confidence = Math.min(255, confidence + 58);
 } else {
-confidence = Math.max(0, confidence - (enabled ? 24 : 58));
+confidence = Math.max(
+0,
+confidence - (enabled ? 18 : 62)
+);
 }
 history.confidence[index] = confidence;
-if (confidence >= 158) {
+if (confidence >= 148) {
 history.confirmed[index] = 255;
-} else if (confidence < 92) {
+} else if (confidence < 76) {
 history.confirmed[index] = 0;
 }
 }
@@ -907,18 +1023,37 @@ const cleaned = new Uint8Array(history.confirmed);
 for (let y = 1; y < height - 1; y++) {
 for (let x = 1; x < width - 1; x++) {
 const index = y * width + x;
-if (!history.confirmed[index]) continue;
 let neighbours = 0;
 for (let dy = -1; dy <= 1; dy++) {
 for (let dx = -1; dx <= 1; dx++) {
 if (!dx && !dy) continue;
-if (history.confirmed[(y + dy) * width + x + dx]) neighbours++;
+if (
+history.confirmed[
+(y + dy) * width + x + dx
+]
+) {
+neighbours++;
 }
 }
-if (neighbours <= 1) cleaned[index] = 0;
+}
+if (
+history.confirmed[index] &&
+neighbours <= 1
+) {
+cleaned[index] = 0;
 }
 }
-history.confirmed.set(cleaned);
+}
+const expanded = enabled
+? expandVegetationMask(
+cleaned,
+affinityMask,
+data,
+width,
+height
+)
+: cleaned;
+history.confirmed.set(expanded);
 return new Uint8Array(history.confirmed);
 }
 function segmentMasks(frameData, w, h, scale = PROCESS_SCALE, strict = false) {
@@ -1069,7 +1204,13 @@ if (whiteNeighbours >= 5) closedWhiteMask[index] = 255;
 whiteMask.set(closedWhiteMask);
 let finalTerrainMask = terrainMask;
 if (!strict) {
-finalTerrainMask = updateTemporalVegetationMask(terrainMask, pW, pH);
+finalTerrainMask = updateTemporalVegetationMask(
+terrainMask,
+terrainAffinityMask,
+data,
+pW,
+pH
+);
 latestVegetationMask = {
 data: new Uint8Array(finalTerrainMask),
 width: pW,
@@ -1674,26 +1815,58 @@ return true;
 });
 }
 function drawTrackHighlight(t) {
-const r = Math.max(8, Math.min(42, t.radius * 1.35));
-const alpha = Math.max(0.18, Math.min(0.95, t.confidence));
-const grad = ctx.createRadialGradient(t.x, t.y, r * 0.18, t.x, t.y, r * 1.55);
-grad.addColorStop(0, `rgba(255,255,255,${0.34 * alpha})`);
-grad.addColorStop(0.35, `rgba(255,255,255,${0.22 * alpha})`);
-grad.addColorStop(1, `rgba(255,255,255,0)`);
+const radius = Math.max(
+11,
+Math.min(34, t.radius * 1.55)
+);
+const alpha = Math.max(
+0.42,
+Math.min(0.82, t.confidence)
+);
+const cornerLength = Math.max(
+5,
+Math.min(10, radius * 0.34)
+);
+const left = t.x - radius;
+const right = t.x + radius;
+const top = t.y - radius;
+const bottom = t.y + radius;
 ctx.save();
-ctx.fillStyle = grad;
-ctx.beginPath();
-ctx.arc(t.x, t.y, r * 1.55, 0, Math.PI * 2);
-ctx.fill();
+ctx.lineCap = "round";
+ctx.lineJoin = "round";
 ctx.lineWidth = 2;
-ctx.strokeStyle = `rgba(255,255,255,${0.72 * alpha})`;
+ctx.strokeStyle =
+`rgba(232,168,48,${alpha})`;
 ctx.beginPath();
-ctx.arc(t.x, t.y, r, 0, Math.PI * 2);
+ctx.moveTo(left, top + cornerLength);
+ctx.lineTo(left, top);
+ctx.lineTo(left + cornerLength, top);
+ctx.moveTo(right - cornerLength, top);
+ctx.lineTo(right, top);
+ctx.lineTo(right, top + cornerLength);
+ctx.moveTo(left, bottom - cornerLength);
+ctx.lineTo(left, bottom);
+ctx.lineTo(left + cornerLength, bottom);
+ctx.moveTo(right - cornerLength, bottom);
+ctx.lineTo(right, bottom);
+ctx.lineTo(right, bottom - cornerLength);
 ctx.stroke();
 ctx.lineWidth = 1;
-ctx.strokeStyle = `rgba(232,168,48,${0.70 * alpha})`;
+ctx.strokeStyle =
+`rgba(255,255,255,${alpha * 0.72})`;
 ctx.beginPath();
-ctx.arc(t.x, t.y, r * 1.28, 0, Math.PI * 2);
+ctx.moveTo(left + 2, top + cornerLength);
+ctx.lineTo(left + 2, top + 2);
+ctx.lineTo(left + cornerLength, top + 2);
+ctx.moveTo(right - cornerLength, top + 2);
+ctx.lineTo(right - 2, top + 2);
+ctx.lineTo(right - 2, top + cornerLength);
+ctx.moveTo(left + 2, bottom - cornerLength);
+ctx.lineTo(left + 2, bottom - 2);
+ctx.lineTo(left + cornerLength, bottom - 2);
+ctx.moveTo(right - cornerLength, bottom - 2);
+ctx.lineTo(right - 2, bottom - 2);
+ctx.lineTo(right - 2, bottom - cornerLength);
 ctx.stroke();
 ctx.restore();
 }
@@ -1733,7 +1906,7 @@ if (!canTint) continue;
 const maskX = Math.min(mask.width - 1, Math.floor(x * maskScaleX));
 if (!mask.data[maskRow + maskX]) continue;
 const affinity = terrainAffinityFast(r, g, b);
-if (affinity < 0.50) continue;
+if (affinity < 0.24) continue;
 const currentLuminance = luminance(r, g, b);
 const texture = Math.max(0.40, Math.min(1.68, currentLuminance / 92));
 const targetR = 24 * texture;
@@ -1841,13 +2014,16 @@ updateTracks(latestDetectedCandidates);
 applyNightBlueTint(full.data, fw, fh);
 updateZoom();
 renderProcessedFrame(full, fw, fh);
-const visibleTracks = getVisibleTracks().sort((a, b) => b.confidence - a.confidence);
-for (const track of visibleTracks) drawTrackHighlight(track);
-if (inspectionState && inspectionState.until > performance.now()) {
-ctx.strokeStyle = "rgba(232,168,48,0.65)";
-ctx.lineWidth = 2;
-ctx.strokeRect(18, 18, fw - 36, fh - 36);
-} else {
+const visibleTracks = getVisibleTracks()
+.sort((a, b) => b.confidence - a.confidence)
+.slice(0, 3);
+for (const track of visibleTracks) {
+drawTrackHighlight(track);
+}
+if (
+inspectionState &&
+inspectionState.until <= performance.now()
+) {
 inspectionState = null;
 }
 }
@@ -1952,7 +2128,6 @@ tracks = [];
 exclusionZones = [];
 terrainModel = createDefaultTerrainModel();
 latestVegetationMask = null;
-vegetationHistories.clear();
 buildTerrainLut();
 zoomState = { scale: 1, targetScale: 1, centerX: .5, centerY: .5 };
 inspectionState = null;
@@ -1997,7 +2172,6 @@ tracks = [];
 exclusionZones = [];
 terrainModel = createDefaultTerrainModel();
 latestVegetationMask = null;
-vegetationHistories.clear();
 buildTerrainLut();
 zoomState = { scale: 1, targetScale: 1, centerX: .5, centerY: .5 };
 updateZoomUi();
