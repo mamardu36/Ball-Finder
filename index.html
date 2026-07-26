@@ -1,4039 +1,1832 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
-  <title>Ball Finder</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      --ink:    #0b0e17;
-      --deep:   #0e1420;
-      --slate:  #141c2e;
-      --card:   #1a2238;
-      --border: rgba(255,255,255,0.07);
-      --gold:   #e8a830;
-      --gold2:  #c88820;
-      --goldf:  #f4c060;
-      --blue:   #3a7bd5;
-      --blue2:  #2860b8;
-      --white:  #eef2f8;
-      --muted:  #6a7a96;
-      --ok:     #28c96a;
-      --warn:   #e8a030;
-      --danger: #e84040;
-    }
-
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-      margin: 0;
-      padding: 0;
-    }
-
-    html,
-    body {
-      height: 100%;
-      font-family: 'DM Sans', sans-serif;
-      overflow: hidden;
-      background: var(--ink);
-      color: var(--white);
-    }
-
-    .screen {
-      display: none;
-      width: 100%;
-      height: 100%;
-    }
-
-    .screen.active {
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ════════════════════════════
-       HOME
-    ════════════════════════════ */
-
-    #homeScreen {
-      background: var(--deep);
-      position: relative;
-      overflow: hidden;
-      justify-content: flex-end;
-    }
-
-    .atmo {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-    }
-
-    .atmo-glow-gold {
-      position: absolute;
-      top: -8%;
-      right: -12%;
-      width: 55vw;
-      height: 55vw;
-      max-width: 380px;
-      max-height: 380px;
-      border-radius: 50%;
-      background: radial-gradient(
-        circle,
-        rgba(232,168,48,0.14) 0%,
-        transparent 68%
-      );
-    }
-
-    .atmo-glow-blue {
-      position: absolute;
-      top: 20%;
-      left: -18%;
-      width: 50vw;
-      height: 50vw;
-      max-width: 320px;
-      max-height: 320px;
-      border-radius: 50%;
-      background: radial-gradient(
-        circle,
-        rgba(58,123,213,0.10) 0%,
-        transparent 68%
-      );
-    }
-
-    .atmo-grid {
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(
-          rgba(255,255,255,0.025) 1px,
-          transparent 1px
-        ),
-        linear-gradient(
-          90deg,
-          rgba(255,255,255,0.025) 1px,
-          transparent 1px
-        );
-      background-size: 42px 42px;
-    }
-
-    .horizon {
-      position: absolute;
-      top: 44%;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(232,168,48,0.25) 35%,
-        rgba(232,168,48,0.25) 65%,
-        transparent
-      );
-    }
-
-    .fairway-wrap {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 58%;
-    }
-
-    .fairway-wrap svg {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    .hero-ball {
-      position: absolute;
-      left: 50%;
-      top: 36%;
-      transform: translate(-50%, -50%);
-      z-index: 3;
-    }
-
-    .ball-shadow {
-      position: absolute;
-      bottom: -18px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 56px;
-      height: 10px;
-      border-radius: 50%;
-      background: rgba(0,0,0,0.5);
-      filter: blur(6px);
-      animation: shadowPulse 3s ease-in-out infinite;
-    }
-
-    @keyframes shadowPulse {
-      0%,
-      100% {
-        transform: translateX(-50%) scaleX(0.8);
-        opacity: 0.5;
-      }
-
-      50% {
-        transform: translateX(-50%) scaleX(1.1);
-        opacity: 0.25;
-      }
-    }
-
-    .ball-sphere {
-      width: 68px;
-      height: 68px;
-      border-radius: 50%;
-      background: radial-gradient(
-        circle at 36% 30%,
-        #ffffff 0%,
-        #e8eee8 48%,
-        #c4d4c4 100%
-      );
-      box-shadow:
-        0 0 0 1px rgba(255,255,255,0.3),
-        0 0 28px rgba(232,168,48,0.30),
-        0 12px 30px rgba(0,0,0,0.55);
-      animation: ballFloat 3s ease-in-out infinite;
-      position: relative;
-    }
-
-    .ball-sphere::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      background-image: radial-gradient(
-        circle,
-        rgba(0,0,0,0.07) 1px,
-        transparent 1px
-      );
-      background-size: 9px 9px;
-      background-position: 4px 4px;
-    }
-
-    @keyframes ballFloat {
-      0%,
-      100% {
-        transform: translateY(0);
-      }
-
-      50% {
-        transform: translateY(-12px);
-      }
-    }
-
-    .scan-ring {
-      position: absolute;
-      left: 50%;
-      top: 36%;
-      transform: translate(-50%, -50%);
-      width: 128px;
-      height: 128px;
-      z-index: 2;
-    }
-
-    .scan-ring svg {
-      width: 100%;
-      height: 100%;
-      animation: ringRotate 12s linear infinite;
-    }
-
-    @keyframes ringRotate {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    .ring-inner {
-      position: absolute;
-      inset: 18px;
-      border-radius: 50%;
-      border: 1px solid rgba(232,168,48,0.2);
-    }
-
-    .corner-marks {
-      position: absolute;
-      left: 50%;
-      top: 36%;
-      transform: translate(-50%, -50%);
-      width: 160px;
-      height: 160px;
-      z-index: 2;
-    }
-
-    .corner-marks::before,
-    .corner-marks::after,
-    .cm-b::before,
-    .cm-b::after {
-      content: '';
-      position: absolute;
-      width: 14px;
-      height: 14px;
-      border-color: rgba(232,168,48,0.6);
-      border-style: solid;
-    }
-
-    .corner-marks::before {
-      top: 0;
-      left: 0;
-      border-width: 2px 0 0 2px;
-    }
-
-    .corner-marks::after {
-      top: 0;
-      right: 0;
-      border-width: 2px 2px 0 0;
-    }
-
-    .cm-b::before {
-      bottom: 0;
-      left: 0;
-      border-width: 0 0 2px 2px;
-    }
-
-    .cm-b::after {
-      bottom: 0;
-      right: 0;
-      border-width: 0 2px 2px 0;
-    }
-
-    .home-panel {
-      position: relative;
-      z-index: 4;
-      padding: 30px 26px calc(env(safe-area-inset-bottom,0px) + 36px);
-      display: flex;
-      flex-direction: column;
-      gap: 22px;
-      background: linear-gradient(
-        0deg,
-        var(--deep) 72%,
-        transparent
-      );
-    }
-
-    .eyebrow {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .eyebrow-line {
-      width: 28px;
-      height: 2px;
-      background: var(--gold);
-      border-radius: 2px;
-    }
-
-    .eyebrow-text {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 0.78rem;
-      font-weight: 600;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--gold);
-    }
-
-    .home-title {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: clamp(3.6rem, 15vw, 5.8rem);
-      font-weight: 800;
-      line-height: 0.88;
-      letter-spacing: -0.01em;
-      color: var(--white);
-    }
-
-    .home-title span {
-      color: var(--gold);
-      display: block;
-    }
-
-    .home-sub {
-      font-size: 0.92rem;
-      color: var(--muted);
-      line-height: 1.6;
-      max-width: 32ch;
-    }
-
-    .start-btn {
-      appearance: none;
-      border: none;
-      cursor: pointer;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 1.15rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      border-radius: 16px;
-      padding: 20px 28px;
-      color: var(--ink);
-      background: linear-gradient(
-        135deg,
-        var(--goldf) 0%,
-        var(--gold) 55%,
-        var(--gold2) 100%
-      );
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.3),
-        0 14px 28px rgba(200,136,32,0.35);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      transition: transform 0.13s, box-shadow 0.13s;
-    }
-
-    .start-btn:active {
-      transform: scale(0.97);
-      box-shadow: 0 6px 12px rgba(200,136,32,0.2);
-    }
-
-    .home-panel > * {
-      opacity: 0;
-      transform: translateY(16px);
-      animation: riseUp 0.5s ease forwards;
-    }
-
-    .home-panel > *:nth-child(1) {
-      animation-delay: 0.04s;
-    }
-
-    .home-panel > *:nth-child(2) {
-      animation-delay: 0.10s;
-    }
-
-    .home-panel > *:nth-child(3) {
-      animation-delay: 0.17s;
-    }
-
-    .home-panel > *:nth-child(4) {
-      animation-delay: 0.24s;
-    }
-
-    @keyframes riseUp {
-      to {
-        opacity: 1;
-        transform: none;
-      }
-    }
-
-    /* ════════════════════════════
-       CAMERA
-    ════════════════════════════ */
-
-    #cameraScreen {
-      position: fixed;
-      inset: 0;
-      background: #000;
-      overflow: hidden;
-    }
-
-    .viewer {
-      position: absolute;
-      inset: 0;
-    }
-
-    canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
-      background: #000;
-      touch-action: none;
-      object-fit: cover;
-    }
-
-    video {
-      display: none;
-    }
-
-    .hud {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-    }
-
-    .hud-top {
-      position: absolute;
-      top: calc(env(safe-area-inset-top,0px) + 14px);
-      left: 16px;
-      right: 16px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .glass-pill {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 15px;
-      border-radius: 14px;
-      background: rgba(11,14,23,0.62);
-      border: 1px solid rgba(255,255,255,0.10);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-    }
-
-    .live-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--ok);
-      box-shadow: 0 0 8px var(--ok);
-      animation: blink 2s ease-in-out infinite;
-    }
-
-    @keyframes blink {
-      0%,
-      100% {
-        opacity: 1;
-      }
-
-      50% {
-        opacity: 0.25;
-      }
-    }
-
-    .hud-title {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 1rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      color: var(--white);
-    }
-
-    .zoom-badge {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 1.05rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      color: var(--gold);
-    }
-
-    .reticle {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%,-50%);
-      width: 92px;
-      height: 92px;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
-    .reticle.active {
-      opacity: 1;
-    }
-
-    .ret-outer {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.88);
-      box-shadow:
-        0 0 20px rgba(255,255,255,0.2),
-        inset 0 0 20px rgba(255,255,255,0.05);
-      animation: retPop 0.3s ease forwards;
-    }
-
-    .ret-inner {
-      position: absolute;
-      inset: 13px;
-      border-radius: 50%;
-      border: 1px solid rgba(232,168,48,0.7);
-    }
-
-    @keyframes retPop {
-      0% {
-        transform: scale(0.82);
-        opacity: 0;
-      }
-
-      70% {
-        transform: scale(1.05);
-      }
-
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
-    }
-
-    .scan-sweep {
-      position: absolute;
-      left: 20%;
-      right: 20%;
-      top: 50%;
-      height: 2px;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(232,168,48,0.9) 50%,
-        transparent
-      );
-      box-shadow: 0 0 10px rgba(232,168,48,0.5);
-      opacity: 0;
-    }
-
-    .scan-sweep.active {
-      opacity: 1;
-      animation: sweep 0.65s ease-in-out forwards;
-    }
-
-    @keyframes sweep {
-      0% {
-        transform: translateY(-48px);
-        opacity: 0;
-      }
-
-      20% {
-        opacity: 1;
-      }
-
-      80% {
-        opacity: 1;
-      }
-
-      100% {
-        transform: translateY(48px);
-        opacity: 0;
-      }
-    }
-
-    .cam-bottom {
-      position: absolute;
-      left: 16px;
-      right: 16px;
-      bottom: calc(env(safe-area-inset-bottom,0px) + 20px);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      pointer-events: none;
-    }
-
-    .cam-actions {
-      display: flex;
-      gap: 10px;
-      pointer-events: auto;
-    }
-
-    .btn-ghost {
-      appearance: none;
-      border: 1px solid rgba(255,255,255,0.14);
-      border-radius: 14px;
-      padding: 15px 16px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.88rem;
-      font-weight: 600;
-      cursor: pointer;
-      color: rgba(255,255,255,0.75);
-      background: rgba(11,14,23,0.60);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      white-space: nowrap;
-      transition: background 0.13s;
-    }
-
-    .btn-ghost:active {
-      background: rgba(30,40,60,0.80);
-    }
-
-    .btn-found {
-      flex: 1;
-      appearance: none;
-      border: none;
-      border-radius: 14px;
-      padding: 15px 20px;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: 1.05rem;
-      font-weight: 700;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      cursor: pointer;
-      color: var(--ink);
-      background: linear-gradient(
-        135deg,
-        var(--goldf) 0%,
-        var(--gold) 55%,
-        var(--gold2) 100%
-      );
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.28),
-        0 10px 22px rgba(200,136,32,0.40);
-      transition: transform 0.12s;
-    }
-
-    .btn-found:active {
-      transform: scale(0.97);
-    }
-  </style>
-</head>
-
-<body>
-
-  <section class="screen active" id="homeScreen">
-
-    <div class="atmo">
-      <div class="atmo-glow-gold"></div>
-      <div class="atmo-glow-blue"></div>
-      <div class="atmo-grid"></div>
-      <div class="horizon"></div>
-    </div>
-
-    <div class="fairway-wrap">
-      <svg
-        viewBox="0 0 390 360"
-        xmlns="http://www.w3.org/2000/svg"
-        preserveAspectRatio="xMidYMax slice"
-      >
-        <defs>
-          <linearGradient id="rough" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#12281a"/>
-            <stop offset="100%" stop-color="#0a1610"/>
-          </linearGradient>
-
-          <linearGradient id="fairway" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#1e5c30"/>
-            <stop offset="100%" stop-color="#122018"/>
-          </linearGradient>
-
-          <linearGradient id="green" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#267840"/>
-            <stop offset="100%" stop-color="#1a5028"/>
-          </linearGradient>
-
-          <radialGradient id="glow" cx="50%" cy="40%" r="50%">
-            <stop offset="0%" stop-color="rgba(232,168,48,0.10)"/>
-            <stop offset="100%" stop-color="transparent"/>
-          </radialGradient>
-        </defs>
-
-        <ellipse cx="195" cy="420" rx="340" ry="250" fill="url(#rough)"/>
-        <ellipse cx="195" cy="400" rx="200" ry="170" fill="url(#fairway)"/>
-        <ellipse cx="195" cy="380" rx="120" ry="100" fill="url(#green)"/>
-        <ellipse cx="195" cy="360" rx="340" ry="250" fill="url(#glow)"/>
-
-        <g opacity="0.06" stroke="#fff" stroke-width="1">
-          <line x1="50" y1="280" x2="340" y2="296"/>
-          <line x1="50" y1="304" x2="340" y2="320"/>
-          <line x1="50" y1="328" x2="340" y2="344"/>
-          <line x1="110" y1="260" x2="116" y2="380"/>
-          <line x1="152" y1="258" x2="158" y2="380"/>
-          <line x1="194" y1="256" x2="200" y2="380"/>
-          <line x1="236" y1="258" x2="242" y2="380"/>
-          <line x1="276" y1="262" x2="282" y2="380"/>
-        </g>
-
-        <line
-          x1="194"
-          y1="270"
-          x2="194"
-          y2="320"
-          stroke="rgba(255,255,255,0.6)"
-          stroke-width="1.8"
-        />
-
-        <polygon
-          points="194,270 220,280 194,290"
-          fill="#e8a830"
-          opacity="0.9"
-        />
-
-        <ellipse
-          cx="194"
-          cy="321"
-          rx="6"
-          ry="2.2"
-          fill="rgba(0,0,0,0.4)"
-        />
-
-        <circle cx="255" cy="302" r="5.5" fill="#fff" opacity="0.55"/>
-        <circle cx="144" cy="294" r="4" fill="#fff" opacity="0.35"/>
-        <circle cx="218" cy="328" r="3.5" fill="#fff" opacity="0.28"/>
-      </svg>
-    </div>
-
-    <div class="scan-ring">
-      <div class="ring-inner"></div>
-
-      <svg
-        viewBox="0 0 128 128"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <circle
-          cx="64"
-          cy="64"
-          r="58"
-          stroke="rgba(232,168,48,0.35)"
-          stroke-width="1.5"
-          stroke-dasharray="6 4"
-        />
-
-        <circle
-          cx="64"
-          cy="64"
-          r="46"
-          stroke="rgba(255,255,255,0.10)"
-          stroke-width="1"
-        />
-      </svg>
-    </div>
-
-    <div class="corner-marks">
-      <div class="cm-b"></div>
-    </div>
-
-    <div class="hero-ball">
-      <div class="ball-sphere"></div>
-      <div class="ball-shadow"></div>
-    </div>
-
-    <div class="home-panel">
-      <div class="eyebrow">
-        <div class="eyebrow-line"></div>
-        <div class="eyebrow-text">Golf Vision · Détection terrain</div>
-      </div>
-
-      <h1 class="home-title">
-        BALL
-        <span>FINDER</span>
-      </h1>
-
-      <p class="home-sub">
-        Repérez votre balle dans l'herbe en quelques secondes grâce à la détection visuelle intelligente.
-      </p>
-
-      <button class="start-btn" id="startExperienceBtn">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M5 12a7 7 0 1 0 14 0A7 7 0 0 0 5 12Z"
-            stroke="#0b0e17"
-            stroke-width="1.8"
-          />
-
-          <path
-            d="M10.5 9.5l4 2.5-4 2.5V9.5Z"
-            fill="#0b0e17"
-          />
-        </svg>
-
-        Lancer la recherche
-      </button>
-    </div>
-  </section>
-
-  <section class="screen" id="cameraScreen">
-    <div class="viewer">
-      <canvas id="canvas"></canvas>
-      <video id="video" playsinline autoplay muted></video>
-
-      <div class="hud">
-        <div class="hud-top">
-          <div class="glass-pill">
-            <div class="live-dot"></div>
-            <div class="hud-title">BALL FINDER</div>
-          </div>
-
-          <div class="glass-pill">
-            <div class="zoom-badge" id="zoomPill">× 1.0</div>
-          </div>
-        </div>
-
-        <div class="reticle" id="focusRing">
-          <div class="ret-outer"></div>
-          <div class="ret-inner"></div>
-        </div>
-
-        <div class="scan-sweep" id="scanLine"></div>
-      </div>
-
-      <div class="cam-bottom">
-        <div class="cam-actions">
-          <button class="btn-ghost" id="zoomOutBtn">↙ Dézoomer</button>
-          <button class="btn-found" id="ballFoundBtn">✓ Balle trouvée</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <script>
-    const homeScreen = document.getElementById("homeScreen");
-    const cameraScreen = document.getElementById("cameraScreen");
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    const zoomPill = document.getElementById("zoomPill");
-    const focusRing = document.getElementById("focusRing");
-    const scanLine = document.getElementById("scanLine");
-
-    let stream = null;
-    let videoTrack = null;
-    let rafId = null;
-
-    let latestRawFrame = null;
-    let latestDetectedCandidates = [];
-
-    let exclusionZones = [];
-    let inspectionState = null;
-    let pinchState = null;
-
-    let zoomState = {
-      scale: 1,
-      targetScale: 1,
-      centerX: 0.5,
-      centerY: 0.5
-    };
-
-    let cameraZoomSupport = null;
-    let pendingStrictAnalysis = null;
-
-    let tracks = [];
-    let nextTrackId = 1;
-
-    const PROCESS_SCALE = 0.52;
-
-    const MIN_ZOOM = 1;
-    const MAX_ZOOM = 3.2;
-    const STRICT_ANALYSIS_DELAY_MS = 220;
-    const MAX_EXCLUSIONS = 40;
-
-    const RENDER_MAX_DIMENSION = 1080;
-    const DISPLAY_INTERVAL_MS = 1000 / 24;
-    const ANALYSIS_INTERVAL_MS = 125;
-    const CALIBRATION_INTERVAL_MS = 900;
-    const ANALYSIS_SCALES = [0.48, 0.66];
-
-    const SHOW_THRESHOLD = 0.62;
-    const TRACK_DECAY = 0.06;
-    const TRACK_GAIN = 0.18;
-    const TRACK_MAX_MISSED = 14;
-
-    const rawCanvas = document.createElement("canvas");
-    const rawCtx = rawCanvas.getContext("2d", {
-      willReadFrequently: true
-    });
-
-    const scaledCanvas = document.createElement("canvas");
-    const scaledCtx = scaledCanvas.getContext("2d", {
-      willReadFrequently: true
-    });
-
-    const cropCanvas = document.createElement("canvas");
-    const cropCtx = cropCanvas.getContext("2d", {
-      willReadFrequently: true
-    });
-
-    let grassProfile = {
-      gOverR: 1,
-      gOverB: 1,
-      lum: 120,
-      chroma: 20
-    };
-
-    const userTintStrength = 1;
-
-    let lastDisplayTime = 0;
-    let lastAnalysisTime = 0;
-    let lastCalibrationTime = 0;
-    let analysisScaleIndex = 0;
-
-    function showScreen(name) {
-      homeScreen.classList.toggle(
-        "active",
-        name === "home"
-      );
-
-      cameraScreen.classList.toggle(
-        "active",
-        name === "camera"
-      );
-    }
-
-    function clamp(value) {
-      if (value < 0) {
-        return 0;
-      }
-
-      if (value > 255) {
-        return 255;
-      }
-
-      return value;
-    }
-
-    function setCanvasSize(target, width, height) {
-      if (
-        target.width !== width ||
-        target.height !== height
-      ) {
-        target.width = width;
-        target.height = height;
-      }
-    }
-
-    function getRenderDimensions(
-      videoWidth,
-      videoHeight
-    ) {
-      const longestSide = Math.max(
-        videoWidth,
-        videoHeight
-      );
-
-      const scale = Math.min(
-        1,
-        RENDER_MAX_DIMENSION / longestSide
-      );
-
-      return {
-        width: Math.max(
-          2,
-          Math.round(videoWidth * scale)
-        ),
-
-        height: Math.max(
-          2,
-          Math.round(videoHeight * scale)
-        )
-      };
-    }
-
-    function updateZoomUi() {
-      zoomPill.textContent =
-        `× ${zoomState.scale.toFixed(1)}`;
-    }
-
-    function pulseScan() {
-      focusRing.classList.remove("active");
-      scanLine.classList.remove("active");
-
-      void focusRing.offsetWidth;
-
-      focusRing.classList.add("active");
-      scanLine.classList.add("active");
-
-      setTimeout(() => {
-        focusRing.classList.remove("active");
-        scanLine.classList.remove("active");
-      }, 760);
-    }
-
-    function luminance(r, g, b) {
-      return (
-        0.2126 * r +
-        0.7152 * g +
-        0.0722 * b
-      );
-    }
-
-    function chroma(r, g, b) {
-      return (
-        Math.max(r, g, b) -
-        Math.min(r, g, b)
-      );
-    }
-
-    function isExcluded(x, y) {
-      for (const zone of exclusionZones) {
-        const distance = Math.hypot(
-          x - zone.x,
-          y - zone.y
-        );
-
-        if (distance <= zone.radius) {
-          return true;
-        }
-      }
-
-      return false;
-    }
-
-    function getCanvasNorm(clientX, clientY) {
-      const rect = canvas.getBoundingClientRect();
-
-      return {
-        x: Math.max(
-          0,
-          Math.min(
-            1,
-            (clientX - rect.left) / rect.width
-          )
-        ),
-
-        y: Math.max(
-          0,
-          Math.min(
-            1,
-            (clientY - rect.top) / rect.height
-          )
-        )
-      };
-    }
-
-    function getDigitalZoomCrop(
-      frameWidth,
-      frameHeight
-    ) {
-      const cropWidth = Math.floor(
-        frameWidth / zoomState.scale
-      );
-
-      const cropHeight = Math.floor(
-        frameHeight / zoomState.scale
-      );
-
-      const centerX =
-        zoomState.centerX * frameWidth;
-
-      const centerY =
-        zoomState.centerY * frameHeight;
-
-      return {
-        sx: Math.max(
-          0,
-          Math.min(
-            frameWidth - cropWidth,
-            Math.floor(
-              centerX - cropWidth / 2
-            )
-          )
-        ),
-
-        sy: Math.max(
-          0,
-          Math.min(
-            frameHeight - cropHeight,
-            Math.floor(
-              centerY - cropHeight / 2
-            )
-          )
-        ),
-
-        cropW: cropWidth,
-        cropH: cropHeight
-      };
-    }
-
-    function screenToFrame(
-      clientX,
-      clientY
-    ) {
-      const position =
-        getCanvasNorm(
-          clientX,
-          clientY
-        );
-
-      const frameWidth =
-        canvas.width;
-
-      const frameHeight =
-        canvas.height;
-
-      if (
-        zoomState.scale <= 1.001 ||
-        cameraZoomSupport?.usingNativeZoom
-      ) {
-        return {
-          x: Math.floor(
-            position.x * frameWidth
-          ),
-
-          y: Math.floor(
-            position.y * frameHeight
-          )
-        };
-      }
-
-      const {
-        sx,
-        sy,
-        cropW,
-        cropH
-      } = getDigitalZoomCrop(
-        frameWidth,
-        frameHeight
-      );
-
-      return {
-        x: Math.floor(
-          sx + position.x * cropW
-        ),
-
-        y: Math.floor(
-          sy + position.y * cropH
-        )
-      };
-    }
-
-    async function setupCameraZoomSupport() {
-      cameraZoomSupport = {
-        supported: false,
-        usingNativeZoom: false,
-        min: 1,
-        max: 1,
-        step: 0.1
-      };
-
-      if (!videoTrack?.getCapabilities) {
-        return;
-      }
-
-      try {
-        const capabilities =
-          videoTrack.getCapabilities();
-
-        if (
-          capabilities?.zoom !== undefined
-        ) {
-          cameraZoomSupport = {
-            supported: true,
-            usingNativeZoom: true,
-            min: capabilities.zoom.min ?? 1,
-            max: capabilities.zoom.max ?? 3,
-            step: capabilities.zoom.step ?? 0.1
-          };
-        }
-      } catch (error) {
-        cameraZoomSupport.usingNativeZoom = false;
-      }
-    }
-
-    async function applyNativeZoom() {
-      if (
-        !cameraZoomSupport?.usingNativeZoom ||
-        !videoTrack?.applyConstraints
-      ) {
-        return;
-      }
-
-      try {
-        await videoTrack.applyConstraints({
-          advanced: [
-            {
-              zoom: Math.max(
-                cameraZoomSupport.min,
-                Math.min(
-                  cameraZoomSupport.max,
-                  zoomState.targetScale
-                )
-              )
-            }
-          ]
-        });
-      } catch (error) {
-        cameraZoomSupport.usingNativeZoom = false;
-      }
-    }
-
-    function updateZoom() {
-      zoomState.scale +=
-        (
-          zoomState.targetScale -
-          zoomState.scale
-        ) * 0.22;
-
-      if (
-        Math.abs(
-          zoomState.scale -
-          zoomState.targetScale
-        ) < 0.01
-      ) {
-        zoomState.scale =
-          zoomState.targetScale;
-      }
-
-      updateZoomUi();
-    }
-
-    function scheduleStrictAnalysis() {
-      if (pendingStrictAnalysis) {
-        clearTimeout(
-          pendingStrictAnalysis
-        );
-      }
-
-      if (
-        zoomState.targetScale <= 1.35 ||
-        !latestRawFrame
-      ) {
-        return;
-      }
-
-      pendingStrictAnalysis = setTimeout(
-        () => {
-          analyzeAt(
-            Math.floor(
-              zoomState.centerX *
-              latestRawFrame.width
-            ),
-
-            Math.floor(
-              zoomState.centerY *
-              latestRawFrame.height
-            )
-          );
-        },
-        STRICT_ANALYSIS_DELAY_MS
-      );
-    }
-
-    function downscaleFrame(
-      frameData,
-      width,
-      height,
-      scale
-    ) {
-      const processedWidth = Math.max(
-        120,
-        Math.floor(width * scale)
-      );
-
-      const processedHeight = Math.max(
-        90,
-        Math.floor(height * scale)
-      );
-
-      setCanvasSize(
-        rawCanvas,
-        width,
-        height
-      );
-
-      rawCtx.putImageData(
-        frameData,
-        0,
-        0
-      );
-
-      setCanvasSize(
-        scaledCanvas,
-        processedWidth,
-        processedHeight
-      );
-
-      scaledCtx.clearRect(
-        0,
-        0,
-        processedWidth,
-        processedHeight
-      );
-
-      scaledCtx.imageSmoothingEnabled = true;
-      scaledCtx.imageSmoothingQuality = "high";
-
-      scaledCtx.drawImage(
-        rawCanvas,
-        0,
-        0,
-        processedWidth,
-        processedHeight
-      );
-
-      const imageData =
-        scaledCtx.getImageData(
-          0,
-          0,
-          processedWidth,
-          processedHeight
-        );
-
-      return {
-        img: imageData,
-        pW: processedWidth,
-        pH: processedHeight
-      };
-    }
-
-    function calibrateGrass(
-      frameData,
-      width,
-      height
-    ) {
-      let sumR = 0;
-      let sumG = 0;
-      let sumB = 0;
-      let sumChroma = 0;
-      let count = 0;
-
-      const yStart = Math.floor(
-        height * 0.58
-      );
-
-      const yEnd = Math.floor(
-        height * 0.92
-      );
-
-      for (
-        let y = yStart;
-        y < yEnd;
-        y += 4
-      ) {
-        for (
-          let x = 0;
-          x < width;
-          x += 4
-        ) {
-          const index =
-            (y * width + x) * 4;
-
-          const r =
-            frameData.data[index];
-
-          const g =
-            frameData.data[index + 1];
-
-          const b =
-            frameData.data[index + 2];
-
-          const maximum =
-            Math.max(r, g, b);
-
-          const minimum =
-            Math.min(r, g, b);
-
-          const currentChroma =
-            maximum - minimum;
-
-          const currentLuminance =
-            luminance(r, g, b);
-
-          const isWhite =
-            maximum > 190 &&
-            currentChroma < 30;
-
-          if (isWhite) {
-            continue;
-          }
-
-          const plausibleGrass =
-            g > 32 &&
-            g >= r * 0.84 &&
-            g >= b * 0.88 &&
-            currentChroma > 6 &&
-            currentLuminance > 18 &&
-            currentLuminance < 210;
-
-          if (!plausibleGrass) {
-            continue;
-          }
-
-          sumR += r;
-          sumG += g;
-          sumB += b;
-          sumChroma += currentChroma;
-          count++;
-        }
-      }
-
-      if (count > 40) {
-        const averageR =
-          sumR / count;
-
-        const averageG =
-          sumG / count;
-
-        const averageB =
-          sumB / count;
-
-        const averageChroma =
-          sumChroma / count;
-
-        grassProfile = {
-          gOverR:
-            averageR > 1
-              ? averageG / averageR
-              : 1,
-
-          gOverB:
-            averageB > 1
-              ? averageG / averageB
-              : 1,
-
-          lum: luminance(
-            averageR,
-            averageG,
-            averageB
-          ),
-
-          chroma: averageChroma
-        };
-      }
-    }
-
-    function segmentMasks(
-      frameData,
-      width,
-      height,
-      scale = PROCESS_SCALE,
-      strict = false
-    ) {
-      const {
-        img,
-        pW,
-        pH
-      } = downscaleFrame(
-        frameData,
-        width,
-        height,
-        scale
-      );
-
-      const data = img.data;
-
-      const whiteMask =
-        new Uint8Array(pW * pH);
-
-      const yellowMask =
-        new Uint8Array(pW * pH);
-
-      const greenMask =
-        new Uint8Array(pW * pH);
-
-      const whiteThreshold =
-        strict
-          ? 198
-          : 188;
-
-      const maximumChroma =
-        strict
-          ? 42
-          : 50;
-
-      for (
-        let dataIndex = 0,
-        pixelIndex = 0;
-
-        dataIndex < data.length;
-
-        dataIndex += 4,
-        pixelIndex++
-      ) {
-        const r =
-          data[dataIndex];
-
-        const g =
-          data[dataIndex + 1];
-
-        const b =
-          data[dataIndex + 2];
-
-        const maximum =
-          Math.max(r, g, b);
-
-        const minimum =
-          Math.min(r, g, b);
-
-        const currentChroma =
-          maximum - minimum;
-
-        if (
-          maximum >= whiteThreshold &&
-          currentChroma <= maximumChroma &&
-          Math.abs(r - g) <= 34 &&
-          Math.abs(g - b) <= 34 &&
-          Math.abs(r - b) <= 38
-        ) {
-          whiteMask[pixelIndex] = 255;
-        }
-
-        if (
-          g > 40 &&
-          g > r * 1.04 &&
-          g > b * 1.08 &&
-          (
-            g - Math.max(r, b)
-          ) >= 6
-        ) {
-          greenMask[pixelIndex] = 255;
-        }
-
-        if (
-          r > 105 &&
-          g > 100 &&
-          b < 145 &&
-          r > b + 12 &&
-          g > b + 8 &&
-          Math.abs(r - g) < 58
-        ) {
-          yellowMask[pixelIndex] = 255;
-        }
-      }
-
-      const radius =
-        strict
-          ? 2
-          : 3;
-
-      const yellowReject =
-        strict
-          ? 2
-          : 3;
-
-      for (
-        let y = radius;
-        y < pH - radius;
-        y++
-      ) {
-        for (
-          let x = radius;
-          x < pW - radius;
-          x++
-        ) {
-          const index =
-            y * pW + x;
-
-          if (!whiteMask[index]) {
-            continue;
-          }
-
-          let yellowNeighbours = 0;
-
-          for (
-            let dy = -radius;
-            dy <= radius;
-            dy++
-          ) {
-            const row =
-              (y + dy) * pW;
-
-            for (
-              let dx = -radius;
-              dx <= radius;
-              dx++
-            ) {
-              if (
-                yellowMask[
-                  row + x + dx
-                ]
-              ) {
-                yellowNeighbours++;
-              }
-            }
-          }
-
-          if (
-            yellowNeighbours >=
-            yellowReject
-          ) {
-            whiteMask[index] = 0;
-          }
-        }
-      }
-
-      return {
-        d: data,
-        pW,
-        pH,
-        whiteMask,
-        yellowMask,
-        greenMask
-      };
-    }
-
-    function extractComponents(
-      mask,
-      width,
-      height
-    ) {
-      const visited =
-        new Uint8Array(mask.length);
-
-      const queue =
-        new Int32Array(mask.length);
-
-      const output = [];
-
-      for (
-        let start = 0;
-        start < mask.length;
-        start++
-      ) {
-        if (
-          !mask[start] ||
-          visited[start]
-        ) {
-          continue;
-        }
-
-        let queueStart = 0;
-        let queueEnd = 0;
-
-        queue[queueEnd++] = start;
-        visited[start] = 1;
-
-        let area = 0;
-        let minX = width;
-        let maxX = 0;
-        let minY = height;
-        let maxY = 0;
-        let sumX = 0;
-        let sumY = 0;
-        let perimeter = 0;
-
-        while (
-          queueStart < queueEnd
-        ) {
-          const index =
-            queue[queueStart++];
-
-          const x =
-            index % width;
-
-          const y =
-            (index / width) | 0;
-
-          area++;
-          sumX += x;
-          sumY += y;
-
-          if (x < minX) {
-            minX = x;
-          }
-
-          if (x > maxX) {
-            maxX = x;
-          }
-
-          if (y < minY) {
-            minY = y;
-          }
-
-          if (y > maxY) {
-            maxY = y;
-          }
-
-          let boundary = false;
-
-          for (
-            let dy = -1;
-            dy <= 1;
-            dy++
-          ) {
-            for (
-              let dx = -1;
-              dx <= 1;
-              dx++
-            ) {
-              if (!dx && !dy) {
-                continue;
-              }
-
-              const neighbourX =
-                x + dx;
-
-              const neighbourY =
-                y + dy;
-
-              if (
-                neighbourX < 0 ||
-                neighbourX >= width ||
-                neighbourY < 0 ||
-                neighbourY >= height
-              ) {
-                boundary = true;
-                continue;
-              }
-
-              const neighbour =
-                neighbourY * width +
-                neighbourX;
-
-              if (!mask[neighbour]) {
-                boundary = true;
-              } else if (
-                !visited[neighbour]
-              ) {
-                visited[neighbour] = 1;
-
-                queue[queueEnd++] =
-                  neighbour;
-              }
-            }
-          }
-
-          if (boundary) {
-            perimeter++;
-          }
-        }
-
-        if (
-          area < 3 ||
-          area > 3000
-        ) {
-          continue;
-        }
-
-        const componentWidth =
-          maxX - minX + 1;
-
-        const componentHeight =
-          maxY - minY + 1;
-
-        const aspect =
-          componentWidth /
-          componentHeight;
-
-        const fill =
-          area /
-          (
-            componentWidth *
-            componentHeight
-          );
-
-        const radiusEstimate =
-          Math.max(
-            componentWidth,
-            componentHeight
-          ) * 0.5;
-
-        const circularity =
-          perimeter > 0
-            ? (
-              4 *
-              Math.PI *
-              area
-            ) /
-              (
-                perimeter *
-                perimeter
-              )
-            : 0;
-
-        output.push({
-          area,
-          minX,
-          maxX,
-          minY,
-          maxY,
-          width: componentWidth,
-          height: componentHeight,
-          cx: sumX / area,
-          cy: sumY / area,
-          aspect,
-          fill,
-          perimeter,
-          circularity,
-          radiusEstimate
-        });
-      }
-
-      return output;
-    }
-
-    function ringContinuity(
-      mask,
-      width,
-      height,
-      centerX,
-      centerY,
-      radius,
-      samples = 24
-    ) {
-      let hits = 0;
-      let transitions = 0;
-      let previous = null;
-
-      for (
-        let sample = 0;
-        sample < samples;
-        sample++
-      ) {
-        const angle =
-          2 *
-          Math.PI *
-          sample /
-          samples;
-
-        const x = Math.round(
-          centerX +
-          radius * Math.cos(angle)
-        );
-
-        const y = Math.round(
-          centerY +
-          radius * Math.sin(angle)
-        );
-
-        const value =
-          (
-            x >= 0 &&
-            x < width &&
-            y >= 0 &&
-            y < height
-          )
-            ? (
-              mask[
-                y * width + x
-              ]
-                ? 1
-                : 0
-            )
-            : 0;
-
-        hits += value;
-
-        if (
-          previous !== null &&
-          value !== previous
-        ) {
-          transitions++;
-        }
-
-        previous = value;
-      }
-
-      return {
-        continuity:
-          hits / samples,
-
-        roughness:
-          transitions / samples
-      };
-    }
-
-    function sampleLocalStats(
-      data,
-      width,
-      height,
-      centerX,
-      centerY,
-      innerRadius,
-      outerRadius,
-      whiteMask,
-      greenMask,
-      yellowMask
-    ) {
-      let count = 0;
-      let luminanceSum = 0;
-      let luminanceSquareSum = 0;
-      let white = 0;
-      let green = 0;
-      let yellow = 0;
-      let chromaSum = 0;
-
-      const xStart = Math.max(
-        0,
-        Math.floor(
-          centerX - outerRadius
-        )
-      );
-
-      const xEnd = Math.min(
-        width - 1,
-        Math.ceil(
-          centerX + outerRadius
-        )
-      );
-
-      const yStart = Math.max(
-        0,
-        Math.floor(
-          centerY - outerRadius
-        )
-      );
-
-      const yEnd = Math.min(
-        height - 1,
-        Math.ceil(
-          centerY + outerRadius
-        )
-      );
-
-      const innerRadiusSquared =
-        innerRadius * innerRadius;
-
-      const outerRadiusSquared =
-        outerRadius * outerRadius;
-
-      for (
-        let y = yStart;
-        y <= yEnd;
-        y++
-      ) {
-        for (
-          let x = xStart;
-          x <= xEnd;
-          x++
-        ) {
-          const dx =
-            x - centerX;
-
-          const dy =
-            y - centerY;
-
-          const distanceSquared =
-            dx * dx + dy * dy;
-
-          if (
-            distanceSquared <
-              innerRadiusSquared ||
-            distanceSquared >
-              outerRadiusSquared
-          ) {
-            continue;
-          }
-
-          const pixelIndex =
-            y * width + x;
-
-          const dataIndex =
-            pixelIndex * 4;
-
-          const r =
-            data[dataIndex];
-
-          const g =
-            data[dataIndex + 1];
-
-          const b =
-            data[dataIndex + 2];
-
-          const currentLuminance =
-            luminance(r, g, b);
-
-          const currentChroma =
-            chroma(r, g, b);
-
-          count++;
-
-          luminanceSum +=
-            currentLuminance;
-
-          luminanceSquareSum +=
-            currentLuminance *
-            currentLuminance;
-
-          chromaSum +=
-            currentChroma;
-
-          if (whiteMask[pixelIndex]) {
-            white++;
-          }
-
-          if (greenMask[pixelIndex]) {
-            green++;
-          }
-
-          if (yellowMask[pixelIndex]) {
-            yellow++;
-          }
-        }
-      }
-
-      if (!count) {
-        return {
-          count: 0,
-          meanLum: 0,
-          varLum: 0,
-          meanChroma: 0,
-          whiteRatio: 0,
-          greenRatio: 0,
-          yellowRatio: 0
-        };
-      }
-
-      const meanLuminance =
-        luminanceSum / count;
-
-      return {
-        count,
-
-        meanLum:
-          meanLuminance,
-
-        varLum: Math.max(
-          0,
-          (
-            luminanceSquareSum /
-            count
-          ) -
-          (
-            meanLuminance *
-            meanLuminance
-          )
-        ),
-
-        meanChroma:
-          chromaSum / count,
-
-        whiteRatio:
-          white / count,
-
-        greenRatio:
-          green / count,
-
-        yellowRatio:
-          yellow / count
-      };
-    }
-
-    function sigmoidLike(
-      value,
-      minimum,
-      maximum
-    ) {
-      if (value <= minimum) {
-        return 0;
-      }
-
-      if (value >= maximum) {
-        return 1;
-      }
-
-      return (
-        value - minimum
-      ) / (
-        maximum - minimum
-      );
-    }
-
-    function scoreCandidate(
-      component,
-      data,
-      width,
-      height,
-      whiteMask,
-      greenMask,
-      yellowMask,
-      strict = false
-    ) {
-      const centerX =
-        component.cx;
-
-      const centerY =
-        component.cy;
-
-      const radius = Math.max(
-        1.6,
-        Math.min(
-          18,
-          component.radiusEstimate
-        )
-      );
-
-      const center =
-        sampleLocalStats(
-          data,
-          width,
-          height,
-          centerX,
-          centerY,
-          0,
-          radius * 0.9,
-          whiteMask,
-          greenMask,
-          yellowMask
-        );
-
-      const ring1 =
-        sampleLocalStats(
-          data,
-          width,
-          height,
-          centerX,
-          centerY,
-          radius * 1,
-          radius * 1.85,
-          whiteMask,
-          greenMask,
-          yellowMask
-        );
-
-      const ring2 =
-        sampleLocalStats(
-          data,
-          width,
-          height,
-          centerX,
-          centerY,
-          radius * 1.85,
-          radius * 2.8,
-          whiteMask,
-          greenMask,
-          yellowMask
-        );
-
-      const continuity =
-        ringContinuity(
-          whiteMask,
-          width,
-          height,
-          centerX,
-          centerY,
-          Math.max(
-            1.2,
-            radius * 0.9
-          ),
-          component.area <= 12
-            ? 16
-            : 24
-        );
-
-      const normalizedY =
-        centerY / height;
-
-      const verticalPrior =
-        Math.max(
-          0,
-          Math.min(
-            1,
-            (
-              normalizedY - 0.12
-            ) / 0.72
-          )
-        );
-
-      const whiteScore =
-        sigmoidLike(
-          center.meanLum,
-          185,
-          255
-        ) *
-        (
-          1 -
-          sigmoidLike(
-            center.meanChroma,
-            20,
-            65
-          )
-        );
-
-      const roundScore =
-        component.area <= 12
-          ? sigmoidLike(
-              1 -
-              Math.abs(
-                1 - component.aspect
-              ),
-              0.15,
-              0.85
-            )
-          : (
-              0.5 *
-              sigmoidLike(
-                component.circularity,
-                0.18,
-                0.82
-              )
-            ) +
-            (
-              0.5 *
-              sigmoidLike(
-                component.fill,
-                0.18,
-                0.8
-              )
-            );
-
-      const compactScore =
-        component.area <= 12
-          ? sigmoidLike(
-              component.fill,
-              0.1,
-              0.55
-            )
-          : (
-              0.55 *
-              sigmoidLike(
-                component.fill,
-                0.3,
-                0.86
-              )
-            ) +
-            (
-              0.45 *
-              sigmoidLike(
-                component.circularity,
-                0.22,
-                0.88
-              )
-            );
-
-      const contrast =
-        center.meanLum -
-        ring1.meanLum;
-
-      const contrastScore =
-        sigmoidLike(
-          contrast,
-          10,
-          70
-        );
-
-      const greenContextScore =
-        (
-          0.55 *
-          sigmoidLike(
-            ring1.greenRatio,
-            0.1,
-            0.65
-          )
-        ) +
-        (
-          0.45 *
-          sigmoidLike(
-            ring2.greenRatio,
-            0.12,
-            0.7
-          )
-        );
-
-      const centerUniformityScore =
-        1 -
-        sigmoidLike(
-          center.varLum,
-          220,
-          1900
-        );
-
-      const edgeContinuityScore =
-        (
-          0.6 *
-          sigmoidLike(
-            continuity.continuity,
-            0.25,
-            0.92
-          )
-        ) +
-        (
-          0.4 *
-          (
-            1 -
-            sigmoidLike(
-              continuity.roughness,
-              0.12,
-              0.7
-            )
-          )
-        );
-
-      const yellowPenalty =
-        Math.max(
-          sigmoidLike(
-            ring1.yellowRatio,
-            0.03,
-            0.18
-          ),
-
-          sigmoidLike(
-            center.yellowRatio,
-            0.02,
-            0.12
-          )
-        );
-
-      const ringWhitePenalty =
-        sigmoidLike(
-          ring1.whiteRatio,
-          0.15,
-          0.45
-        );
-
-      const topFramePenalty =
-        1 - verticalPrior;
-
-      if (
-        component.area > 400 &&
-        component.fill > 0.75
-      ) {
-        return null;
-      }
-
-      if (
-        component.aspect < 0.28 ||
-        component.aspect > 2.3
-      ) {
-        return null;
-      }
-
-      if (center.meanLum < 150) {
-        return null;
-      }
-
-      let score =
-        0.20 * whiteScore +
-        0.15 * roundScore +
-        0.12 * compactScore +
-        0.15 * contrastScore +
-        0.13 * greenContextScore +
-        0.10 * centerUniformityScore +
-        0.07 * edgeContinuityScore +
-        0.08 * verticalPrior -
-        0.16 * yellowPenalty -
-        0.12 * ringWhitePenalty -
-        0.05 * topFramePenalty;
-
-      if (component.area <= 12) {
-        score +=
-          0.06 * contrastScore +
-          0.05 * greenContextScore -
-          0.02 * roundScore;
-      }
-
-      if (component.area > 30) {
-        score +=
-          0.04 * roundScore +
-          0.03 * compactScore;
-      }
-
-      score = Math.max(
-        0,
-        Math.min(
-          1,
-          score
-        )
-      );
-
-      return {
-        score,
-
-        detail: {
-          yellowPenalty,
-          ringWhitePenalty
-        }
-      };
-    }
-
-    function detectCandidates(
-      frameData,
-      width,
-      height,
-      scale = PROCESS_SCALE,
-      strict = false
-    ) {
-      const {
-        d,
-        pW,
-        pH,
-        whiteMask,
-        yellowMask,
-        greenMask
-      } = segmentMasks(
-        frameData,
-        width,
-        height,
-        scale,
-        strict
-      );
-
-      const components =
-        extractComponents(
-          whiteMask,
-          pW,
-          pH
-        );
-
-      const output = [];
-
-      for (
-        const component of components
-      ) {
-        const scored =
-          scoreCandidate(
-            component,
-            d,
-            pW,
-            pH,
-            whiteMask,
-            greenMask,
-            yellowMask,
-            strict
-          );
-
-        if (!scored) {
-          continue;
-        }
-
-        const threshold =
-          strict
-            ? 0.32
-            : 0.38;
-
-        if (
-          scored.score < threshold
-        ) {
-          continue;
-        }
-
-        const frameX =
-          component.cx /
-          pW *
-          width;
-
-        const frameY =
-          component.cy /
-          pH *
-          height;
-
-        if (
-          isExcluded(
-            frameX,
-            frameY
-          )
-        ) {
-          continue;
-        }
-
-        output.push({
-          x: frameX,
-          y: frameY,
-
-          radius: Math.max(
-            4,
-            component.radiusEstimate /
-            pW *
-            width
-          ),
-
-          score: scored.score,
-          area: component.area,
-          sourceScale: scale,
-          detail: scored.detail
-        });
-      }
-
-      return output;
-    }
-
-    function fuseCandidates(
-      candidates,
-      distanceFactor = 1.8
-    ) {
-      if (!candidates.length) {
-        return candidates;
-      }
-
-      candidates.sort(
-        (a, b) =>
-          b.score - a.score
-      );
-
-      const fused = [];
-
-      for (
-        const candidate of candidates
-      ) {
-        let merged = false;
-
-        for (
-          const existing of fused
-        ) {
-          const maximumDistance =
-            Math.max(
-              12,
-              Math.max(
-                candidate.radius,
-                existing.radius
-              ) *
-              distanceFactor
-            );
-
-          if (
-            Math.hypot(
-              candidate.x - existing.x,
-              candidate.y - existing.y
-            ) <= maximumDistance
-          ) {
-            const weight1 =
-              existing.score + 0.001;
-
-            const weight2 =
-              candidate.score + 0.001;
-
-            const weightSum =
-              weight1 + weight2;
-
-            existing.x =
-              (
-                existing.x * weight1 +
-                candidate.x * weight2
-              ) /
-              weightSum;
-
-            existing.y =
-              (
-                existing.y * weight1 +
-                candidate.y * weight2
-              ) /
-              weightSum;
-
-            existing.radius =
-              (
-                existing.radius * weight1 +
-                candidate.radius * weight2
-              ) /
-              weightSum;
-
-            existing.score =
-              Math.max(
-                existing.score,
-                candidate.score
-              );
-
-            existing.area =
-              Math.max(
-                existing.area,
-                candidate.area
-              );
-
-            merged = true;
-            break;
-          }
-        }
-
-        if (!merged) {
-          fused.push({
-            ...candidate
-          });
-        }
-      }
-
-      return fused;
-    }
-
-    function detectMultiScale(
-      frameData,
-      width,
-      height,
-      strict = false
-    ) {
-      if (strict) {
-        const scales = [
-          0.78,
-          0.96
-        ];
-
-        let allCandidates = [];
-
-        for (const scale of scales) {
-          allCandidates =
-            allCandidates.concat(
-              detectCandidates(
-                frameData,
-                width,
-                height,
-                scale,
-                true
-              )
-            );
-        }
-
-        return fuseCandidates(
-          allCandidates,
-          1.5
-        );
-      }
-
-      const scale =
-        ANALYSIS_SCALES[
-          analysisScaleIndex %
-          ANALYSIS_SCALES.length
-        ];
-
-      analysisScaleIndex++;
-
-      return detectCandidates(
-        frameData,
-        width,
-        height,
-        scale,
-        false
-      );
-    }
-
-    function findBestTrackMatch(
-      track,
-      candidates,
-      used
-    ) {
-      let bestIndex = -1;
-      let bestCost = Infinity;
-
-      for (
-        let index = 0;
-        index < candidates.length;
-        index++
-      ) {
-        if (used[index]) {
-          continue;
-        }
-
-        const candidate =
-          candidates[index];
-
-        const distance =
-          Math.hypot(
-            candidate.x - track.x,
-            candidate.y - track.y
-          );
-
-        const maximumDistance =
-          Math.max(
-            14,
-            track.radius * 2.4
-          );
-
-        if (
-          distance >
-          maximumDistance
-        ) {
-          continue;
-        }
-
-        const radiusDifference =
-          Math.abs(
-            candidate.radius -
-            track.radius
-          ) /
-          Math.max(
-            track.radius,
-            1
-          );
-
-        const scoreDifference =
-          Math.abs(
-            candidate.score -
-            track.score
-          );
-
-        const cost =
-          distance * 0.6 +
-          radiusDifference * 18 +
-          scoreDifference * 12;
-
-        if (
-          cost < bestCost
-        ) {
-          bestCost = cost;
-          bestIndex = index;
-        }
-      }
-
-      return bestIndex;
-    }
-
-    function updateTracks(candidates) {
-      const used =
-        new Uint8Array(
-          candidates.length
-        );
-
-      for (const track of tracks) {
-        const index =
-          findBestTrackMatch(
-            track,
-            candidates,
-            used
-          );
-
-        if (index >= 0) {
-          const candidate =
-            candidates[index];
-
-          used[index] = 1;
-
-          const previousX =
-            track.x;
-
-          const previousY =
-            track.y;
-
-          track.x =
-            0.72 * track.x +
-            0.28 * candidate.x;
-
-          track.y =
-            0.72 * track.y +
-            0.28 * candidate.y;
-
-          track.radius =
-            0.78 * track.radius +
-            0.22 * candidate.radius;
-
-          track.score =
-            0.68 * track.score +
-            0.32 * candidate.score;
-
-          track.vx =
-            track.x - previousX;
-
-          track.vy =
-            track.y - previousY;
-
-          track.age++;
-          track.missed = 0;
-
-          track.lastSeen =
-            performance.now();
-
-          track.confidence =
-            Math.min(
-              1,
-              track.confidence +
-              TRACK_GAIN +
-              candidate.score * 0.05
-            );
-
-          track.lastDetail =
-            candidate.detail;
-        } else {
-          track.x +=
-            track.vx * 0.25;
-
-          track.y +=
-            track.vy * 0.25;
-
-          track.missed++;
-          track.age++;
-
-          track.confidence =
-            Math.max(
-              0,
-              track.confidence -
-              TRACK_DECAY
-            );
-        }
-      }
-
-      for (
-        let index = 0;
-        index < candidates.length;
-        index++
-      ) {
-        if (used[index]) {
-          continue;
-        }
-
-        const candidate =
-          candidates[index];
-
-        tracks.push({
-          id: nextTrackId++,
-          x: candidate.x,
-          y: candidate.y,
-          radius: candidate.radius,
-          score: candidate.score,
-
-          confidence: Math.max(
-            0.16,
-            candidate.score * 0.45
-          ),
-
-          age: 1,
-          missed: 0,
-          vx: 0,
-          vy: 0,
-
-          lastSeen:
-            performance.now(),
-
-          lastDetail:
-            candidate.detail
-        });
-      }
-
-      tracks = tracks.filter(
-        track =>
-          track.missed <=
-            TRACK_MAX_MISSED &&
-          track.confidence > 0.03
-      );
-    }
-
-    function getVisibleTracks() {
-      return tracks.filter(
-        track => {
-          if (
-            track.confidence <
-            SHOW_THRESHOLD
-          ) {
-            return false;
-          }
-
-          if (track.score < 0.34) {
-            return false;
-          }
-
-          if (
-            isExcluded(
-              track.x,
-              track.y
-            )
-          ) {
-            return false;
-          }
-
-          return true;
-        }
-      );
-    }
-
-    function drawTrackHighlight(track) {
-      const radius =
-        Math.max(
-          8,
-          Math.min(
-            42,
-            track.radius * 1.35
-          )
-        );
-
-      const alpha =
-        Math.max(
-          0.18,
-          Math.min(
-            0.95,
-            track.confidence
-          )
-        );
-
-      const gradient =
-        ctx.createRadialGradient(
-          track.x,
-          track.y,
-          radius * 0.18,
-          track.x,
-          track.y,
-          radius * 1.55
-        );
-
-      gradient.addColorStop(
-        0,
-        `rgba(255,255,255,${0.34 * alpha})`
-      );
-
-      gradient.addColorStop(
-        0.35,
-        `rgba(255,255,255,${0.22 * alpha})`
-      );
-
-      gradient.addColorStop(
-        1,
-        "rgba(255,255,255,0)"
-      );
-
-      ctx.save();
-      ctx.fillStyle = gradient;
-      ctx.beginPath();
-
-      ctx.arc(
-        track.x,
-        track.y,
-        radius * 1.55,
-        0,
-        Math.PI * 2
-      );
-
-      ctx.fill();
-
-      ctx.lineWidth = 2;
-
-      ctx.strokeStyle =
-        `rgba(255,255,255,${0.72 * alpha})`;
-
-      ctx.beginPath();
-
-      ctx.arc(
-        track.x,
-        track.y,
-        radius,
-        0,
-        Math.PI * 2
-      );
-
-      ctx.stroke();
-
-      ctx.lineWidth = 1;
-
-      ctx.strokeStyle =
-        `rgba(232,168,48,${0.70 * alpha})`;
-
-      ctx.beginPath();
-
-      ctx.arc(
-        track.x,
-        track.y,
-        radius * 1.28,
-        0,
-        Math.PI * 2
-      );
-
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    function applyNightBlueTint(data) {
-      const greenOverRed =
-        grassProfile.gOverR;
-
-      const greenOverBlue =
-        grassProfile.gOverB;
-
-      const baseLuminance =
-        grassProfile.lum;
-
-      const baseChroma =
-        Math.max(
-          8,
-          grassProfile.chroma
-        );
-
-      for (
-        let index = 0;
-        index < data.length;
-        index += 4
-      ) {
-        const r = data[index];
-        const g = data[index + 1];
-        const b = data[index + 2];
-
-        const maximum =
-          Math.max(r, g, b);
-
-        const minimum =
-          Math.min(r, g, b);
-
-        const currentChroma =
-          maximum - minimum;
-
-        const currentLuminance =
-          luminance(r, g, b);
-
-        const isWhiteish =
-          maximum > 178 &&
-          currentChroma < 42 &&
-          Math.abs(r - g) < 36 &&
-          Math.abs(g - b) < 36;
-
-        if (isWhiteish) {
-          const boost =
-            currentLuminance > 205
-              ? 10
-              : 5;
-
-          data[index] =
-            clamp(r + boost);
-
-          data[index + 1] =
-            clamp(g + boost);
-
-          data[index + 2] =
-            clamp(b + boost);
-
-          continue;
-        }
-
-        const greenDominance =
-          g - Math.max(r, b);
-
-        const grassLike =
-          g > 28 &&
-          g >= r *
-            Math.max(
-              0.86,
-              greenOverRed * 0.8
-            ) &&
-          g >= b *
-            Math.max(
-              0.9,
-              greenOverBlue * 0.8
-            ) &&
-          currentChroma >
-            Math.max(
-              6,
-              baseChroma * 0.36
-            ) &&
-          currentLuminance <
-            Math.max(
-              205,
-              baseLuminance * 1.55
-            );
-
-        if (!grassLike) {
-          continue;
-        }
-
-        const texture =
-          Math.max(
-            0.42,
-            Math.min(
-              1.65,
-              currentLuminance / 92
-            )
-          );
-
-        const targetR =
-          24 * texture;
-
-        const targetG =
-          35 * texture;
-
-        const targetB =
-          61 * texture;
-
-        const dominance =
-          Math.max(
-            0,
-            Math.min(
-              1,
-              (
-                greenDominance - 2
-              ) / 42
-            )
-          );
-
-        const blend =
-          0.70 +
-          dominance * 0.20;
-
-        data[index] =
-          clamp(
-            r * (1 - blend) +
-            targetR * blend
-          );
-
-        data[index + 1] =
-          clamp(
-            g * (1 - blend) +
-            targetG * blend
-          );
-
-        data[index + 2] =
-          clamp(
-            b * (1 - blend) +
-            targetB * blend
-          );
-      }
-    }
-
-    function renderProcessedFrame(
-      processedFrame,
-      frameWidth,
-      frameHeight
-    ) {
-      setCanvasSize(
-        rawCanvas,
-        frameWidth,
-        frameHeight
-      );
-
-      rawCtx.putImageData(
-        processedFrame,
-        0,
-        0
-      );
-
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = "high";
-
-      if (
-        cameraZoomSupport?.usingNativeZoom ||
-        zoomState.scale <= 1.02
-      ) {
-        ctx.clearRect(
-          0,
-          0,
-          frameWidth,
-          frameHeight
-        );
-
-        ctx.drawImage(
-          rawCanvas,
-          0,
-          0
-        );
-
-        return;
-      }
-
-      const {
-        sx,
-        sy,
-        cropW,
-        cropH
-      } = getDigitalZoomCrop(
-        frameWidth,
-        frameHeight
-      );
-
-      ctx.clearRect(
-        0,
-        0,
-        frameWidth,
-        frameHeight
-      );
-
-      ctx.drawImage(
-        rawCanvas,
-        sx,
-        sy,
-        cropW,
-        cropH,
-        0,
-        0,
-        frameWidth,
-        frameHeight
-      );
-    }
-
-    function analyzeAt(x, y) {
-      if (!latestRawFrame) {
-        return;
-      }
-
-      pulseScan();
-
-      const frameWidth =
-        latestRawFrame.width;
-
-      const frameHeight =
-        latestRawFrame.height;
-
-      const cropWidth =
-        Math.floor(
-          frameWidth / 2.35
-        );
-
-      const cropHeight =
-        Math.floor(
-          frameHeight / 2.35
-        );
-
-      const sourceX =
-        Math.max(
-          0,
-          Math.min(
-            frameWidth - cropWidth,
-            Math.floor(
-              x - cropWidth / 2
-            )
-          )
-        );
-
-      const sourceY =
-        Math.max(
-          0,
-          Math.min(
-            frameHeight - cropHeight,
-            Math.floor(
-              y - cropHeight / 2
-            )
-          )
-        );
-
-      setCanvasSize(
-        rawCanvas,
-        frameWidth,
-        frameHeight
-      );
-
-      rawCtx.putImageData(
-        latestRawFrame,
-        0,
-        0
-      );
-
-      setCanvasSize(
-        cropCanvas,
-        cropWidth,
-        cropHeight
-      );
-
-      cropCtx.clearRect(
-        0,
-        0,
-        cropWidth,
-        cropHeight
-      );
-
-      cropCtx.drawImage(
-        rawCanvas,
-        sourceX,
-        sourceY,
-        cropWidth,
-        cropHeight,
-        0,
-        0,
-        cropWidth,
-        cropHeight
-      );
-
-      const crop =
-        cropCtx.getImageData(
-          0,
-          0,
-          cropWidth,
-          cropHeight
-        );
-
-      const strictCandidates =
-        detectMultiScale(
-          crop,
-          cropWidth,
-          cropHeight,
-          true
-        )
-        .map(
-          candidate => ({
-            ...candidate,
-            x: candidate.x + sourceX,
-            y: candidate.y + sourceY
-          })
-        )
-        .filter(
-          candidate =>
-            Math.hypot(
-              candidate.x - x,
-              candidate.y - y
-            ) <=
-            Math.max(
-              60,
-              candidate.radius * 2.8
-            )
-        )
-        .sort(
-          (a, b) =>
-            b.score - a.score
-        );
-
-      if (!strictCandidates.length) {
-        exclusionZones.push({
-          x,
-          y,
-          radius: 28
-        });
-
-        if (
-          exclusionZones.length >
-          MAX_EXCLUSIONS
-        ) {
-          exclusionZones.shift();
-        }
-
-        inspectionState = {
-          until:
-            performance.now() +
-            1000
-        };
-
-        return;
-      }
-
-      const best =
-        strictCandidates[0];
-
-      const detail =
-        best.detail || {};
-
-      const daisyLikelihood =
-        (
-          detail.yellowPenalty ?? 0
-        ) * 0.65 +
-        (
-          detail.ringWhitePenalty ?? 0
-        ) * 0.35;
-
-      if (
-        best.score >= 0.58 &&
-        daisyLikelihood < 0.28
-      ) {
-        tracks.push({
-          id: nextTrackId++,
-          x: best.x,
-          y: best.y,
-          radius: best.radius,
-
-          score: Math.max(
-            0.62,
-            best.score
-          ),
-
-          confidence: 0.78,
-          age: 1,
-          missed: 0,
-          vx: 0,
-          vy: 0,
-
-          lastSeen:
-            performance.now(),
-
-          lastDetail:
-            best.detail
-        });
-      } else if (
-        daisyLikelihood >= 0.28 ||
-        (
-          detail.ringWhitePenalty ?? 0
-        ) > 0.32
-      ) {
-        exclusionZones.push({
-          x: best.x,
-          y: best.y,
-
-          radius: Math.max(
-            26,
-            best.radius * 2
-          )
-        });
-
-        if (
-          exclusionZones.length >
-          MAX_EXCLUSIONS
-        ) {
-          exclusionZones.shift();
-        }
-      }
-
-      inspectionState = {
-        until:
-          performance.now() +
-          1000
-      };
-    }
-
-    function processFrame(
-      timestamp = performance.now()
-    ) {
-      rafId =
-        requestAnimationFrame(
-          processFrame
-        );
-
-      if (
-        !video.videoWidth ||
-        !video.videoHeight
-      ) {
-        return;
-      }
-
-      if (
-        timestamp - lastDisplayTime <
-        DISPLAY_INTERVAL_MS
-      ) {
-        return;
-      }
-
-      lastDisplayTime = timestamp;
-
-      const dimensions =
-        getRenderDimensions(
-          video.videoWidth,
-          video.videoHeight
-        );
-
-      const frameWidth =
-        dimensions.width;
-
-      const frameHeight =
-        dimensions.height;
-
-      setCanvasSize(
-        canvas,
-        frameWidth,
-        frameHeight
-      );
-
-      setCanvasSize(
-        rawCanvas,
-        frameWidth,
-        frameHeight
-      );
-
-      rawCtx.imageSmoothingEnabled = true;
-      rawCtx.imageSmoothingQuality = "high";
-
-      rawCtx.drawImage(
-        video,
-        0,
-        0,
-        frameWidth,
-        frameHeight
-      );
-
-      const fullFrame =
-        rawCtx.getImageData(
-          0,
-          0,
-          frameWidth,
-          frameHeight
-        );
-
-      const shouldAnalyze =
-        timestamp - lastAnalysisTime >=
-        ANALYSIS_INTERVAL_MS;
-
-      if (shouldAnalyze) {
-        lastAnalysisTime = timestamp;
-
-        latestRawFrame =
-          new ImageData(
-            new Uint8ClampedArray(
-              fullFrame.data
-            ),
-            frameWidth,
-            frameHeight
-          );
-
-        if (
-          timestamp - lastCalibrationTime >=
-          CALIBRATION_INTERVAL_MS
-        ) {
-          lastCalibrationTime = timestamp;
-
-          calibrateGrass(
-            latestRawFrame,
-            frameWidth,
-            frameHeight
-          );
-        }
-
-        latestDetectedCandidates =
-          detectMultiScale(
-            latestRawFrame,
-            frameWidth,
-            frameHeight,
-            false
-          );
-
-        updateTracks(
-          latestDetectedCandidates
-        );
-      }
-
-      applyNightBlueTint(
-        fullFrame.data
-      );
-
-      updateZoom();
-
-      renderProcessedFrame(
-        fullFrame,
-        frameWidth,
-        frameHeight
-      );
-
-      const visibleTracks =
-        getVisibleTracks()
-        .sort(
-          (a, b) =>
-            b.confidence -
-            a.confidence
-        );
-
-      for (
-        const track of visibleTracks
-      ) {
-        drawTrackHighlight(track);
-      }
-
-      if (
-        inspectionState &&
-        inspectionState.until >
-        performance.now()
-      ) {
-        ctx.strokeStyle =
-          "rgba(232,168,48,0.65)";
-
-        ctx.lineWidth = 2;
-
-        ctx.strokeRect(
-          18,
-          18,
-          frameWidth - 36,
-          frameHeight - 36
-        );
-      } else {
-        inspectionState = null;
-      }
-    }
-
-    function handlePointerDown(event) {
-      canvas.setPointerCapture?.(
-        event.pointerId
-      );
-
-      const position =
-        getCanvasNorm(
-          event.clientX,
-          event.clientY
-        );
-
-      if (!pinchState) {
-        pinchState = {
-          pointers: new Map(),
-          moved: false
-        };
-      }
-
-      pinchState.pointers.set(
-        event.pointerId,
-        {
-          clientX:
-            event.clientX,
-
-          clientY:
-            event.clientY,
-
-          x:
-            position.x,
-
-          y:
-            position.y
-        }
-      );
-
-      if (
-        pinchState.pointers.size === 2
-      ) {
-        const points = [
-          ...pinchState.pointers.values()
-        ];
-
-        pinchState.initialDistance =
-          Math.hypot(
-            points[0].clientX -
-            points[1].clientX,
-
-            points[0].clientY -
-            points[1].clientY
-          );
-
-        pinchState.initialScale =
-          zoomState.targetScale;
-
-        zoomState.centerX =
-          (
-            points[0].x +
-            points[1].x
-          ) / 2;
-
-        zoomState.centerY =
-          (
-            points[0].y +
-            points[1].y
-          ) / 2;
-      }
-    }
-
-    async function handlePointerMove(event) {
-      if (
-        !pinchState ||
-        !pinchState.pointers.has(
-          event.pointerId
-        )
-      ) {
-        return;
-      }
-
-      const position =
-        getCanvasNorm(
-          event.clientX,
-          event.clientY
-        );
-
-      const previous =
-        pinchState.pointers.get(
-          event.pointerId
-        );
-
-      if (
-        Math.abs(
-          previous.clientX -
-          event.clientX
-        ) > 4 ||
-        Math.abs(
-          previous.clientY -
-          event.clientY
-        ) > 4
-      ) {
-        pinchState.moved = true;
-      }
-
-      pinchState.pointers.set(
-        event.pointerId,
-        {
-          clientX:
-            event.clientX,
-
-          clientY:
-            event.clientY,
-
-          x:
-            position.x,
-
-          y:
-            position.y
-        }
-      );
-
-      if (
-        pinchState.pointers.size === 2
-      ) {
-        const points = [
-          ...pinchState.pointers.values()
-        ];
-
-        const distance =
-          Math.hypot(
-            points[0].clientX -
-            points[1].clientX,
-
-            points[0].clientY -
-            points[1].clientY
-          );
-
-        zoomState.targetScale =
-          Math.max(
-            MIN_ZOOM,
-            Math.min(
-              MAX_ZOOM,
-
-              pinchState.initialScale *
-              (
-                distance /
-                pinchState.initialDistance
-              )
-            )
-          );
-
-        zoomState.centerX =
-          (
-            points[0].x +
-            points[1].x
-          ) / 2;
-
-        zoomState.centerY =
-          (
-            points[0].y +
-            points[1].y
-          ) / 2;
-
-        if (
-          cameraZoomSupport?.usingNativeZoom
-        ) {
-          await applyNativeZoom();
-        }
-      }
-    }
-
-    function nearestVisibleTrack(x, y) {
-      const visible =
-        getVisibleTracks();
-
-      let best = null;
-      let bestDistance = Infinity;
-
-      for (const track of visible) {
-        const distance =
-          Math.hypot(
-            track.x - x,
-            track.y - y
-          );
-
-        if (
-          distance <
-          Math.max(
-            36,
-            track.radius * 2.5
-          ) &&
-          distance < bestDistance
-        ) {
-          best = track;
-          bestDistance = distance;
-        }
-      }
-
-      return best;
-    }
-
-    function handlePointerUp(event) {
-      if (!pinchState) {
-        return;
-      }
-
-      const pointer =
-        pinchState.pointers.get(
-          event.pointerId
-        );
-
-      const hadTwoPointers =
-        pinchState.pointers.size === 2;
-
-      pinchState.pointers.delete(
-        event.pointerId
-      );
-
-      if (
-        !hadTwoPointers &&
-        pointer &&
-        !pinchState.moved
-      ) {
-        const position =
-          screenToFrame(
-            event.clientX,
-            event.clientY
-          );
-
-        if (position) {
-          const track =
-            nearestVisibleTrack(
-              position.x,
-              position.y
-            );
-
-          if (track) {
-            analyzeAt(
-              Math.round(track.x),
-              Math.round(track.y)
-            );
-          }
-        }
-      }
-
-      if (
-        zoomState.targetScale > 1.35 &&
-        pinchState.pointers.size < 2 &&
-        latestRawFrame
-      ) {
-        scheduleStrictAnalysis();
-      }
-
-      if (
-        pinchState.pointers.size === 0
-      ) {
-        pinchState = null;
-      }
-    }
-
-    async function startCamera() {
-      try {
-        if (
-          !navigator.mediaDevices
-          ?.getUserMedia
-        ) {
-          return;
-        }
-
-        stream =
-          await navigator.mediaDevices
-          .getUserMedia({
-            video: {
-              facingMode: {
-                ideal: "environment"
-              },
-
-              width: {
-                ideal: 1280,
-                max: 1920
-              },
-
-              height: {
-                ideal: 720,
-                max: 1080
-              },
-
-              frameRate: {
-                ideal: 30,
-                max: 30
-              }
-            },
-
-            audio: false
-          });
-
-        videoTrack =
-          stream.getVideoTracks()[0] ||
-          null;
-
-        video.srcObject = stream;
-
-        await video.play();
-        await setupCameraZoomSupport();
-
-        latestRawFrame = null;
-        latestDetectedCandidates = [];
-        tracks = [];
-        exclusionZones = [];
-
-        grassProfile = {
-          gOverR: 1,
-          gOverB: 1,
-          lum: 120,
-          chroma: 20
-        };
-
-        zoomState = {
-          scale: 1,
-          targetScale: 1,
-          centerX: 0.5,
-          centerY: 0.5
-        };
-
-        inspectionState = null;
-        lastDisplayTime = 0;
-        lastAnalysisTime = 0;
-        lastCalibrationTime = 0;
-        analysisScaleIndex = 0;
-
-        updateZoomUi();
-
-        if (rafId) {
-          cancelAnimationFrame(
-            rafId
-          );
-        }
-
-        rafId =
-          requestAnimationFrame(
-            processFrame
-          );
-      } catch (error) {
-        console.error(
-          "Impossible de démarrer la caméra :",
-          error
-        );
-
-        stopCamera();
-        showScreen("home");
-      }
-    }
-
-    function stopCamera() {
-      if (pendingStrictAnalysis) {
-        clearTimeout(
-          pendingStrictAnalysis
-        );
-
-        pendingStrictAnalysis = null;
-      }
-
-      if (rafId) {
-        cancelAnimationFrame(
-          rafId
-        );
-
-        rafId = null;
-      }
-
-      if (stream) {
-        stream
-        .getTracks()
-        .forEach(
-          track => track.stop()
-        );
-
-        stream = null;
-      }
-
-      video.srcObject = null;
-      videoTrack = null;
-      cameraZoomSupport = null;
-      latestRawFrame = null;
-      latestDetectedCandidates = [];
-
-      lastDisplayTime = 0;
-      lastAnalysisTime = 0;
-      lastCalibrationTime = 0;
-      analysisScaleIndex = 0;
-
-      inspectionState = null;
-      tracks = [];
-      exclusionZones = [];
-
-      grassProfile = {
-        gOverR: 1,
-        gOverB: 1,
-        lum: 120,
-        chroma: 20
-      };
-
-      zoomState = {
-        scale: 1,
-        targetScale: 1,
-        centerX: 0.5,
-        centerY: 0.5
-      };
-
-      updateZoomUi();
-    }
-
-    async function resetZoom() {
-      zoomState.targetScale = 1;
-
-      if (
-        cameraZoomSupport
-        ?.usingNativeZoom
-      ) {
-        await applyNativeZoom();
-      }
-    }
-
-    document
-    .getElementById(
-      "startExperienceBtn"
-    )
-    .addEventListener(
-      "click",
-      async () => {
-        showScreen("camera");
-        await startCamera();
-      }
-    );
-
-    document
-    .getElementById(
-      "ballFoundBtn"
-    )
-    .addEventListener(
-      "click",
-      () => {
-        stopCamera();
-        showScreen("home");
-      }
-    );
-
-    document
-    .getElementById(
-      "zoomOutBtn"
-    )
-    .addEventListener(
-      "click",
-      resetZoom
-    );
-
-    canvas.addEventListener(
-      "pointerdown",
-      handlePointerDown
-    );
-
-    canvas.addEventListener(
-      "pointermove",
-      handlePointerMove
-    );
-
-    canvas.addEventListener(
-      "pointerup",
-      handlePointerUp
-    );
-
-    canvas.addEventListener(
-      "pointercancel",
-      handlePointerUp
-    );
-
-    window.addEventListener(
-      "beforeunload",
-      stopCamera
-    );
-
-    updateZoomUi();
-  </script>
-
-</body>
-</html>
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" /><title>Ball Finder</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"><style>:root{--ink:#0b0e17;--deep:#0e1420;--slate:#141c2e;--card:#1a2238;--border:rgba(255,255,255,0.07);--gold:#e8a830;--gold2:#c88820;--goldf:#f4c060;--blue:#3a7bd5;--blue2:#2860b8;--white:#eef2f8;--muted:#6a7a96;--ok:#28c96a;--warn:#e8a030;--danger:#e84040;}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}html,body{height:100%;font-family:'DM Sans',sans-serif;overflow:hidden;background:var(--ink);color:var(--white);}.screen{display:none;width:100%;height:100%;}.screen.active{display:flex;flex-direction:column;}#homeScreen{background:var(--deep);position:relative;overflow:hidden;justify-content:flex-end;}.atmo{position:absolute;inset:0;pointer-events:none;}.atmo-glow-gold{position:absolute;top:-8%;right:-12%;width:55vw;height:55vw;max-width:380px;max-height:380px;border-radius:50%;background:radial-gradient(circle,rgba(232,168,48,0.14) 0%,transparent 68%);}.atmo-glow-blue{position:absolute;top:20%;left:-18%;width:50vw;height:50vw;max-width:320px;max-height:320px;border-radius:50%;background:radial-gradient(circle,rgba(58,123,213,0.10) 0%,transparent 68%);}.atmo-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:42px 42px;}.horizon{position:absolute;top:44%;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(232,168,48,0.25) 35%,rgba(232,168,48,0.25) 65%,transparent);}.fairway-wrap{position:absolute;bottom:0;left:0;right:0;height:58%;}.fairway-wrap svg{position:absolute;bottom:0;left:0;width:100%;height:100%;}.hero-ball{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);z-index:3;}.ball-shadow{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);width:56px;height:10px;border-radius:50%;background:rgba(0,0,0,0.5);filter:blur(6px);animation:shadowPulse 3s ease-in-out infinite;}@keyframes shadowPulse{0%,100%{transform:translateX(-50%) scaleX(0.8);opacity:0.5;}50%{transform:translateX(-50%) scaleX(1.1);opacity:0.25;}}.ball-sphere{width:68px;height:68px;border-radius:50%;background:radial-gradient(circle at 36% 30%,#ffffff 0%,#e8eee8 48%,#c4d4c4 100%);box-shadow:0 0 0 1px rgba(255,255,255,0.3),0 0 28px rgba(232,168,48,0.30),0 12px 30px rgba(0,0,0,0.55);animation:ballFloat 3s ease-in-out infinite;position:relative;}.ball-sphere::after{content:'';position:absolute;inset:0;border-radius:50%;background-image:radial-gradient(circle,rgba(0,0,0,0.07) 1px,transparent 1px);background-size:9px 9px;background-position:4px 4px;}@keyframes ballFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}.scan-ring{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);width:128px;height:128px;z-index:2;}.scan-ring svg{width:100%;height:100%;animation:ringRotate 12s linear infinite;}@keyframes ringRotate{to{transform:rotate(360deg);}}.ring-inner{position:absolute;inset:18px;border-radius:50%;border:1px solid rgba(232,168,48,0.2);}.corner-marks{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);width:160px;height:160px;z-index:2;}.corner-marks::before,.corner-marks::after,.cm-b::before,.cm-b::after{content:'';position:absolute;width:14px;height:14px;border-color:rgba(232,168,48,0.6);border-style:solid;}.corner-marks::before{top:0;left:0;border-width:2px 0 0 2px;}.corner-marks::after{top:0;right:0;border-width:2px 2px 0 0;}.cm-b::before{bottom:0;left:0;border-width:0 0 2px 2px;}.cm-b::after{bottom:0;right:0;border-width:0 2px 2px 0;}.home-panel{position:relative;z-index:4;padding:30px 26px calc(env(safe-area-inset-bottom,0px) + 36px);display:flex;flex-direction:column;gap:22px;background:linear-gradient(0deg,var(--deep) 72%,transparent);}.eyebrow{display:flex;align-items:center;gap:10px;}.eyebrow-line{width:28px;height:2px;background:var(--gold);border-radius:2px;}.eyebrow-text{font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);}.home-title{font-family:'Barlow Condensed',sans-serif;font-size:clamp(3.6rem,15vw,5.8rem);font-weight:800;line-height:0.88;letter-spacing:-0.01em;color:var(--white);}.home-title span{color:var(--gold);display:block;}.home-sub{font-size:0.92rem;color:var(--muted);line-height:1.6;max-width:32ch;}.stats-row{display:flex;gap:0;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:rgba(255,255,255,0.03);}.stat-item{flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:3px;border-right:1px solid var(--border);}.stat-item:last-child{border-right:none;}.stat-val{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:700;color:var(--white);letter-spacing:-0.02em;}.stat-label{font-size:0.72rem;color:var(--muted);font-weight:500;}.start-btn{appearance:none;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:1.15rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border-radius:16px;padding:20px 28px;color:var(--ink);background:linear-gradient(135deg,var(--goldf) 0%,var(--gold) 55%,var(--gold2) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.3),0 14px 28px rgba(200,136,32,0.35);display:flex;align-items:center;justify-content:center;gap:12px;transition:transform 0.13s,box-shadow 0.13s;}.start-btn:active{transform:scale(0.97);box-shadow:0 6px 12px rgba(200,136,32,0.2);}.home-panel>*{opacity:0;transform:translateY(16px);animation:riseUp 0.5s ease forwards;}.home-panel>*:nth-child(1){animation-delay:0.04s;}.home-panel>*:nth-child(2){animation-delay:0.10s;}.home-panel>*:nth-child(3){animation-delay:0.17s;}.home-panel>*:nth-child(4){animation-delay:0.24s;}.home-panel>*:nth-child(5){animation-delay:0.31s;}@keyframes riseUp{to{opacity:1;transform:none;}}#cameraScreen{position:fixed;inset:0;background:#000;overflow:hidden;}.viewer{position:absolute;inset:0;}canvas{width:100%;height:100%;display:block;background:#000;touch-action:none;object-fit:cover;}video{display:none;}.hud{position:absolute;inset:0;pointer-events:none;}.hud-top{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);left:16px;right:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}.glass-pill{display:flex;align-items:center;gap:8px;padding:10px 15px;border-radius:14px;background:rgba(11,14,23,0.62);border:1px solid rgba(255,255,255,0.10);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);}.live-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:blink 2s ease-in-out infinite;}@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.25;}}.hud-title{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.12em;color:var(--white);}.zoom-badge{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:0.06em;color:var(--gold);}.reticle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:92px;height:92px;opacity:0;transition:opacity 0.2s;}.reticle.active{opacity:1;}.ret-outer{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,255,255,0.88);box-shadow:0 0 20px rgba(255,255,255,0.2),inset 0 0 20px rgba(255,255,255,0.05);animation:retPop 0.3s ease forwards;}.ret-inner{position:absolute;inset:13px;border-radius:50%;border:1px solid rgba(232,168,48,0.7);}@keyframes retPop{0%{transform:scale(0.82);opacity:0;}70%{transform:scale(1.05);}100%{transform:scale(1);opacity:1;}}.scan-sweep{position:absolute;left:20%;right:20%;top:50%;height:2px;background:linear-gradient(90deg,transparent,rgba(232,168,48,0.9) 50%,transparent);box-shadow:0 0 10px rgba(232,168,48,0.5);opacity:0;}.scan-sweep.active{opacity:1;animation:sweep 0.65s ease-in-out forwards;}@keyframes sweep{0%{transform:translateY(-48px);opacity:0;}20%{opacity:1;}80%{opacity:1;}100%{transform:translateY(48px);opacity:0;}}.cam-bottom{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);display:flex;flex-direction:column;gap:10px;pointer-events:none;}.cam-actions{display:flex;gap:10px;pointer-events:auto;}.btn-ghost{appearance:none;border:1px solid rgba(255,255,255,0.14);border-radius:14px;padding:15px 16px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:600;cursor:pointer;color:rgba(255,255,255,0.75);background:rgba(11,14,23,0.60);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);white-space:nowrap;transition:background 0.13s;}.btn-ghost:active{background:rgba(30,40,60,0.80);}.btn-found{flex:1;appearance:none;border:none;border-radius:14px;padding:15px 20px;font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;cursor:pointer;color:var(--ink);background:linear-gradient(135deg,var(--goldf) 0%,var(--gold) 55%,var(--gold2) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.28),0 10px 22px rgba(200,136,32,0.40);transition:transform 0.12s;}.btn-found:active{transform:scale(0.97);}</style></head><body><section class="screen active" id="homeScreen"><div class="atmo"><div class="atmo-glow-gold"></div><div class="atmo-glow-blue"></div><div class="atmo-grid"></div><div class="horizon"></div></div><div class="fairway-wrap"><svg viewBox="0 0 390 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice"><defs><linearGradient id="rough" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#12281a"/><stop offset="100%" stop-color="#0a1610"/></linearGradient><linearGradient id="fairway" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1e5c30"/><stop offset="100%" stop-color="#122018"/></linearGradient><linearGradient id="green" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#267840"/><stop offset="100%" stop-color="#1a5028"/></linearGradient><radialGradient id="glow" cx="50%" cy="40%" r="50%"><stop offset="0%" stop-color="rgba(232,168,48,0.10)"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs><ellipse cx="195" cy="420" rx="340" ry="250" fill="url(#rough)"/><ellipse cx="195" cy="400" rx="200" ry="170" fill="url(#fairway)"/><ellipse cx="195" cy="380" rx="120" ry="100" fill="url(#green)"/><ellipse cx="195" cy="360" rx="340" ry="250" fill="url(#glow)"/><g opacity="0.06" stroke="#fff" stroke-width="1"><line x1="50"  y1="280" x2="340" y2="296"/><line x1="50"  y1="304" x2="340" y2="320"/><line x1="50"  y1="328" x2="340" y2="344"/><line x1="110" y1="260" x2="116" y2="380"/><line x1="152" y1="258" x2="158" y2="380"/><line x1="194" y1="256" x2="200" y2="380"/><line x1="236" y1="258" x2="242" y2="380"/><line x1="276" y1="262" x2="282" y2="380"/></g><line x1="194" y1="270" x2="194" y2="320" stroke="rgba(255,255,255,0.6)" stroke-width="1.8"/><polygon points="194,270 220,280 194,290" fill="#e8a830" opacity="0.9"/><ellipse cx="194" cy="321" rx="6" ry="2.2" fill="rgba(0,0,0,0.4)"/><circle cx="255" cy="302" r="5.5" fill="#fff" opacity="0.55"/><circle cx="144" cy="294" r="4"   fill="#fff" opacity="0.35"/><circle cx="218" cy="328" r="3.5" fill="#fff" opacity="0.28"/></svg></div><div class="scan-ring"><div class="ring-inner"></div><svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="64" cy="64" r="58" stroke="rgba(232,168,48,0.35)" stroke-width="1.5" stroke-dasharray="6 4"/><circle cx="64" cy="64" r="46" stroke="rgba(255,255,255,0.10)" stroke-width="1"/></svg></div><div class="corner-marks"><div class="cm-b"></div></div><div class="hero-ball"><div class="ball-sphere"></div><div class="ball-shadow"></div></div><div class="home-panel"><div class="eyebrow"><div class="eyebrow-line"></div><div class="eyebrow-text">Golf Vision · Détection terrain</div></div><h1 class="home-title">BALL<span>FINDER</span></h1><p class="home-sub">Repérez votre balle dans l'herbe en quelques secondes grâce à la détection visuelle intelligente.</p><button class="start-btn" id="startExperienceBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12a7 7 0 1 0 14 0A7 7 0 0 0 5 12Z" stroke="#0b0e17" stroke-width="1.8"/><path d="M10.5 9.5l4 2.5-4 2.5V9.5Z" fill="#0b0e17"/></svg>Lancer la recherche</button></div></section><section class="screen" id="cameraScreen"><div class="viewer"><canvas id="canvas"></canvas><video id="video" playsinline autoplay muted></video><div class="hud"><div class="hud-top"><div class="glass-pill"><div class="live-dot"></div><div class="hud-title">BALL FINDER</div></div><div class="glass-pill"><div class="zoom-badge" id="zoomPill">× 1.0</div></div></div><div class="reticle" id="focusRing"><div class="ret-outer"></div><div class="ret-inner"></div></div><div class="scan-sweep" id="scanLine"></div></div><div class="cam-bottom"><div class="cam-actions"><button class="btn-ghost" id="zoomOutBtn">↙ Dézoomer</button><button class="btn-found" id="ballFoundBtn">✓ Balle trouvée</button></div></div></div></section><script>
+const homeScreen   = document.getElementById("homeScreen");
+const cameraScreen = document.getElementById("cameraScreen");
+const video        = document.getElementById("video");
+const canvas       = document.getElementById("canvas");
+const ctx          = canvas.getContext("2d", { willReadFrequently: true });
+const zoomPill     = document.getElementById("zoomPill");
+const focusRing    = document.getElementById("focusRing");
+const scanLine     = document.getElementById("scanLine");
+let stream = null, videoTrack = null, rafId = null, frameCounter = 0;
+let latestRawFrame = null, latestDetectedCandidates = [];
+let exclusionZones = [], inspectionState = null, pinchState = null;
+let zoomState = { scale: 1, targetScale: 1, centerX: .5, centerY: .5 };
+let cameraZoomSupport = null, pendingStrictAnalysis = null;
+let tracks = [];
+let nextTrackId = 1;
+const PROCESS_SCALE = .52;
+const MIN_ZOOM = 1, MAX_ZOOM = 3.2, STRICT_ANALYSIS_DELAY_MS = 220;
+const MAX_EXCLUSIONS = 40;
+const RENDER_MAX_DIMENSION = 1080;
+const DISPLAY_INTERVAL_MS = 1000 / 24;
+const ANALYSIS_INTERVAL_MS = 125;
+const CALIBRATION_INTERVAL_MS = 1200;
+const ANALYSIS_SCALES = [0.46, 0.62, 0.80];
+const SHOW_THRESHOLD = 0.60;
+const TRACK_DECAY = 0.06;
+const TRACK_GAIN = 0.18;
+const TRACK_MAX_MISSED = 14;
+const rawCanvas = document.createElement("canvas");
+const rawCtx = rawCanvas.getContext("2d", { willReadFrequently: true });
+const scaledCanvas = document.createElement("canvas");
+const scaledCtx = scaledCanvas.getContext("2d", { willReadFrequently: true });
+const cropCanvas = document.createElement("canvas");
+const cropCtx = cropCanvas.getContext("2d", { willReadFrequently: true });
+let terrainModel = {
+ready: false,
+sceneLum: 105,
+centroids: [
+{ rn: 0.24, gn: 0.52, bn: 0.24, lum: 90,  sat: 0.54, weight: 1 },
+{ rn: 0.40, gn: 0.42, bn: 0.18, lum: 132, sat: 0.42, weight: 1 },
+{ rn: 0.46, gn: 0.35, bn: 0.19, lum: 96,  sat: 0.45, weight: 1 }
+]
+};
+let terrainLut = new Uint8Array(4096);
+let lastDisplayTime = 0;
+let lastAnalysisTime = 0;
+let lastCalibrationTime = 0;
+let analysisScaleIndex = 0;
+function setStatus() {}
+function setHint() {}
+function showScreen(n) {
+homeScreen.classList.toggle("active", n === "home");
+cameraScreen.classList.toggle("active", n === "camera");
+}
+function clamp(v) { return v < 0 ? 0 : v > 255 ? 255 : v; }
+function setCanvasSize(target, width, height) {
+if (target.width !== width || target.height !== height) {
+target.width = width;
+target.height = height;
+}
+}
+function getRenderDimensions(videoWidth, videoHeight) {
+const longestSide = Math.max(videoWidth, videoHeight);
+const scale = Math.min(1, RENDER_MAX_DIMENSION / longestSide);
+return {
+width: Math.max(2, Math.round(videoWidth * scale)),
+height: Math.max(2, Math.round(videoHeight * scale))
+};
+}
+function updateZoomUi() {
+zoomPill.textContent = `× ${zoomState.scale.toFixed(1)}`;
+}
+function pulseScan() {
+focusRing.classList.remove("active");
+scanLine.classList.remove("active");
+void focusRing.offsetWidth;
+focusRing.classList.add("active");
+scanLine.classList.add("active");
+setTimeout(() => {
+focusRing.classList.remove("active");
+scanLine.classList.remove("active");
+}, 760);
+}
+function rgbToHsv(r, g, b) {
+r /= 255; g /= 255; b /= 255;
+const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+let h = 0;
+const s = mx === 0 ? 0 : d / mx, v = mx;
+if (d) {
+switch (mx) {
+case r: h = ((g - b) / d) % 6; break;
+case g: h = (b - r) / d + 2; break;
+case b: h = (r - g) / d + 4; break;
+}
+h *= 60;
+if (h < 0) h += 360;
+}
+return { h, s, v };
+}
+function luminance(r, g, b) {
+return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+function chroma(r, g, b) {
+return Math.max(r, g, b) - Math.min(r, g, b);
+}
+function clamp01(value) {
+return Math.max(0, Math.min(1, value));
+}
+function getColorFeatures(r, g, b) {
+const sum = Math.max(1, r + g + b);
+const hsv = rgbToHsv(r, g, b);
+return {
+rn: r / sum,
+gn: g / sum,
+bn: b / sum,
+lum: luminance(r, g, b),
+sat: hsv.s,
+hue: hsv.h,
+value: hsv.v
+};
+}
+function featureDistance(a, b) {
+const dr = a.rn - b.rn;
+const dg = a.gn - b.gn;
+const db = a.bn - b.bn;
+const ds = a.sat - b.sat;
+const dl = (a.lum - b.lum) / 255;
+return Math.sqrt(
+dr * dr +
+dg * dg +
+db * db
+) * 3.35 +
+Math.abs(ds) * 0.42 +
+Math.abs(dl) * 0.22;
+}
+function isBroadSeasonalTerrainColor(feature) {
+const hueAccepted =
+feature.hue >= 8 &&
+feature.hue <= 178;
+const lowSaturationDryGrass =
+feature.sat >= 0.045 &&
+feature.lum >= 32 &&
+feature.lum <= 205;
+const coloredGrass =
+feature.sat >= 0.08 &&
+feature.value >= 0.10 &&
+feature.value <= 0.92;
+return hueAccepted &&
+(
+lowSaturationDryGrass ||
+coloredGrass
+);
+}
+function terrainAffinityRaw(r, g, b) {
+const maximum = Math.max(r, g, b);
+const minimum = Math.min(r, g, b);
+const currentChroma = maximum - minimum;
+const feature = getColorFeatures(r, g, b);
+if (
+feature.lum < 10 ||
+feature.lum > 236 ||
+(
+maximum > 174 &&
+currentChroma < 40
+)
+) {
+return 0;
+}
+let bestAffinity = 0;
+for (const centroid of terrainModel.centroids) {
+const distance = featureDistance(
+feature,
+centroid
+);
+const affinity = clamp01(
+1 - distance / 0.62
+);
+if (affinity > bestAffinity) {
+bestAffinity = affinity;
+}
+}
+const seasonalPrior =
+(
+feature.hue >= 12 &&
+feature.hue <= 175 &&
+feature.sat >= 0.08 &&
+feature.value <= 0.92
+)
+? 0.28
+: 0;
+return Math.max(
+bestAffinity,
+seasonalPrior
+);
+}
+function buildTerrainLut() {
+const lut = new Uint8Array(4096);
+for (let ri = 0; ri < 16; ri++) {
+for (let gi = 0; gi < 16; gi++) {
+for (let bi = 0; bi < 16; bi++) {
+const r = ri * 16 + 8;
+const g = gi * 16 + 8;
+const b = bi * 16 + 8;
+const index =
+(ri << 8) |
+(gi << 4) |
+bi;
+lut[index] = Math.round(
+terrainAffinityRaw(r, g, b) * 255
+);
+}
+}
+}
+terrainLut = lut;
+}
+function terrainAffinityFast(r, g, b) {
+const index =
+((r >> 4) << 8) |
+((g >> 4) << 4) |
+(b >> 4);
+return terrainLut[index] / 255;
+}
+function chooseInitialCentroids(samples, count = 3) {
+if (!samples.length) {
+return [];
+}
+const centroids = [];
+let first = samples[0];
+let bestCentrality = Infinity;
+for (let i = 0; i < samples.length; i += Math.max(1, Math.floor(samples.length / 120))) {
+let localDistance = 0;
+const candidate = samples[i];
+for (let j = 0; j < samples.length; j += Math.max(1, Math.floor(samples.length / 40))) {
+localDistance += featureDistance(
+candidate,
+samples[j]
+);
+}
+if (localDistance < bestCentrality) {
+bestCentrality = localDistance;
+first = candidate;
+}
+}
+centroids.push({ ...first });
+while (
+centroids.length < count &&
+centroids.length < samples.length
+) {
+let farthest = samples[0];
+let farthestDistance = -1;
+for (const sample of samples) {
+let nearestDistance = Infinity;
+for (const centroid of centroids) {
+nearestDistance = Math.min(
+nearestDistance,
+featureDistance(
+sample,
+centroid
+)
+);
+}
+if (nearestDistance > farthestDistance) {
+farthestDistance = nearestDistance;
+farthest = sample;
+}
+}
+centroids.push({ ...farthest });
+}
+return centroids;
+}
+function clusterTerrainSamples(samples) {
+if (samples.length < 40) {
+return [];
+}
+let centroids =
+chooseInitialCentroids(
+samples,
+3
+);
+for (let iteration = 0; iteration < 5; iteration++) {
+const groups = centroids.map(() => ({
+rn: 0,
+gn: 0,
+bn: 0,
+lum: 0,
+sat: 0,
+count: 0
+}));
+for (const sample of samples) {
+let bestIndex = 0;
+let bestDistance = Infinity;
+for (let index = 0; index < centroids.length; index++) {
+const distance = featureDistance(
+sample,
+centroids[index]
+);
+if (distance < bestDistance) {
+bestDistance = distance;
+bestIndex = index;
+}
+}
+const group = groups[bestIndex];
+group.rn += sample.rn;
+group.gn += sample.gn;
+group.bn += sample.bn;
+group.lum += sample.lum;
+group.sat += sample.sat;
+group.count++;
+}
+centroids = centroids.map(
+(centroid, index) => {
+const group = groups[index];
+if (!group.count) {
+return centroid;
+}
+return {
+rn: group.rn / group.count,
+gn: group.gn / group.count,
+bn: group.bn / group.count,
+lum: group.lum / group.count,
+sat: group.sat / group.count,
+weight: group.count / samples.length
+};
+}
+);
+}
+return centroids.filter(
+centroid =>
+centroid.weight >= 0.055 &&
+centroid.lum >= 18 &&
+centroid.lum <= 220
+);
+}
+function smoothTerrainCentroids(newCentroids) {
+if (!newCentroids.length) {
+return;
+}
+if (!terrainModel.ready) {
+terrainModel.centroids =
+newCentroids.map(
+centroid => ({ ...centroid })
+);
+return;
+}
+const previous =
+terrainModel.centroids;
+const used =
+new Set();
+terrainModel.centroids =
+newCentroids.map(
+newCentroid => {
+let nearestIndex = -1;
+let nearestDistance = Infinity;
+for (let index = 0; index < previous.length; index++) {
+if (used.has(index)) {
+continue;
+}
+const distance = featureDistance(
+newCentroid,
+previous[index]
+);
+if (distance < nearestDistance) {
+nearestDistance = distance;
+nearestIndex = index;
+}
+}
+if (nearestIndex < 0) {
+return { ...newCentroid };
+}
+used.add(nearestIndex);
+const oldCentroid =
+previous[nearestIndex];
+const oldWeight = 0.68;
+const newWeight = 0.32;
+return {
+rn:
+oldCentroid.rn * oldWeight +
+newCentroid.rn * newWeight,
+gn:
+oldCentroid.gn * oldWeight +
+newCentroid.gn * newWeight,
+bn:
+oldCentroid.bn * oldWeight +
+newCentroid.bn * newWeight,
+lum:
+oldCentroid.lum * oldWeight +
+newCentroid.lum * newWeight,
+sat:
+oldCentroid.sat * oldWeight +
+newCentroid.sat * newWeight,
+weight:
+newCentroid.weight
+};
+}
+);
+}
+function getAdaptiveWhiteThreshold(strict = false) {
+const offset =
+strict
+? 56
+: 42;
+const minimum =
+strict
+? 150
+: 136;
+const maximum =
+strict
+? 202
+: 190;
+return Math.max(
+minimum,
+Math.min(
+maximum,
+terrainModel.sceneLum + offset
+)
+);
+}
+function isExcluded(x, y) {
+for (const z of exclusionZones) {
+if (Math.hypot(x - z.x, y - z.y) <= z.radius) return true;
+}
+return false;
+}
+function getCanvasNorm(cx, cy) {
+const r = canvas.getBoundingClientRect();
+return {
+x: Math.max(0, Math.min(1, (cx - r.left) / r.width)),
+y: Math.max(0, Math.min(1, (cy - r.top) / r.height))
+};
+}
+function getDigitalZoomCrop(fw, fh) {
+const cw = Math.floor(fw / zoomState.scale), ch = Math.floor(fh / zoomState.scale);
+const cx = zoomState.centerX * fw, cy = zoomState.centerY * fh;
+return {
+sx: Math.max(0, Math.min(fw - cw, Math.floor(cx - cw / 2))),
+sy: Math.max(0, Math.min(fh - ch, Math.floor(cy - ch / 2))),
+cropW: cw,
+cropH: ch
+};
+}
+function screenToFrame(cx, cy) {
+const pos = getCanvasNorm(cx, cy), fw = canvas.width, fh = canvas.height;
+if (zoomState.scale <= 1.001 || cameraZoomSupport?.usingNativeZoom) {
+return { x: Math.floor(pos.x * fw), y: Math.floor(pos.y * fh) };
+}
+const { sx, sy, cropW, cropH } = getDigitalZoomCrop(fw, fh);
+return {
+x: Math.floor(sx + pos.x * cropW),
+y: Math.floor(sy + pos.y * cropH)
+};
+}
+async function setupCameraZoomSupport() {
+cameraZoomSupport = { supported: false, usingNativeZoom: false, min: 1, max: 1, step: .1 };
+if (!videoTrack?.getCapabilities) return;
+try {
+const c = videoTrack.getCapabilities();
+if (c?.zoom !== undefined) {
+cameraZoomSupport = {
+supported: true,
+usingNativeZoom: true,
+min: c.zoom.min ?? 1,
+max: c.zoom.max ?? 3,
+step: c.zoom.step ?? .1
+};
+}
+} catch {}
+}
+async function applyNativeZoom() {
+if (!cameraZoomSupport?.usingNativeZoom || !videoTrack?.applyConstraints) return;
+try {
+await videoTrack.applyConstraints({
+advanced: [{
+zoom: Math.max(cameraZoomSupport.min, Math.min(cameraZoomSupport.max, zoomState.targetScale))
+}]
+});
+} catch {
+cameraZoomSupport.usingNativeZoom = false;
+}
+}
+function updateZoom() {
+zoomState.scale += (zoomState.targetScale - zoomState.scale) * .22;
+if (Math.abs(zoomState.scale - zoomState.targetScale) < .01) zoomState.scale = zoomState.targetScale;
+updateZoomUi();
+}
+function scheduleStrictAnalysis() {
+if (pendingStrictAnalysis) clearTimeout(pendingStrictAnalysis);
+if (zoomState.targetScale <= 1.35 || !latestRawFrame) return;
+pendingStrictAnalysis = setTimeout(() => {
+analyzeAt(
+Math.floor(zoomState.centerX * latestRawFrame.width),
+Math.floor(zoomState.centerY * latestRawFrame.height)
+);
+}, STRICT_ANALYSIS_DELAY_MS);
+}
+function downscaleFrame(frameData, w, h, scale) {
+const pW = Math.max(120, Math.floor(w * scale));
+const pH = Math.max(90, Math.floor(h * scale));
+setCanvasSize(rawCanvas, w, h);
+rawCtx.putImageData(frameData, 0, 0);
+setCanvasSize(scaledCanvas, pW, pH);
+scaledCtx.clearRect(0, 0, pW, pH);
+scaledCtx.imageSmoothingEnabled = true;
+scaledCtx.imageSmoothingQuality = "high";
+scaledCtx.drawImage(rawCanvas, 0, 0, pW, pH);
+const img = scaledCtx.getImageData(0, 0, pW, pH);
+return { img, pW, pH };
+}
+function calibrateTerrain(frameData, w, h) {
+const samples = [];
+const sceneLuminances = [];
+const xStart = Math.floor(w * 0.06);
+const xEnd = Math.floor(w * 0.94);
+const yStart = Math.floor(h * 0.44);
+const yEnd = Math.floor(h * 0.95);
+const step = Math.max(
+7,
+Math.floor(
+Math.max(w, h) / 125
+)
+);
+for (let y = yStart; y < yEnd; y += step) {
+for (let x = xStart; x < xEnd; x += step) {
+const index = (y * w + x) * 4;
+const r = frameData.data[index];
+const g = frameData.data[index + 1];
+const b = frameData.data[index + 2];
+const maximum = Math.max(r, g, b);
+const minimum = Math.min(r, g, b);
+const currentChroma = maximum - minimum;
+const feature = getColorFeatures(r, g, b);
+const isWhiteish =
+maximum > 168 &&
+currentChroma < 42;
+const isBlueSkyLike =
+b > r * 1.24 &&
+b > g * 1.13 &&
+feature.sat > 0.18;
+const isVeryRed =
+(
+feature.hue < 8 ||
+feature.hue > 345
+) &&
+feature.sat > 0.24;
+if (
+feature.lum < 14 ||
+feature.lum > 228 ||
+isWhiteish ||
+isBlueSkyLike ||
+isVeryRed
+) {
+continue;
+}
+sceneLuminances.push(
+feature.lum
+);
+if (
+isBroadSeasonalTerrainColor(
+feature
+)
+) {
+samples.push(feature);
+}
+}
+}
+if (sceneLuminances.length) {
+sceneLuminances.sort(
+(a, b) => a - b
+);
+const median =
+sceneLuminances[
+Math.floor(
+sceneLuminances.length / 2
+)
+];
+terrainModel.sceneLum =
+terrainModel.ready
+? (
+terrainModel.sceneLum * 0.72 +
+median * 0.28
+)
+: median;
+}
+const centroids =
+clusterTerrainSamples(
+samples
+);
+if (centroids.length) {
+smoothTerrainCentroids(
+centroids
+);
+terrainModel.ready = true;
+buildTerrainLut();
+}
+}
+function segmentMasks(frameData, w, h, scale = PROCESS_SCALE, strict = false) {
+const {
+img,
+pW,
+pH
+} = downscaleFrame(
+frameData,
+w,
+h,
+scale
+);
+const data = img.data;
+const whiteMask =
+new Uint8Array(pW * pH);
+const flowerYellowMask =
+new Uint8Array(pW * pH);
+const terrainMask =
+new Uint8Array(pW * pH);
+const whiteThreshold =
+getAdaptiveWhiteThreshold(
+strict
+);
+const maximumChroma =
+strict
+? 46
+: 54;
+const terrainThreshold =
+strict
+? 0.40
+: 0.32;
+for (
+let dataIndex = 0,
+pixelIndex = 0;
+dataIndex < data.length;
+dataIndex += 4,
+pixelIndex++
+) {
+const r = data[dataIndex];
+const g = data[dataIndex + 1];
+const b = data[dataIndex + 2];
+const maximum =
+Math.max(r, g, b);
+const minimum =
+Math.min(r, g, b);
+const currentChroma =
+maximum - minimum;
+if (
+maximum >= whiteThreshold &&
+currentChroma <= maximumChroma &&
+Math.abs(r - g) <= 40 &&
+Math.abs(g - b) <= 40 &&
+Math.abs(r - b) <= 44
+) {
+whiteMask[pixelIndex] = 255;
+}
+if (
+terrainAffinityFast(
+r,
+g,
+b
+) >= terrainThreshold
+) {
+terrainMask[pixelIndex] = 255;
+}
+const hsv =
+rgbToHsv(r, g, b);
+if (
+hsv.h >= 38 &&
+hsv.h <= 72 &&
+hsv.s >= 0.44 &&
+hsv.v >= 0.48 &&
+r > b + 24 &&
+g > b + 20
+) {
+flowerYellowMask[pixelIndex] = 255;
+}
+}
+const radius =
+strict
+? 2
+: 3;
+const flowerReject =
+strict
+? 5
+: 8;
+for (
+let y = radius;
+y < pH - radius;
+y++
+) {
+for (
+let x = radius;
+x < pW - radius;
+x++
+) {
+const index =
+y * pW + x;
+if (!whiteMask[index]) {
+continue;
+}
+let flowerNeighbours = 0;
+for (
+let dy = -radius;
+dy <= radius;
+dy++
+) {
+const row =
+(y + dy) * pW;
+for (
+let dx = -radius;
+dx <= radius;
+dx++
+) {
+if (
+flowerYellowMask[
+row + x + dx
+]
+) {
+flowerNeighbours++;
+}
+}
+}
+if (
+flowerNeighbours >=
+flowerReject
+) {
+whiteMask[index] = 0;
+}
+}
+}
+return {
+d: data,
+pW,
+pH,
+whiteMask,
+yellowMask: flowerYellowMask,
+terrainMask
+};
+}
+function extractComponents(mask, W, H) {
+const visited = new Uint8Array(mask.length);
+const q = new Int32Array(mask.length);
+const out = [];
+for (let st = 0; st < mask.length; st++) {
+if (!mask[st] || visited[st]) continue;
+let qS = 0, qE = 0;
+q[qE++] = st; visited[st] = 1;
+let area = 0, minX = W, maxX = 0, minY = H, maxY = 0, sumX = 0, sumY = 0, perimeter = 0;
+while (qS < qE) {
+const idx = q[qS++], x = idx % W, y = (idx / W) | 0;
+area++; sumX += x; sumY += y;
+if (x < minX) minX = x; if (x > maxX) maxX = x;
+if (y < minY) minY = y; if (y > maxY) maxY = y;
+let boundary = false;
+for (let dy = -1; dy <= 1; dy++) {
+for (let dx = -1; dx <= 1; dx++) {
+if (!dx && !dy) continue;
+const xx = x + dx, yy = y + dy;
+if (xx < 0 || xx >= W || yy < 0 || yy >= H) { boundary = true; continue; }
+const n = yy * W + xx;
+if (!mask[n]) boundary = true;
+else if (!visited[n]) { visited[n] = 1; q[qE++] = n; }
+}
+}
+if (boundary) perimeter++;
+}
+if (area < 3 || area > 3000) continue;
+const width = maxX - minX + 1, height = maxY - minY + 1, aspect = width / height;
+const fill = area / (width * height);
+const radiusEstimate = Math.max(width, height) * 0.5;
+const circularity = perimeter > 0 ? (4 * Math.PI * area) / (perimeter * perimeter) : 0;
+out.push({
+area, minX, maxX, minY, maxY, width, height,
+cx: sumX / area, cy: sumY / area,
+aspect, fill, perimeter, circularity, radiusEstimate
+});
+}
+return out;
+}
+function ringContinuity(mask, W, H, cx, cy, r, samples = 24) {
+let hits = 0, transitions = 0, prev = null;
+for (let k = 0; k < samples; k++) {
+const a = 2 * Math.PI * k / samples;
+const x = Math.round(cx + r * Math.cos(a));
+const y = Math.round(cy + r * Math.sin(a));
+const v = (x >= 0 && x < W && y >= 0 && y < H) ? (mask[y * W + x] ? 1 : 0) : 0;
+hits += v;
+if (prev !== null && v !== prev) transitions++;
+prev = v;
+}
+return { continuity: hits / samples, roughness: transitions / samples };
+}
+function sampleLocalStats(
+data,
+width,
+height,
+centerX,
+centerY,
+innerRadius,
+outerRadius,
+whiteMask,
+terrainMask,
+yellowMask
+) {
+let count = 0;
+let luminanceSum = 0;
+let luminanceSquareSum = 0;
+let white = 0;
+let terrain = 0;
+let yellow = 0;
+let chromaSum = 0;
+const xStart =
+Math.max(
+0,
+Math.floor(
+centerX - outerRadius
+)
+);
+const xEnd =
+Math.min(
+width - 1,
+Math.ceil(
+centerX + outerRadius
+)
+);
+const yStart =
+Math.max(
+0,
+Math.floor(
+centerY - outerRadius
+)
+);
+const yEnd =
+Math.min(
+height - 1,
+Math.ceil(
+centerY + outerRadius
+)
+);
+const innerRadiusSquared =
+innerRadius * innerRadius;
+const outerRadiusSquared =
+outerRadius * outerRadius;
+for (
+let y = yStart;
+y <= yEnd;
+y++
+) {
+for (
+let x = xStart;
+x <= xEnd;
+x++
+) {
+const dx =
+x - centerX;
+const dy =
+y - centerY;
+const distanceSquared =
+dx * dx + dy * dy;
+if (
+distanceSquared <
+innerRadiusSquared ||
+distanceSquared >
+outerRadiusSquared
+) {
+continue;
+}
+const pixelIndex =
+y * width + x;
+const dataIndex =
+pixelIndex * 4;
+const r =
+data[dataIndex];
+const g =
+data[dataIndex + 1];
+const b =
+data[dataIndex + 2];
+const currentLuminance =
+luminance(r, g, b);
+const currentChroma =
+chroma(r, g, b);
+count++;
+luminanceSum +=
+currentLuminance;
+luminanceSquareSum +=
+currentLuminance *
+currentLuminance;
+chromaSum +=
+currentChroma;
+if (whiteMask[pixelIndex]) {
+white++;
+}
+if (terrainMask[pixelIndex]) {
+terrain++;
+}
+if (yellowMask[pixelIndex]) {
+yellow++;
+}
+}
+}
+if (!count) {
+return {
+count: 0,
+meanLum: 0,
+varLum: 0,
+meanChroma: 0,
+whiteRatio: 0,
+terrainRatio: 0,
+yellowRatio: 0
+};
+}
+const meanLuminance =
+luminanceSum / count;
+return {
+count,
+meanLum:
+meanLuminance,
+varLum:
+Math.max(
+0,
+(
+luminanceSquareSum /
+count
+) -
+(
+meanLuminance *
+meanLuminance
+)
+),
+meanChroma:
+chromaSum / count,
+whiteRatio:
+white / count,
+terrainRatio:
+terrain / count,
+yellowRatio:
+yellow / count
+};
+}
+function sigmoidLike(value, minimum, maximum) {
+if (value <= minimum) {
+return 0;
+}
+if (value >= maximum) {
+return 1;
+}
+return (
+value - minimum
+) / (
+maximum - minimum
+);
+}
+function scoreCandidate(
+component,
+data,
+width,
+height,
+whiteMask,
+terrainMask,
+yellowMask,
+strict = false
+) {
+const centerX =
+component.cx;
+const centerY =
+component.cy;
+const radius =
+Math.max(
+1.6,
+Math.min(
+18,
+component.radiusEstimate
+)
+);
+const center =
+sampleLocalStats(
+data,
+width,
+height,
+centerX,
+centerY,
+0,
+radius * 0.9,
+whiteMask,
+terrainMask,
+yellowMask
+);
+const ring1 =
+sampleLocalStats(
+data,
+width,
+height,
+centerX,
+centerY,
+radius,
+radius * 1.85,
+whiteMask,
+terrainMask,
+yellowMask
+);
+const ring2 =
+sampleLocalStats(
+data,
+width,
+height,
+centerX,
+centerY,
+radius * 1.85,
+radius * 2.8,
+whiteMask,
+terrainMask,
+yellowMask
+);
+const continuity =
+ringContinuity(
+whiteMask,
+width,
+height,
+centerX,
+centerY,
+Math.max(
+1.2,
+radius * 0.9
+),
+component.area <= 12
+? 16
+: 24
+);
+const normalizedY =
+centerY / height;
+const verticalPrior =
+Math.max(
+0,
+Math.min(
+1,
+(
+normalizedY - 0.10
+) / 0.76
+)
+);
+const adaptiveWhiteLow =
+getAdaptiveWhiteThreshold(
+strict
+) - 10;
+const adaptiveWhiteHigh =
+Math.min(
+255,
+adaptiveWhiteLow + 78
+);
+const whiteScore =
+sigmoidLike(
+center.meanLum,
+adaptiveWhiteLow,
+adaptiveWhiteHigh
+) *
+(
+1 -
+sigmoidLike(
+center.meanChroma,
+24,
+76
+)
+);
+const roundScore =
+component.area <= 12
+? sigmoidLike(
+1 -
+Math.abs(
+1 - component.aspect
+),
+0.14,
+0.86
+)
+: (
+0.52 *
+sigmoidLike(
+component.circularity,
+0.17,
+0.82
+)
+) +
+(
+0.48 *
+sigmoidLike(
+component.fill,
+0.18,
+0.80
+)
+);
+const compactScore =
+component.area <= 12
+? sigmoidLike(
+component.fill,
+0.10,
+0.56
+)
+: (
+0.55 *
+sigmoidLike(
+component.fill,
+0.28,
+0.86
+)
+) +
+(
+0.45 *
+sigmoidLike(
+component.circularity,
+0.20,
+0.88
+)
+);
+const contrast =
+center.meanLum -
+ring1.meanLum;
+const contrastScore =
+sigmoidLike(
+contrast,
+7,
+64
+);
+const terrainContextScore =
+(
+0.60 *
+sigmoidLike(
+ring1.terrainRatio,
+0.10,
+0.68
+)
+) +
+(
+0.40 *
+sigmoidLike(
+ring2.terrainRatio,
+0.10,
+0.72
+)
+);
+const centerUniformityScore =
+1 -
+sigmoidLike(
+center.varLum,
+240,
+2050
+);
+const edgeContinuityScore =
+(
+0.60 *
+sigmoidLike(
+continuity.continuity,
+0.24,
+0.92
+)
+) +
+(
+0.40 *
+(
+1 -
+sigmoidLike(
+continuity.roughness,
+0.12,
+0.72
+)
+)
+);
+const yellowPenalty =
+Math.max(
+sigmoidLike(
+ring1.yellowRatio,
+0.04,
+0.20
+),
+sigmoidLike(
+center.yellowRatio,
+0.03,
+0.14
+)
+);
+const ringWhitePenalty =
+sigmoidLike(
+ring1.whiteRatio,
+0.18,
+0.50
+);
+const topFramePenalty =
+1 - verticalPrior;
+if (
+component.area > 430 &&
+component.fill > 0.76
+) {
+return null;
+}
+if (
+component.aspect < 0.27 ||
+component.aspect > 2.35
+) {
+return null;
+}
+if (
+center.meanLum <
+adaptiveWhiteLow - 16
+) {
+return null;
+}
+let score =
+0.20 * whiteScore +
+0.15 * roundScore +
+0.12 * compactScore +
+0.15 * contrastScore +
+0.16 * terrainContextScore +
+0.09 * centerUniformityScore +
+0.07 * edgeContinuityScore +
+0.06 * verticalPrior -
+0.13 * yellowPenalty -
+0.11 * ringWhitePenalty -
+0.04 * topFramePenalty;
+if (component.area <= 12) {
+score +=
+0.06 * contrastScore +
+0.06 * terrainContextScore -
+0.02 * roundScore;
+}
+if (component.area > 30) {
+score +=
+0.04 * roundScore +
+0.03 * compactScore;
+}
+score =
+Math.max(
+0,
+Math.min(
+1,
+score
+)
+);
+return {
+score,
+detail: {
+yellowPenalty,
+ringWhitePenalty,
+terrainContextScore
+}
+};
+}
+function detectCandidates(
+frameData,
+width,
+height,
+scale = PROCESS_SCALE,
+strict = false
+) {
+const {
+d,
+pW,
+pH,
+whiteMask,
+yellowMask,
+terrainMask
+} = segmentMasks(
+frameData,
+width,
+height,
+scale,
+strict
+);
+const components =
+extractComponents(
+whiteMask,
+pW,
+pH
+);
+const output = [];
+for (const component of components) {
+const scored =
+scoreCandidate(
+component,
+d,
+pW,
+pH,
+whiteMask,
+terrainMask,
+yellowMask,
+strict
+);
+if (!scored) {
+continue;
+}
+const threshold =
+strict
+? 0.31
+: 0.365;
+if (
+scored.score <
+threshold
+) {
+continue;
+}
+const frameX =
+component.cx /
+pW *
+width;
+const frameY =
+component.cy /
+pH *
+height;
+if (
+isExcluded(
+frameX,
+frameY
+)
+) {
+continue;
+}
+output.push({
+x: frameX,
+y: frameY,
+radius:
+Math.max(
+4,
+component.radiusEstimate /
+pW *
+width
+),
+score:
+scored.score,
+area:
+component.area,
+sourceScale:
+scale,
+detail:
+scored.detail
+});
+}
+return output;
+}
+function fuseCandidates(cands, distFactor = 1.8) {
+if (!cands.length) return cands;
+cands.sort((a, b) => b.score - a.score);
+const fused = [];
+for (const c of cands) {
+let merged = false;
+for (const f of fused) {
+const maxD = Math.max(12, Math.max(c.radius, f.radius) * distFactor);
+if (Math.hypot(c.x - f.x, c.y - f.y) <= maxD) {
+const w1 = f.score + 0.001, w2 = c.score + 0.001, sum = w1 + w2;
+f.x = (f.x * w1 + c.x * w2) / sum;
+f.y = (f.y * w1 + c.y * w2) / sum;
+f.radius = (f.radius * w1 + c.radius * w2) / sum;
+f.score = Math.max(f.score, c.score);
+f.area = Math.max(f.area, c.area);
+merged = true;
+break;
+}
+}
+if (!merged) fused.push({ ...c });
+}
+return fused;
+}
+function detectMultiScale(frameData, w, h, strict = false) {
+if (strict) {
+const scales = [0.78, 0.96];
+let all = [];
+for (const scale of scales) {
+all = all.concat(detectCandidates(frameData, w, h, scale, true));
+}
+return fuseCandidates(all, 1.5);
+}
+const scale = ANALYSIS_SCALES[analysisScaleIndex % ANALYSIS_SCALES.length];
+analysisScaleIndex += 1;
+return detectCandidates(frameData, w, h, scale, false);
+}
+function findBestTrackMatch(track, candidates, used) {
+let bestIdx = -1, bestCost = Infinity;
+for (let i = 0; i < candidates.length; i++) {
+if (used[i]) continue;
+const c = candidates[i];
+const d = Math.hypot(c.x - track.x, c.y - track.y);
+const maxD = Math.max(14, track.radius * 2.4);
+if (d > maxD) continue;
+const rDiff = Math.abs(c.radius - track.radius) / Math.max(track.radius, 1);
+const sDiff = Math.abs(c.score - track.score);
+const cost = d * 0.6 + rDiff * 18 + sDiff * 12;
+if (cost < bestCost) {
+bestCost = cost;
+bestIdx = i;
+}
+}
+return bestIdx;
+}
+function updateTracks(candidates) {
+const used = new Uint8Array(candidates.length);
+for (const t of tracks) {
+const idx = findBestTrackMatch(t, candidates, used);
+if (idx >= 0) {
+const c = candidates[idx];
+used[idx] = 1;
+const prevX = t.x, prevY = t.y;
+t.x = 0.72 * t.x + 0.28 * c.x;
+t.y = 0.72 * t.y + 0.28 * c.y;
+t.radius = 0.78 * t.radius + 0.22 * c.radius;
+t.score = 0.68 * t.score + 0.32 * c.score;
+t.vx = t.x - prevX;
+t.vy = t.y - prevY;
+t.age++;
+t.missed = 0;
+t.lastSeen = performance.now();
+t.confidence = Math.min(1, t.confidence + TRACK_GAIN + c.score * 0.05);
+t.lastDetail = c.detail;
+} else {
+t.x += t.vx * 0.25;
+t.y += t.vy * 0.25;
+t.missed++;
+t.age++;
+t.confidence = Math.max(0, t.confidence - TRACK_DECAY);
+}
+}
+for (let i = 0; i < candidates.length; i++) {
+if (used[i]) continue;
+const c = candidates[i];
+tracks.push({
+id: nextTrackId++,
+x: c.x,
+y: c.y,
+radius: c.radius,
+score: c.score,
+confidence: Math.max(0.16, c.score * 0.45),
+age: 1,
+missed: 0,
+vx: 0,
+vy: 0,
+lastSeen: performance.now(),
+lastDetail: c.detail
+});
+}
+tracks = tracks.filter(t => t.missed <= TRACK_MAX_MISSED && t.confidence > 0.03);
+}
+function getVisibleTracks() {
+return tracks.filter(t => {
+if (t.confidence < SHOW_THRESHOLD) return false;
+if (t.score < 0.34) return false;
+if (isExcluded(t.x, t.y)) return false;
+return true;
+});
+}
+function drawTrackHighlight(t) {
+const r = Math.max(8, Math.min(42, t.radius * 1.35));
+const alpha = Math.max(0.18, Math.min(0.95, t.confidence));
+const grad = ctx.createRadialGradient(t.x, t.y, r * 0.18, t.x, t.y, r * 1.55);
+grad.addColorStop(0, `rgba(255,255,255,${0.34 * alpha})`);
+grad.addColorStop(0.35, `rgba(255,255,255,${0.22 * alpha})`);
+grad.addColorStop(1, `rgba(255,255,255,0)`);
+ctx.save();
+ctx.fillStyle = grad;
+ctx.beginPath();
+ctx.arc(t.x, t.y, r * 1.55, 0, Math.PI * 2);
+ctx.fill();
+ctx.lineWidth = 2;
+ctx.strokeStyle = `rgba(255,255,255,${0.72 * alpha})`;
+ctx.beginPath();
+ctx.arc(t.x, t.y, r, 0, Math.PI * 2);
+ctx.stroke();
+ctx.lineWidth = 1;
+ctx.strokeStyle = `rgba(232,168,48,${0.70 * alpha})`;
+ctx.beginPath();
+ctx.arc(t.x, t.y, r * 1.28, 0, Math.PI * 2);
+ctx.stroke();
+ctx.restore();
+}
+function applyNightBlueTint(data) {
+const adaptiveWhite =
+getAdaptiveWhiteThreshold(
+false
+);
+for (
+let index = 0;
+index < data.length;
+index += 4
+) {
+const r = data[index];
+const g = data[index + 1];
+const b = data[index + 2];
+const maximum =
+Math.max(r, g, b);
+const minimum =
+Math.min(r, g, b);
+const currentChroma =
+maximum - minimum;
+const currentLuminance =
+luminance(r, g, b);
+const isWhiteish =
+maximum >
+adaptiveWhite - 4 &&
+currentChroma < 48 &&
+Math.abs(r - g) < 42 &&
+Math.abs(g - b) < 42;
+if (isWhiteish) {
+const boost =
+currentLuminance > 205
+? 9
+: 5;
+data[index] =
+clamp(r + boost);
+data[index + 1] =
+clamp(g + boost);
+data[index + 2] =
+clamp(b + boost);
+continue;
+}
+const affinity =
+terrainAffinityFast(
+r,
+g,
+b
+);
+if (affinity < 0.24) {
+continue;
+}
+const texture =
+Math.max(
+0.38,
+Math.min(
+1.72,
+currentLuminance / 92
+)
+);
+const targetR =
+24 * texture;
+const targetG =
+35 * texture;
+const targetB =
+61 * texture;
+const blend =
+0.42 +
+affinity * 0.48;
+data[index] =
+clamp(
+r * (1 - blend) +
+targetR * blend
+);
+data[index + 1] =
+clamp(
+g * (1 - blend) +
+targetG * blend
+);
+data[index + 2] =
+clamp(
+b * (1 - blend) +
+targetB * blend
+);
+}
+}
+function renderProcessedFrame(pf, fw, fh) {
+setCanvasSize(rawCanvas, fw, fh);
+rawCtx.putImageData(pf, 0, 0);
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = "high";
+if (cameraZoomSupport?.usingNativeZoom || zoomState.scale <= 1.02) {
+ctx.clearRect(0, 0, fw, fh);
+ctx.drawImage(rawCanvas, 0, 0);
+return;
+}
+const { sx, sy, cropW, cropH } = getDigitalZoomCrop(fw, fh);
+ctx.clearRect(0, 0, fw, fh);
+ctx.drawImage(rawCanvas, sx, sy, cropW, cropH, 0, 0, fw, fh);
+}
+function analyzeAt(x, y) {
+if (!latestRawFrame) return;
+pulseScan();
+const fw = latestRawFrame.width, fh = latestRawFrame.height;
+const cW = Math.floor(fw / 2.35), cH = Math.floor(fh / 2.35);
+const sx = Math.max(0, Math.min(fw - cW, Math.floor(x - cW / 2)));
+const sy = Math.max(0, Math.min(fh - cH, Math.floor(y - cH / 2)));
+setCanvasSize(rawCanvas, fw, fh);
+rawCtx.putImageData(latestRawFrame, 0, 0);
+setCanvasSize(cropCanvas, cW, cH);
+cropCtx.clearRect(0, 0, cW, cH);
+cropCtx.drawImage(rawCanvas, sx, sy, cW, cH, 0, 0, cW, cH);
+const crop = cropCtx.getImageData(0, 0, cW, cH);
+const strictCands = detectMultiScale(crop, cW, cH, true)
+.map(c => ({ ...c, x: c.x + sx, y: c.y + sy }))
+.filter(c => Math.hypot(c.x - x, c.y - y) <= Math.max(60, c.radius * 2.8))
+.sort((a, b) => b.score - a.score);
+if (!strictCands.length) {
+exclusionZones.push({ x, y, radius: 28 });
+if (exclusionZones.length > MAX_EXCLUSIONS) exclusionZones.shift();
+inspectionState = { until: performance.now() + 1000 };
+return;
+}
+const best = strictCands[0];
+const d = best.detail || {};
+const daisyLikelihood = (d.yellowPenalty ?? 0) * 0.65 + (d.ringWhitePenalty ?? 0) * 0.35;
+if (best.score >= 0.58 && daisyLikelihood < 0.28) {
+tracks.push({
+id: nextTrackId++,
+x: best.x,
+y: best.y,
+radius: best.radius,
+score: Math.max(0.62, best.score),
+confidence: 0.78,
+age: 1,
+missed: 0,
+vx: 0,
+vy: 0,
+lastSeen: performance.now(),
+lastDetail: best.detail
+});
+} else if (daisyLikelihood >= 0.28 || (d.ringWhitePenalty ?? 0) > 0.32) {
+exclusionZones.push({ x: best.x, y: best.y, radius: Math.max(26, best.radius * 2.0) });
+if (exclusionZones.length > MAX_EXCLUSIONS) exclusionZones.shift();
+}
+inspectionState = { until: performance.now() + 1000 };
+}
+function processFrame(timestamp = performance.now()) {
+rafId = requestAnimationFrame(processFrame);
+if (!video.videoWidth || !video.videoHeight) return;
+if (timestamp - lastDisplayTime < DISPLAY_INTERVAL_MS) return;
+lastDisplayTime = timestamp;
+const dimensions = getRenderDimensions(video.videoWidth, video.videoHeight);
+const fw = dimensions.width;
+const fh = dimensions.height;
+setCanvasSize(canvas, fw, fh);
+setCanvasSize(rawCanvas, fw, fh);
+rawCtx.imageSmoothingEnabled = true;
+rawCtx.imageSmoothingQuality = "high";
+rawCtx.drawImage(video, 0, 0, fw, fh);
+const full = rawCtx.getImageData(0, 0, fw, fh);
+frameCounter += 1;
+const shouldAnalyze = timestamp - lastAnalysisTime >= ANALYSIS_INTERVAL_MS;
+if (shouldAnalyze) {
+lastAnalysisTime = timestamp;
+latestRawFrame = new ImageData(
+new Uint8ClampedArray(full.data),
+fw,
+fh
+);
+if (timestamp - lastCalibrationTime >= CALIBRATION_INTERVAL_MS) {
+lastCalibrationTime = timestamp;
+calibrateTerrain(latestRawFrame, fw, fh);
+}
+latestDetectedCandidates = detectMultiScale(latestRawFrame, fw, fh, false);
+updateTracks(latestDetectedCandidates);
+}
+applyNightBlueTint(full.data);
+updateZoom();
+renderProcessedFrame(full, fw, fh);
+const visibleTracks = getVisibleTracks().sort((a, b) => b.confidence - a.confidence);
+for (const track of visibleTracks) drawTrackHighlight(track);
+if (inspectionState && inspectionState.until > performance.now()) {
+ctx.strokeStyle = "rgba(232,168,48,0.65)";
+ctx.lineWidth = 2;
+ctx.strokeRect(18, 18, fw - 36, fh - 36);
+} else {
+inspectionState = null;
+}
+}
+function handlePointerDown(e) {
+canvas.setPointerCapture?.(e.pointerId);
+const pos = getCanvasNorm(e.clientX, e.clientY);
+if (!pinchState) pinchState = { pointers: new Map(), moved: false };
+pinchState.pointers.set(e.pointerId, {
+clientX: e.clientX,
+clientY: e.clientY,
+x: pos.x,
+y: pos.y
+});
+if (pinchState.pointers.size === 2) {
+const pts = [...pinchState.pointers.values()];
+pinchState.initialDistance = Math.hypot(
+pts[0].clientX - pts[1].clientX,
+pts[0].clientY - pts[1].clientY
+);
+pinchState.initialScale = zoomState.targetScale;
+zoomState.centerX = (pts[0].x + pts[1].x) / 2;
+zoomState.centerY = (pts[0].y + pts[1].y) / 2;
+}
+}
+async function handlePointerMove(e) {
+if (!pinchState || !pinchState.pointers.has(e.pointerId)) return;
+const pos = getCanvasNorm(e.clientX, e.clientY);
+const prev = pinchState.pointers.get(e.pointerId);
+if (Math.abs(prev.clientX - e.clientX) > 4 || Math.abs(prev.clientY - e.clientY) > 4) {
+pinchState.moved = true;
+}
+pinchState.pointers.set(e.pointerId, {
+clientX: e.clientX,
+clientY: e.clientY,
+x: pos.x,
+y: pos.y
+});
+if (pinchState.pointers.size === 2) {
+const pts = [...pinchState.pointers.values()];
+const dist = Math.hypot(
+pts[0].clientX - pts[1].clientX,
+pts[0].clientY - pts[1].clientY
+);
+zoomState.targetScale = Math.max(
+MIN_ZOOM,
+Math.min(MAX_ZOOM, pinchState.initialScale * (dist / pinchState.initialDistance))
+);
+zoomState.centerX = (pts[0].x + pts[1].x) / 2;
+zoomState.centerY = (pts[0].y + pts[1].y) / 2;
+if (cameraZoomSupport?.usingNativeZoom) await applyNativeZoom();
+}
+}
+function nearestVisibleTrack(x, y) {
+const visible = getVisibleTracks();
+let best = null, bestD = Infinity;
+for (const t of visible) {
+const d = Math.hypot(t.x - x, t.y - y);
+if (d < Math.max(36, t.radius * 2.5) && d < bestD) {
+best = t;
+bestD = d;
+}
+}
+return best;
+}
+function handlePointerUp(e) {
+if (!pinchState) return;
+const ptr = pinchState.pointers.get(e.pointerId);
+const hadTwo = pinchState.pointers.size === 2;
+pinchState.pointers.delete(e.pointerId);
+if (!hadTwo && ptr && !pinchState.moved) {
+const pos = screenToFrame(e.clientX, e.clientY);
+if (pos) {
+const t = nearestVisibleTrack(pos.x, pos.y);
+if (t) analyzeAt(Math.round(t.x), Math.round(t.y));
+}
+}
+if (zoomState.targetScale > 1.35 && pinchState.pointers.size < 2 && latestRawFrame) {
+scheduleStrictAnalysis();
+}
+if (pinchState.pointers.size === 0) pinchState = null;
+}
+async function startCamera() {
+try {
+if (!navigator.mediaDevices?.getUserMedia) return;
+stream = await navigator.mediaDevices.getUserMedia({
+video: {
+facingMode: { ideal: "environment" },
+width: { ideal: 1280, max: 1920 },
+height: { ideal: 720, max: 1080 },
+frameRate: { ideal: 30, max: 30 }
+},
+audio: false
+});
+videoTrack = stream.getVideoTracks()[0] || null;
+video.srcObject = stream;
+await video.play();
+await setupCameraZoomSupport();
+latestRawFrame = null;
+latestDetectedCandidates = [];
+frameCounter = 0;
+tracks = [];
+exclusionZones = [];
+terrainModel = {
+ready: false,
+sceneLum: 105,
+centroids: [
+{ rn: 0.24, gn: 0.52, bn: 0.24, lum: 90,  sat: 0.54, weight: 1 },
+{ rn: 0.40, gn: 0.42, bn: 0.18, lum: 132, sat: 0.42, weight: 1 },
+{ rn: 0.46, gn: 0.35, bn: 0.19, lum: 96,  sat: 0.45, weight: 1 }
+]
+};
+buildTerrainLut();
+zoomState = { scale: 1, targetScale: 1, centerX: .5, centerY: .5 };
+inspectionState = null;
+lastDisplayTime = 0;
+lastAnalysisTime = 0;
+lastCalibrationTime = 0;
+analysisScaleIndex = 0;
+updateZoomUi();
+if (rafId) cancelAnimationFrame(rafId);
+rafId = requestAnimationFrame(processFrame);
+} catch (err) {
+console.error("Impossible de démarrer la caméra :", err);
+stopCamera();
+showScreen("home");
+}
+}
+function stopCamera() {
+if (pendingStrictAnalysis) {
+clearTimeout(pendingStrictAnalysis);
+pendingStrictAnalysis = null;
+}
+if (rafId) {
+cancelAnimationFrame(rafId);
+rafId = null;
+}
+if (stream) {
+stream.getTracks().forEach(t => t.stop());
+stream = null;
+}
+videoTrack = null;
+cameraZoomSupport = null;
+latestRawFrame = null;
+latestDetectedCandidates = [];
+frameCounter = 0;
+lastDisplayTime = 0;
+lastAnalysisTime = 0;
+lastCalibrationTime = 0;
+analysisScaleIndex = 0;
+inspectionState = null;
+tracks = [];
+exclusionZones = [];
+terrainModel = {
+ready: false,
+sceneLum: 105,
+centroids: [
+{ rn: 0.24, gn: 0.52, bn: 0.24, lum: 90,  sat: 0.54, weight: 1 },
+{ rn: 0.40, gn: 0.42, bn: 0.18, lum: 132, sat: 0.42, weight: 1 },
+{ rn: 0.46, gn: 0.35, bn: 0.19, lum: 96,  sat: 0.45, weight: 1 }
+]
+};
+buildTerrainLut();
+zoomState = { scale: 1, targetScale: 1, centerX: .5, centerY: .5 };
+updateZoomUi();
+}
+async function resetZoom() {
+zoomState.targetScale = 1;
+if (cameraZoomSupport?.usingNativeZoom) await applyNativeZoom();
+}
+buildTerrainLut();
+document.getElementById("startExperienceBtn").addEventListener("click", async () => {
+showScreen("camera");
+await startCamera();
+});
+document.getElementById("ballFoundBtn").addEventListener("click", () => {
+stopCamera();
+showScreen("home");
+});
+document.getElementById("zoomOutBtn").addEventListener("click", resetZoom);
+canvas.addEventListener("pointerdown", handlePointerDown);
+canvas.addEventListener("pointermove", handlePointerMove);
+canvas.addEventListener("pointerup", handlePointerUp);
+canvas.addEventListener("pointercancel", handlePointerUp);
+window.addEventListener("beforeunload", stopCamera);
+updateZoomUi();
+</script></body></html>
