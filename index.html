@@ -20,7 +20,7 @@ const MAX_EXCLUSIONS = 40;
 const RENDER_MAX_DIMENSION = 1080;
 const DISPLAY_INTERVAL_MS = 1000 / 24;
 const ANALYSIS_INTERVAL_MS = 125;
-const CALIBRATION_INTERVAL_MS = 1200;
+const CALIBRATION_INTERVAL_MS = 700;
 const ANALYSIS_SCALES = [0.46, 0.62, 0.80];
 const SHOW_THRESHOLD = 0.60;
 const TRACK_DECAY = 0.06;
@@ -41,15 +41,23 @@ function createDefaultTerrainModel() {
 return {
 ready: false,
 sceneLum: 105,
-sceneConfidence: 0.12,
+sceneConfidence: 0,
 vegetationRatio: 0,
 texturedRatio: 0,
+greenAnchorRatio: 0,
+dryBladeRatio: 0,
+colorSpread: 0,
+positiveFrames: 0,
+negativeFrames: 0,
+tintEnabled: false,
+allowDryTerrain: false,
 centroids: DEFAULT_TERRAIN_CENTROIDS.map(centroid => ({ ...centroid }))
 };
 }
 let terrainModel = createDefaultTerrainModel();
 let terrainLut = new Uint8Array(4096);
 let latestVegetationMask = null;
+const vegetationHistories = new Map();
 const ballTarget = {
 mode: "white"
 };
@@ -160,115 +168,103 @@ let greenPrior = 0;
 let dryPrior = 0;
 let brownPrior = 0;
 if (
-hue >= 50 &&
+hue >= 48 &&
 hue <= 178 &&
-saturation >= 0.10
+saturation >= 0.12
 ) {
-const saturationScore = clamp01(
-(saturation - 0.10) / 0.48
-);
-const hueScore = clamp01(
-1 - Math.abs(hue - 108) / 92
-);
-greenPrior =
-0.38 +
-0.34 * saturationScore +
-0.28 * hueScore;
+const saturationScore = clamp01((saturation - 0.12) / 0.50);
+const hueScore = clamp01(1 - Math.abs(hue - 108) / 88);
+greenPrior = 0.34 + 0.38 * saturationScore + 0.28 * hueScore;
 }
 if (
 hue >= 31 &&
-hue <= 76 &&
-saturation >= 0.14 &&
-value <= 0.94
+hue <= 78 &&
+saturation >= 0.18 &&
+value <= 0.92
 ) {
-const saturationScore = clamp01(
-(saturation - 0.14) / 0.48
-);
-const hueScore = clamp01(
-1 - Math.abs(hue - 50) / 30
-);
-dryPrior =
-0.28 +
-0.30 * saturationScore +
-0.24 * hueScore;
+const saturationScore = clamp01((saturation - 0.18) / 0.46);
+const hueScore = clamp01(1 - Math.abs(hue - 52) / 28);
+dryPrior = 0.16 + 0.27 * saturationScore + 0.20 * hueScore;
 }
 if (
 hue >= 18 &&
-hue < 38 &&
-saturation >= 0.24 &&
-value <= 0.82
+hue < 40 &&
+saturation >= 0.28 &&
+value <= 0.78
 ) {
-const saturationScore = clamp01(
-(saturation - 0.24) / 0.52
-);
-const hueScore = clamp01(
-1 - Math.abs(hue - 29) / 14
-);
-brownPrior =
-0.06 +
-0.12 * saturationScore +
-0.10 * hueScore;
+const saturationScore = clamp01((saturation - 0.28) / 0.48);
+const hueScore = clamp01(1 - Math.abs(hue - 29) / 13);
+brownPrior = 0.07 + 0.16 * saturationScore + 0.13 * hueScore;
 }
-return clamp01(
-Math.max(
-greenPrior,
-dryPrior,
-brownPrior
-)
-);
+return clamp01(Math.max(greenPrior, dryPrior, brownPrior));
+}
+
+function strictGreenPrior(feature) {
+if (
+feature.hue < 52 ||
+feature.hue > 172 ||
+feature.sat < 0.15 ||
+feature.value < 0.08 ||
+feature.value > 0.94
+) {
+return 0;
+}
+const hueScore = clamp01(1 - Math.abs(feature.hue - 108) / 78);
+const saturationScore = clamp01((feature.sat - 0.15) / 0.46);
+return clamp01(0.42 + 0.32 * hueScore + 0.26 * saturationScore);
+}
+function dryGrassColorPrior(feature) {
+if (
+feature.hue < 27 ||
+feature.hue > 82 ||
+feature.sat < 0.18 ||
+feature.value < 0.10 ||
+feature.value > 0.91
+) {
+return 0;
+}
+const hueScore = clamp01(1 - Math.abs(feature.hue - 51) / 32);
+const saturationScore = clamp01((feature.sat - 0.18) / 0.48);
+return clamp01(0.22 + 0.34 * hueScore + 0.28 * saturationScore);
 }
 function isBroadSeasonalTerrainColor(feature) {
 return vegetationColorPrior(feature) >= 0.28;
 }
 function terrainAffinityRaw(r, g, b) {
+if (!terrainModel.tintEnabled) {
+return 0;
+}
 const maximum = Math.max(r, g, b);
 const minimum = Math.min(r, g, b);
 const currentChroma = maximum - minimum;
 const feature = getColorFeatures(r, g, b);
 if (
 feature.lum < 10 ||
-feature.lum > 236 ||
-(
-maximum > 174 &&
-currentChroma < 40
-)
+feature.lum > 232 ||
+(maximum > 174 && currentChroma < 40)
 ) {
 return 0;
 }
-const botanicalPrior = vegetationColorPrior(feature);
-if (botanicalPrior < 0.08) {
+const greenPrior = strictGreenPrior(feature);
+const dryPrior = terrainModel.allowDryTerrain
+? dryGrassColorPrior(feature)
+: 0;
+const botanicalPrior = Math.max(greenPrior, dryPrior);
+if (botanicalPrior < 0.20) {
 return 0;
 }
 let bestAffinity = 0;
 for (const centroid of terrainModel.centroids) {
-const distance = featureDistance(
-feature,
-centroid
-);
-const affinity = clamp01(
-1 - distance / 0.50
-);
+const distance = featureDistance(feature, centroid);
+const affinity = clamp01(1 - distance / 0.38);
 if (affinity > bestAffinity) {
 bestAffinity = affinity;
 }
 }
-const learnedAffinity =
-bestAffinity *
-(
-0.22 +
-0.78 * botanicalPrior
-);
-const fallbackAffinity =
-botanicalPrior * 0.52;
-const sceneGate =
-0.06 +
-0.94 * terrainModel.sceneConfidence;
-return clamp01(
-Math.max(
-learnedAffinity,
-fallbackAffinity
-) * sceneGate
-);
+const learnedAffinity = bestAffinity * (0.28 + 0.72 * botanicalPrior);
+const fallbackAffinity = botanicalPrior * (greenPrior >= dryPrior ? 0.46 : 0.30);
+const sceneGate = clamp01((terrainModel.sceneConfidence - 0.42) / 0.45);
+return clamp01(Math.max(learnedAffinity, fallbackAffinity) * sceneGate);
 }
 function buildTerrainLut() {
 const lut = new Uint8Array(4096);
@@ -583,86 +579,94 @@ const img = scaledCtx.getImageData(0, 0, pW, pH);
 return { img, pW, pH };
 }
 
-function localTextureScore(frameData, width, height, x, y) {
-const offset = Math.max(
-2,
-Math.floor(
-Math.max(width, height) / 420
-)
+function localVegetationTextureMetrics(frameData, width, height, x, y) {
+const data = frameData.data;
+const fineOffset = Math.max(1, Math.floor(Math.max(width, height) / 720));
+const coarseOffset = Math.max(3, fineOffset * 3);
+function read(sampleX, sampleY) {
+const sx = Math.max(0, Math.min(width - 1, sampleX));
+const sy = Math.max(0, Math.min(height - 1, sampleY));
+const index = (sy * width + sx) * 4;
+const r = data[index];
+const g = data[index + 1];
+const b = data[index + 2];
+return { r, g, b, lum: luminance(r, g, b) };
+}
+const c = read(x, y);
+const left = read(x - fineOffset, y);
+const right = read(x + fineOffset, y);
+const up = read(x, y - fineOffset);
+const down = read(x, y + fineOffset);
+const d1 = read(x - fineOffset, y - fineOffset);
+const d2 = read(x + fineOffset, y + fineOffset);
+const d3 = read(x + fineOffset, y - fineOffset);
+const d4 = read(x - fineOffset, y + fineOffset);
+const coarse = [
+read(x - coarseOffset, y),
+read(x + coarseOffset, y),
+read(x, y - coarseOffset),
+read(x, y + coarseOffset),
+read(x - coarseOffset, y - coarseOffset),
+read(x + coarseOffset, y + coarseOffset)
+];
+const fineSamples = [left, right, up, down, d1, d2, d3, d4];
+let fineDifference = 0;
+let colorDifference = 0;
+for (const sample of fineSamples) {
+fineDifference += Math.abs(c.lum - sample.lum);
+colorDifference += (
+Math.abs(c.r - sample.r) +
+Math.abs(c.g - sample.g) +
+Math.abs(c.b - sample.b)
+) / 3;
+}
+fineDifference /= fineSamples.length;
+colorDifference /= fineSamples.length;
+let coarseDifference = 0;
+for (const sample of coarse) {
+coarseDifference += Math.abs(c.lum - sample.lum);
+}
+coarseDifference /= coarse.length;
+const directionalEdges = [
+Math.abs(right.lum - left.lum),
+Math.abs(down.lum - up.lum),
+Math.abs(d2.lum - d1.lum),
+Math.abs(d4.lum - d3.lum)
+];
+let activeDirections = 0;
+for (const edge of directionalEdges) {
+if (edge >= 7) activeDirections++;
+}
+const orientationDiversity = activeDirections / directionalEdges.length;
+const laplacian = Math.abs(
+4 * c.lum -
+left.lum -
+right.lum -
+up.lum -
+down.lum
 );
-const readLum = (sampleX, sampleY) => {
-const sampleIndex =
-(sampleY * width + sampleX) * 4;
-return luminance(
-frameData.data[sampleIndex],
-frameData.data[sampleIndex + 1],
-frameData.data[sampleIndex + 2]
-);
-};
-const centerLum = readLum(x, y);
-const left = readLum(
-Math.max(0, x - offset),
-y
-);
-const right = readLum(
-Math.min(width - 1, x + offset),
-y
-);
-const up = readLum(
-x,
-Math.max(0, y - offset)
-);
-const down = readLum(
-x,
-Math.min(height - 1, y + offset)
-);
-const diagonal1 = readLum(
-Math.max(0, x - offset),
-Math.max(0, y - offset)
-);
-const diagonal2 = readLum(
-Math.min(width - 1, x + offset),
-Math.min(height - 1, y + offset)
-);
-const horizontal =
-(
-Math.abs(centerLum - left) +
-Math.abs(centerLum - right)
-) / 2;
-const vertical =
-(
-Math.abs(centerLum - up) +
-Math.abs(centerLum - down)
-) / 2;
-const diagonal =
-(
-Math.abs(centerLum - diagonal1) +
-Math.abs(centerLum - diagonal2)
-) / 2;
-const strength = clamp01(
-(
-horizontal +
-vertical +
-diagonal
-) / 3 / 24
-);
-const directionMaximum = Math.max(
-horizontal,
-vertical,
-1
-);
-const directionMinimum = Math.min(
-horizontal,
-vertical
-);
-const isotropy = clamp01(
-directionMinimum /
-directionMaximum
+const fineTexture = clamp01((fineDifference - 2.5) / 19);
+const coarseTexture = clamp01((coarseDifference - 3.5) / 31);
+const colorVariation = clamp01((colorDifference - 2.5) / 22);
+const laplacianScore = clamp01((laplacian - 3) / 42);
+const bladeScore = clamp01(
+0.31 * fineTexture +
+0.19 * coarseTexture +
+0.24 * orientationDiversity +
+0.14 * colorVariation +
+0.12 * laplacianScore
 );
 return {
-strength,
-isotropy
+bladeScore,
+fineTexture,
+coarseTexture,
+orientationDiversity,
+colorVariation,
+laplacianScore
 };
+}
+function localTextureScore(frameData, width, height, x, y) {
+return localVegetationTextureMetrics(frameData, width, height, x, y).bladeScore;
 }
 function whiteBallPixelConfidence(
 r,
@@ -690,25 +694,12 @@ Math.abs(g - b) +
 Math.abs(r - b)
 ) / 205
 );
-const warmBias = clamp01(
-(
-(r - b) - 18
-) / 45
-) *
-clamp01(
-(
-(r - g) - 5
-) / 30
-);
 return clamp01(
 brightnessScore *
 (
 0.58 +
 0.27 * neutralityScore +
 0.15 * channelBalance
-) *
-(
-1 - 0.58 * warmBias
 )
 );
 }
@@ -731,19 +722,20 @@ return 0;
 function calibrateTerrain(frameData, w, h) {
 const samples = [];
 const sceneLuminances = [];
+const greenCells = new Set();
+const dryCells = new Set();
+const dryFeatures = [];
 let validSamples = 0;
-let vegetationSamples = 0;
-let texturedVegetationSamples = 0;
-const xStart = Math.floor(w * 0.06);
-const xEnd = Math.floor(w * 0.94);
-const yStart = Math.floor(h * 0.42);
-const yEnd = Math.floor(h * 0.96);
-const step = Math.max(
-7,
-Math.floor(
-Math.max(w, h) / 125
-)
-);
+let greenAnchorSamples = 0;
+let dryBladeSamples = 0;
+let textureSum = 0;
+const xStart = Math.floor(w * 0.05);
+const xEnd = Math.floor(w * 0.95);
+const yStart = Math.floor(h * 0.46);
+const yEnd = Math.floor(h * 0.97);
+const gridColumns = 8;
+const gridRows = 5;
+const step = Math.max(7, Math.floor(Math.max(w, h) / 128));
 for (let y = yStart; y < yEnd; y += step) {
 for (let x = xStart; x < xEnd; x += step) {
 const index = (y * w + x) * 4;
@@ -754,187 +746,201 @@ const maximum = Math.max(r, g, b);
 const minimum = Math.min(r, g, b);
 const currentChroma = maximum - minimum;
 const feature = getColorFeatures(r, g, b);
-const isWhiteish =
-maximum > 168 &&
-currentChroma < 42;
-const isBlueSkyLike =
-b > r * 1.20 &&
-b > g * 1.10 &&
-feature.sat > 0.16;
-const isVeryRed =
-(
-feature.hue < 10 ||
-feature.hue > 344
-) &&
-feature.sat > 0.22;
+const isWhiteish = maximum > 168 && currentChroma < 42;
+const isBlueLike = b > r * 1.18 && b > g * 1.08 && feature.sat > 0.15;
+const isVeryRed = (feature.hue < 10 || feature.hue > 344) && feature.sat > 0.22;
 if (
 feature.lum < 14 ||
 feature.lum > 228 ||
 isWhiteish ||
-isBlueSkyLike ||
+isBlueLike ||
 isVeryRed
 ) {
 continue;
 }
 validSamples++;
-sceneLuminances.push(
-feature.lum
-);
-const botanicalPrior =
-vegetationColorPrior(
-feature
-);
-if (botanicalPrior < 0.24) {
-continue;
-}
-vegetationSamples++;
-const texture =
-localTextureScore(
-frameData,
-w,
-h,
-x,
-y
-);
-const requiredIsotropy =
-feature.hue < 38
-? 0.40
-: 0.16;
-if (
-texture.strength >= 0.11 &&
-texture.isotropy >= requiredIsotropy &&
-botanicalPrior >= 0.28
-) {
-texturedVegetationSamples++;
-samples.push({
-...feature,
-texture: texture.strength
-});
+sceneLuminances.push(feature.lum);
+const metrics = localVegetationTextureMetrics(frameData, w, h, x, y);
+const cellX = Math.max(0, Math.min(gridColumns - 1, Math.floor((x - xStart) / Math.max(1, xEnd - xStart) * gridColumns)));
+const cellY = Math.max(0, Math.min(gridRows - 1, Math.floor((y - yStart) / Math.max(1, yEnd - yStart) * gridRows)));
+const cellKey = cellY * gridColumns + cellX;
+const greenPrior = strictGreenPrior(feature);
+const dryPrior = dryGrassColorPrior(feature);
+const isGreenAnchor =
+greenPrior >= 0.48 &&
+metrics.bladeScore >= 0.26 &&
+metrics.orientationDiversity >= 0.25;
+const isStrongDryBlade =
+dryPrior >= 0.46 &&
+metrics.bladeScore >= 0.63 &&
+metrics.orientationDiversity >= 0.70 &&
+metrics.colorVariation >= 0.24 &&
+metrics.fineTexture >= 0.32;
+if (isGreenAnchor) {
+greenAnchorSamples++;
+greenCells.add(cellKey);
+textureSum += metrics.bladeScore;
+samples.push({ ...feature, texture: metrics.bladeScore });
+} else if (isStrongDryBlade) {
+dryBladeSamples++;
+dryCells.add(cellKey);
+dryFeatures.push(feature);
+textureSum += metrics.bladeScore;
 }
 }
 }
 if (sceneLuminances.length) {
-sceneLuminances.sort(
-(a, b) => a - b
-);
-const median =
-sceneLuminances[
-Math.floor(
-sceneLuminances.length / 2
-)
-];
-terrainModel.sceneLum =
-terrainModel.ready
-? (
-terrainModel.sceneLum * 0.72 +
-median * 0.28
-)
+sceneLuminances.sort((a, b) => a - b);
+const median = sceneLuminances[Math.floor(sceneLuminances.length / 2)];
+terrainModel.sceneLum = terrainModel.ready
+? terrainModel.sceneLum * 0.74 + median * 0.26
 : median;
 }
-const vegetationRatio =
-validSamples
-? vegetationSamples / validSamples
-: 0;
-const texturedRatio =
-validSamples
-? texturedVegetationSamples / validSamples
-: 0;
-const rawSceneConfidence =
-0.18 * clamp01(
-(vegetationRatio - 0.035) / 0.24
-) +
-0.82 * clamp01(
-(texturedRatio - 0.018) / 0.15
-);
-terrainModel.sceneConfidence =
-terrainModel.ready
+const greenAnchorRatio = validSamples ? greenAnchorSamples / validSamples : 0;
+const dryBladeRatio = validSamples ? dryBladeSamples / validSamples : 0;
+const greenCoverage = greenCells.size / (gridColumns * gridRows);
+const dryCoverage = dryCells.size / (gridColumns * gridRows);
+let colorSpread = 0;
+if (dryFeatures.length >= 4) {
+let meanRn = 0, meanGn = 0, meanBn = 0;
+for (const feature of dryFeatures) {
+meanRn += feature.rn;
+meanGn += feature.gn;
+meanBn += feature.bn;
+}
+meanRn /= dryFeatures.length;
+meanGn /= dryFeatures.length;
+meanBn /= dryFeatures.length;
+let variance = 0;
+for (const feature of dryFeatures) {
+variance +=
+Math.abs(feature.rn - meanRn) +
+Math.abs(feature.gn - meanGn) +
+Math.abs(feature.bn - meanBn);
+}
+colorSpread = variance / dryFeatures.length;
+}
+const greenEvidence =
+0.64 * clamp01((greenAnchorRatio - 0.018) / 0.16) +
+0.36 * clamp01((greenCoverage - 0.08) / 0.52);
+const dryEvidenceAllowed =
+dryBladeRatio >= 0.085 &&
+dryCoverage >= 0.30 &&
+colorSpread >= 0.020;
+const dryEvidence = dryEvidenceAllowed
 ? (
-terrainModel.sceneConfidence * 0.62 +
-rawSceneConfidence * 0.38
+0.50 * clamp01((dryBladeRatio - 0.085) / 0.18) +
+0.31 * clamp01((dryCoverage - 0.30) / 0.48) +
+0.19 * clamp01((colorSpread - 0.020) / 0.075)
 )
-: rawSceneConfidence;
-terrainModel.vegetationRatio =
-vegetationRatio;
-terrainModel.texturedRatio =
-texturedRatio;
-const centroids =
-clusterTerrainSamples(
-samples
-);
+: 0;
+const rawSceneConfidence = clamp01(Math.max(greenEvidence, dryEvidence));
+if (rawSceneConfidence >= 0.56) {
+terrainModel.positiveFrames = Math.min(8, terrainModel.positiveFrames + 1);
+terrainModel.negativeFrames = Math.max(0, terrainModel.negativeFrames - 1);
+} else if (rawSceneConfidence <= 0.30) {
+terrainModel.negativeFrames = Math.min(8, terrainModel.negativeFrames + 1);
+terrainModel.positiveFrames = Math.max(0, terrainModel.positiveFrames - 1);
+} else {
+terrainModel.positiveFrames = Math.max(0, terrainModel.positiveFrames - 0.25);
+terrainModel.negativeFrames = Math.max(0, terrainModel.negativeFrames - 0.25);
+}
+terrainModel.sceneConfidence = terrainModel.tintEnabled
+? terrainModel.sceneConfidence * 0.70 + rawSceneConfidence * 0.30
+: terrainModel.sceneConfidence * 0.42 + rawSceneConfidence * 0.58;
+terrainModel.greenAnchorRatio = greenAnchorRatio;
+terrainModel.dryBladeRatio = dryBladeRatio;
+terrainModel.vegetationRatio = greenAnchorRatio + dryBladeRatio;
+terrainModel.texturedRatio = validSamples ? (greenAnchorSamples + dryBladeSamples) / validSamples : 0;
+terrainModel.colorSpread = colorSpread;
+terrainModel.allowDryTerrain = greenAnchorRatio >= 0.012 || dryEvidenceAllowed;
+if (terrainModel.positiveFrames >= 3 && terrainModel.sceneConfidence >= 0.48) {
+terrainModel.tintEnabled = true;
+}
+if (terrainModel.negativeFrames >= 2 || terrainModel.sceneConfidence < 0.22) {
+terrainModel.tintEnabled = false;
+terrainModel.ready = false;
+}
+if (terrainModel.allowDryTerrain && dryEvidenceAllowed) {
+for (const feature of dryFeatures) {
+samples.push({ ...feature, texture: 0.75 });
+}
+}
+const centroids = clusterTerrainSamples(samples);
 if (
+terrainModel.tintEnabled &&
 centroids.length &&
-terrainModel.sceneConfidence >= 0.12
+terrainModel.sceneConfidence >= 0.48
 ) {
-smoothTerrainCentroids(
-centroids
-);
+smoothTerrainCentroids(centroids);
 terrainModel.ready = true;
 }
 buildTerrainLut();
 }
+
+function updateTemporalVegetationMask(candidateMask, width, height) {
+const key = `${width}x${height}`;
+let history = vegetationHistories.get(key);
+if (!history) {
+history = {
+confidence: new Uint8Array(width * height),
+confirmed: new Uint8Array(width * height)
+};
+vegetationHistories.set(key, history);
+}
+const enabled = terrainModel.tintEnabled && terrainModel.sceneConfidence >= 0.48;
+for (let index = 0; index < candidateMask.length; index++) {
+let confidence = history.confidence[index];
+if (enabled && candidateMask[index]) {
+confidence = Math.min(255, confidence + 54);
+} else {
+confidence = Math.max(0, confidence - (enabled ? 24 : 58));
+}
+history.confidence[index] = confidence;
+if (confidence >= 158) {
+history.confirmed[index] = 255;
+} else if (confidence < 92) {
+history.confirmed[index] = 0;
+}
+}
+const cleaned = new Uint8Array(history.confirmed);
+for (let y = 1; y < height - 1; y++) {
+for (let x = 1; x < width - 1; x++) {
+const index = y * width + x;
+if (!history.confirmed[index]) continue;
+let neighbours = 0;
+for (let dy = -1; dy <= 1; dy++) {
+for (let dx = -1; dx <= 1; dx++) {
+if (!dx && !dy) continue;
+if (history.confirmed[(y + dy) * width + x + dx]) neighbours++;
+}
+}
+if (neighbours <= 1) cleaned[index] = 0;
+}
+}
+history.confirmed.set(cleaned);
+return new Uint8Array(history.confirmed);
+}
 function segmentMasks(frameData, w, h, scale = PROCESS_SCALE, strict = false) {
-const {
-img,
-pW,
-pH
-} = downscaleFrame(
-frameData,
-w,
-h,
-scale
-);
+const { img, pW, pH } = downscaleFrame(frameData, w, h, scale);
 const data = img.data;
-const whiteMask =
-new Uint8Array(pW * pH);
-const flowerYellowMask =
-new Uint8Array(pW * pH);
-const terrainMask =
-new Uint8Array(pW * pH);
-const terrainAffinityMask =
-new Uint8Array(pW * pH);
-const whiteThreshold =
-getAdaptiveWhiteThreshold(
-strict
-);
-const targetPixelThreshold =
-strict
-? 0.50
-: 0.42;
-for (
-let dataIndex = 0,
-pixelIndex = 0;
-dataIndex < data.length;
-dataIndex += 4,
-pixelIndex++
-) {
+const whiteMask = new Uint8Array(pW * pH);
+const flowerYellowMask = new Uint8Array(pW * pH);
+const terrainMask = new Uint8Array(pW * pH);
+const terrainAffinityMask = new Uint8Array(pW * pH);
+const whiteThreshold = getAdaptiveWhiteThreshold(strict);
+const targetPixelThreshold = strict ? 0.58 : 0.50;
+for (let dataIndex = 0, pixelIndex = 0; dataIndex < data.length; dataIndex += 4, pixelIndex++) {
 const r = data[dataIndex];
 const g = data[dataIndex + 1];
 const b = data[dataIndex + 2];
-const targetConfidence =
-targetBallPixelConfidence(
-r,
-g,
-b,
-whiteThreshold
-);
-if (
-targetConfidence >=
-targetPixelThreshold
-) {
+const targetConfidence = targetBallPixelConfidence(r, g, b, whiteThreshold);
+if (targetConfidence >= targetPixelThreshold) {
 whiteMask[pixelIndex] = 255;
 }
-const terrainAffinity =
-terrainAffinityFast(
-r,
-g,
-b
-);
-terrainAffinityMask[pixelIndex] =
-Math.round(
-terrainAffinity * 255
-);
-const hsv =
-rgbToHsv(r, g, b);
+const terrainAffinity = terrainAffinityFast(r, g, b);
+terrainAffinityMask[pixelIndex] = Math.round(terrainAffinity * 255);
+const hsv = rgbToHsv(r, g, b);
 if (
 hsv.h >= 38 &&
 hsv.h <= 72 &&
@@ -946,254 +952,131 @@ g > b + 20
 flowerYellowMask[pixelIndex] = 255;
 }
 }
-const baseTerrainThreshold =
-strict
-? 0.38
-: 0.30;
-const scenePenalty =
-terrainModel.sceneConfidence < 0.14
-? 0.30
-: terrainModel.sceneConfidence < 0.30
-? 0.16
-: terrainModel.sceneConfidence < 0.48
-? 0.015
-: 0;
-const requiredTerrain =
-baseTerrainThreshold +
-scenePenalty;
-for (let y = 1; y < pH - 1; y++) {
-for (let x = 1; x < pW - 1; x++) {
+if (terrainModel.tintEnabled && terrainModel.sceneConfidence >= 0.48) {
+const requiredTerrain = strict ? 0.50 : 0.42;
+for (let y = 2; y < pH - 2; y++) {
+for (let x = 2; x < pW - 2; x++) {
 const index = y * pW + x;
-const affinity =
-terrainAffinityMask[index] / 255;
-if (affinity < requiredTerrain) {
-continue;
+const affinity = terrainAffinityMask[index] / 255;
+if (affinity < requiredTerrain) continue;
+const dataIndex = index * 4;
+const r = data[dataIndex];
+const g = data[dataIndex + 1];
+const b = data[dataIndex + 2];
+const feature = getColorFeatures(r, g, b);
+const greenColor = strictGreenPrior(feature) >= 0.42;
+const dryColor = terrainModel.allowDryTerrain && dryGrassColorPrior(feature) >= 0.46;
+if (!greenColor && !dryColor) continue;
+const centerLum = luminance(r, g, b);
+function lumAt(px, py) {
+const sampleIndex = (py * pW + px) * 4;
+return luminance(data[sampleIndex], data[sampleIndex + 1], data[sampleIndex + 2]);
+}
+const horizontal = Math.abs(lumAt(x + 1, y) - lumAt(x - 1, y));
+const vertical = Math.abs(lumAt(x, y + 1) - lumAt(x, y - 1));
+const diagonalA = Math.abs(lumAt(x + 1, y + 1) - lumAt(x - 1, y - 1));
+const diagonalB = Math.abs(lumAt(x + 1, y - 1) - lumAt(x - 1, y + 1));
+const coarseDifference = (
+Math.abs(centerLum - lumAt(x - 2, y)) +
+Math.abs(centerLum - lumAt(x + 2, y)) +
+Math.abs(centerLum - lumAt(x, y - 2)) +
+Math.abs(centerLum - lumAt(x, y + 2))
+) / 4;
+const directionCount = [horizontal, vertical, diagonalA, diagonalB].filter(value => value >= 5.5).length;
+const fineTexture = clamp01(((horizontal + vertical + diagonalA + diagonalB) / 4 - 2.5) / 17);
+const coarseTexture = clamp01((coarseDifference - 3) / 24);
+const orientationDiversity = directionCount / 4;
+const textureScore = 0.48 * fineTexture + 0.28 * coarseTexture + 0.24 * orientationDiversity;
+if (greenColor) {
+if (textureScore < 0.18 && affinity < 0.78) continue;
+} else {
+if (
+textureScore < 0.56 ||
+orientationDiversity < 0.50 ||
+coarseTexture < 0.28
+) continue;
 }
 let neighbours = 0;
 let neighbourAffinity = 0;
 for (let dy = -1; dy <= 1; dy++) {
 for (let dx = -1; dx <= 1; dx++) {
-if (!dx && !dy) {
-continue;
-}
-const neighbourIndex =
-(y + dy) * pW +
-(x + dx);
-const neighbour =
-terrainAffinityMask[neighbourIndex] / 255;
-if (
-neighbour >=
-requiredTerrain * 0.76
-) {
-neighbours++;
-}
-neighbourAffinity +=
-neighbour;
+if (!dx && !dy) continue;
+const neighbour = terrainAffinityMask[(y + dy) * pW + x + dx] / 255;
+if (neighbour >= requiredTerrain * 0.82) neighbours++;
+neighbourAffinity += neighbour;
 }
 }
-const dataIndex = index * 4;
-const centerLum = luminance(
-data[dataIndex],
-data[dataIndex + 1],
-data[dataIndex + 2]
-);
-const leftIndex = (index - 1) * 4;
-const rightIndex = (index + 1) * 4;
-const upIndex = (index - pW) * 4;
-const downIndex = (index + pW) * 4;
-const localDifference =
-(
-Math.abs(
-centerLum - luminance(
-data[leftIndex],
-data[leftIndex + 1],
-data[leftIndex + 2]
-)
-) +
-Math.abs(
-centerLum - luminance(
-data[rightIndex],
-data[rightIndex + 1],
-data[rightIndex + 2]
-)
-) +
-Math.abs(
-centerLum - luminance(
-data[upIndex],
-data[upIndex + 1],
-data[upIndex + 2]
-)
-) +
-Math.abs(
-centerLum - luminance(
-data[downIndex],
-data[downIndex + 1],
-data[downIndex + 2]
-)
-)
-) / 4;
-const textureScore =
-clamp01(
-localDifference / 22
-);
-const supportScore =
-neighbours / 8;
-const averageNeighbourAffinity =
-neighbourAffinity / 8;
+const supportScore = neighbours / 8;
 const combinedConfidence =
-affinity *
-(
-0.58 +
-0.24 * supportScore +
-0.18 * textureScore
-) +
-averageNeighbourAffinity * 0.08;
+affinity * (0.58 + 0.22 * supportScore + 0.20 * textureScore) +
+(neighbourAffinity / 8) * 0.06;
 if (
-combinedConfidence >=
-requiredTerrain &&
-textureScore >= 0.08 &&
-(
-neighbours >= 2 ||
-affinity >= 0.78
-)
+combinedConfidence >= requiredTerrain &&
+(neighbours >= 3 || affinity >= 0.84)
 ) {
 terrainMask[index] = 255;
 }
 }
 }
-const refinedTerrainMask =
-new Uint8Array(terrainMask);
+}
+const refinedTerrainMask = new Uint8Array(terrainMask);
 for (let y = 1; y < pH - 1; y++) {
 for (let x = 1; x < pW - 1; x++) {
 const index = y * pW + x;
 let neighbours = 0;
 for (let dy = -1; dy <= 1; dy++) {
 for (let dx = -1; dx <= 1; dx++) {
-if (!dx && !dy) {
-continue;
-}
-if (
-terrainMask[
-(y + dy) * pW +
-(x + dx)
-]
-) {
-neighbours++;
+if (!dx && !dy) continue;
+if (terrainMask[(y + dy) * pW + x + dx]) neighbours++;
 }
 }
-}
-if (
-terrainMask[index] &&
-neighbours <= 1
-) {
-refinedTerrainMask[index] = 0;
-} else if (
-!terrainMask[index] &&
-neighbours >= 5 &&
-terrainAffinityMask[index] / 255 >=
-requiredTerrain * 0.82
-) {
-refinedTerrainMask[index] = 255;
+if (terrainMask[index] && neighbours <= 1) refinedTerrainMask[index] = 0;
+if (!terrainMask[index] && neighbours >= 6) refinedTerrainMask[index] = 255;
 }
 }
-}
-terrainMask.set(
-refinedTerrainMask
-);
-const radius =
-strict
-? 2
-: 3;
-const flowerReject =
-strict
-? 5
-: 8;
-for (
-let y = radius;
-y < pH - radius;
-y++
-) {
-for (
-let x = radius;
-x < pW - radius;
-x++
-) {
-const index =
-y * pW + x;
-if (!whiteMask[index]) {
-continue;
-}
+terrainMask.set(refinedTerrainMask);
+const radius = strict ? 2 : 3;
+const flowerReject = strict ? 5 : 8;
+for (let y = radius; y < pH - radius; y++) {
+for (let x = radius; x < pW - radius; x++) {
+const index = y * pW + x;
+if (!whiteMask[index]) continue;
 let flowerNeighbours = 0;
-for (
-let dy = -radius;
-dy <= radius;
-dy++
-) {
-const row =
-(y + dy) * pW;
-for (
-let dx = -radius;
-dx <= radius;
-dx++
-) {
-if (
-flowerYellowMask[
-row + x + dx
-]
-) {
-flowerNeighbours++;
+for (let dy = -radius; dy <= radius; dy++) {
+const row = (y + dy) * pW;
+for (let dx = -radius; dx <= radius; dx++) {
+if (flowerYellowMask[row + x + dx]) flowerNeighbours++;
 }
 }
-}
-if (
-flowerNeighbours >=
-flowerReject
-) {
-whiteMask[index] = 0;
+if (flowerNeighbours >= flowerReject) whiteMask[index] = 0;
 }
 }
-}
-const closedWhiteMask =
-new Uint8Array(whiteMask);
+const closedWhiteMask = new Uint8Array(whiteMask);
 for (let y = 1; y < pH - 1; y++) {
 for (let x = 1; x < pW - 1; x++) {
 const index = y * pW + x;
-if (whiteMask[index]) {
-continue;
-}
+if (whiteMask[index]) continue;
 let whiteNeighbours = 0;
 for (let dy = -1; dy <= 1; dy++) {
 for (let dx = -1; dx <= 1; dx++) {
-if (!dx && !dy) {
-continue;
-}
-if (
-whiteMask[
-(y + dy) * pW +
-(x + dx)
-]
-) {
-whiteNeighbours++;
+if (!dx && !dy) continue;
+if (whiteMask[(y + dy) * pW + x + dx]) whiteNeighbours++;
 }
 }
-}
-if (whiteNeighbours >= 5) {
-closedWhiteMask[index] = 255;
+if (whiteNeighbours >= 5) closedWhiteMask[index] = 255;
 }
 }
-}
-whiteMask.set(
-closedWhiteMask
-);
+whiteMask.set(closedWhiteMask);
+let finalTerrainMask = terrainMask;
 if (!strict) {
+finalTerrainMask = updateTemporalVegetationMask(terrainMask, pW, pH);
 latestVegetationMask = {
-data: new Uint8Array(terrainMask),
+data: new Uint8Array(finalTerrainMask),
 width: pW,
 height: pH,
 frameWidth: w,
 frameHeight: h,
-sceneConfidence:
-terrainModel.sceneConfidence
+sceneConfidence: terrainModel.sceneConfidence
 };
 }
 return {
@@ -1201,9 +1084,8 @@ d: data,
 pW,
 pH,
 whiteMask,
-yellowMask:
-flowerYellowMask,
-terrainMask
+yellowMask: flowerYellowMask,
+terrainMask: finalTerrainMask
 };
 }
 function extractComponents(mask, W, H) {
@@ -1419,6 +1301,65 @@ value - minimum
 maximum - minimum
 );
 }
+
+function radialBallSignature(data, width, height, centerX, centerY, radius) {
+if (radius < 2.2) {
+return { radialScore: 0.46, edgeScore: 0.44, dimpleScore: 0.40 };
+}
+const samples = radius >= 6 ? 20 : 14;
+const innerValues = [];
+const edgeDrops = [];
+const outerValues = [];
+function sampleLum(x, y) {
+const sx = Math.max(0, Math.min(width - 1, Math.round(x)));
+const sy = Math.max(0, Math.min(height - 1, Math.round(y)));
+const index = (sy * width + sx) * 4;
+return luminance(data[index], data[index + 1], data[index + 2]);
+}
+for (let index = 0; index < samples; index++) {
+const angle = Math.PI * 2 * index / samples;
+const cos = Math.cos(angle);
+const sin = Math.sin(angle);
+const inner = sampleLum(centerX + cos * radius * 0.48, centerY + sin * radius * 0.48);
+const edge = sampleLum(centerX + cos * radius * 0.88, centerY + sin * radius * 0.88);
+const outer = sampleLum(centerX + cos * radius * 1.30, centerY + sin * radius * 1.30);
+innerValues.push(inner);
+outerValues.push(outer);
+edgeDrops.push((inner + edge) * 0.5 - outer);
+}
+function mean(values) {
+return values.reduce((sum, value) => sum + value, 0) / Math.max(1, values.length);
+}
+function deviation(values, average) {
+let variance = 0;
+for (const value of values) variance += (value - average) * (value - average);
+return Math.sqrt(variance / Math.max(1, values.length));
+}
+const innerMean = mean(innerValues);
+const outerMean = mean(outerValues);
+const dropMean = mean(edgeDrops);
+const dropDeviation = deviation(edgeDrops, dropMean);
+const innerDeviation = deviation(innerValues, innerMean);
+const contrastScore = sigmoidLike(dropMean, 5, 58);
+const consistencyScore = 1 - sigmoidLike(dropDeviation, 10, 42);
+const brightnessSeparation = sigmoidLike(innerMean - outerMean, 5, 62);
+const radialScore = clamp01(
+0.43 * contrastScore +
+0.34 * consistencyScore +
+0.23 * brightnessSeparation
+);
+const dimpleScore = radius >= 5
+? clamp01(
+0.55 * sigmoidLike(innerDeviation, 2.5, 18) +
+0.45 * (1 - sigmoidLike(innerDeviation, 30, 64))
+)
+: 0.44;
+return {
+radialScore,
+edgeScore: contrastScore,
+dimpleScore
+};
+}
 function scoreCandidate(
 component,
 data,
@@ -1431,278 +1372,91 @@ strict = false
 ) {
 const centerX = component.cx;
 const centerY = component.cy;
-const radius = Math.max(
-1.6,
-Math.min(
-18,
-component.radiusEstimate
-)
-);
-const center = sampleLocalStats(
-data,
-width,
-height,
-centerX,
-centerY,
-0,
-radius * 0.9,
-whiteMask,
-terrainMask,
-yellowMask
-);
-const ring1 = sampleLocalStats(
-data,
-width,
-height,
-centerX,
-centerY,
-radius,
-radius * 1.85,
-whiteMask,
-terrainMask,
-yellowMask
-);
-const ring2 = sampleLocalStats(
-data,
-width,
-height,
-centerX,
-centerY,
-radius * 1.85,
-radius * 2.8,
-whiteMask,
-terrainMask,
-yellowMask
-);
+const radius = Math.max(1.6, Math.min(18, component.radiusEstimate));
+const center = sampleLocalStats(data, width, height, centerX, centerY, 0, radius * 0.9, whiteMask, terrainMask, yellowMask);
+const ring1 = sampleLocalStats(data, width, height, centerX, centerY, radius, radius * 1.85, whiteMask, terrainMask, yellowMask);
+const ring2 = sampleLocalStats(data, width, height, centerX, centerY, radius * 1.85, radius * 2.8, whiteMask, terrainMask, yellowMask);
 const continuity = ringContinuity(
 whiteMask,
 width,
 height,
 centerX,
 centerY,
-Math.max(
-1.2,
-radius * 0.9
-),
-component.area <= 12
-? 16
-: 24
+Math.max(1.2, radius * 0.9),
+component.area <= 12 ? 16 : 24
 );
-const normalizedY =
-centerY / height;
-const verticalPrior = Math.max(
-0,
-Math.min(
-1,
-(
-normalizedY - 0.08
-) / 0.80
-)
-);
-const adaptiveWhiteLow =
-getAdaptiveWhiteThreshold(
-strict
-) - 12;
-const adaptiveWhiteHigh = Math.min(
-255,
-adaptiveWhiteLow + 82
-);
-const whiteScore =
-sigmoidLike(
-center.meanLum,
-adaptiveWhiteLow,
-adaptiveWhiteHigh
-) *
-(
-1 -
-sigmoidLike(
-center.meanChroma,
-26,
-82
-)
-);
-const whiteCoverageScore =
-sigmoidLike(
+const radial = radialBallSignature(data, width, height, centerX, centerY, radius);
+const normalizedY = centerY / height;
+const verticalPrior = Math.max(0, Math.min(1, (normalizedY - 0.06) / 0.84));
+const adaptiveWhiteLow = getAdaptiveWhiteThreshold(strict) - 12;
+const adaptiveWhiteHigh = Math.min(255, adaptiveWhiteLow + 82);
+const whiteScore = sigmoidLike(center.meanLum, adaptiveWhiteLow, adaptiveWhiteHigh) * (1 - sigmoidLike(center.meanChroma, 24, 78));
+const whiteCoverageScore = sigmoidLike(
 center.whiteRatio,
-component.area <= 12
-? 0.10
-: 0.28,
-component.area <= 12
-? 0.60
-: 0.84
+component.area <= 12 ? 0.10 : 0.30,
+component.area <= 12 ? 0.62 : 0.86
 );
-const roundScore =
-component.area <= 12
-? sigmoidLike(
-1 - Math.abs(
-1 - component.aspect
-),
-0.16,
-0.88
-)
-: (
-0.58 * sigmoidLike(
-component.circularity,
-0.18,
-0.84
-) +
-0.42 * sigmoidLike(
-component.fill,
-0.20,
-0.82
-)
-);
-const compactScore =
-component.area <= 12
-? sigmoidLike(
-component.fill,
-0.12,
-0.58
-)
-: (
-0.52 * sigmoidLike(
-component.fill,
-0.30,
-0.88
-) +
-0.48 * sigmoidLike(
-component.circularity,
-0.22,
-0.90
-)
-);
-const contrast =
-center.meanLum -
-ring1.meanLum;
-const contrastScore =
-sigmoidLike(
-contrast,
-8,
-66
-);
+const roundScore = component.area <= 12
+? sigmoidLike(1 - Math.abs(1 - component.aspect), 0.18, 0.90)
+: 0.60 * sigmoidLike(component.circularity, 0.20, 0.86) + 0.40 * sigmoidLike(component.fill, 0.22, 0.84);
+const compactScore = component.area <= 12
+? sigmoidLike(component.fill, 0.13, 0.60)
+: 0.50 * sigmoidLike(component.fill, 0.32, 0.90) + 0.50 * sigmoidLike(component.circularity, 0.24, 0.92);
+const contrast = center.meanLum - ring1.meanLum;
+const contrastScore = sigmoidLike(contrast, 8, 66);
 const terrainContextScore =
-0.62 * sigmoidLike(
-ring1.terrainRatio,
-0.10,
-0.70
-) +
-0.38 * sigmoidLike(
-ring2.terrainRatio,
-0.10,
-0.74
-);
-const surfaceScore =
-1 - sigmoidLike(
-center.varLum,
-1450,
-4700
-);
+0.64 * sigmoidLike(ring1.terrainRatio, 0.12, 0.72) +
+0.36 * sigmoidLike(ring2.terrainRatio, 0.12, 0.76);
+const surfaceScore = 1 - sigmoidLike(center.varLum, 1700, 5200);
 const edgeContinuityScore =
-0.64 * sigmoidLike(
-continuity.continuity,
-0.26,
-0.93
-) +
-0.36 * (
-1 - sigmoidLike(
-continuity.roughness,
-0.14,
-0.74
-)
-);
+0.64 * sigmoidLike(continuity.continuity, 0.28, 0.94) +
+0.36 * (1 - sigmoidLike(continuity.roughness, 0.14, 0.72));
 const yellowPenalty = Math.max(
-sigmoidLike(
-ring1.yellowRatio,
-0.04,
-0.20
-),
-sigmoidLike(
-center.yellowRatio,
-0.03,
-0.14
-)
+sigmoidLike(ring1.yellowRatio, 0.04, 0.20),
+sigmoidLike(center.yellowRatio, 0.03, 0.14)
 );
-const ringWhitePenalty =
-sigmoidLike(
-ring1.whiteRatio,
-0.16,
-0.46
-);
-const topFramePenalty =
-1 - verticalPrior;
-const relativeWidth =
-component.width / width;
-const relativeHeight =
-component.height / height;
-if (
-component.area > 430 &&
-component.fill > 0.76
-) {
-return null;
-}
-if (
-relativeWidth > 0.16 ||
-relativeHeight > 0.16
-) {
-return null;
-}
-if (
-component.aspect < 0.34 ||
-component.aspect > 1.95
-) {
-return null;
-}
-if (
-component.area > 18 &&
-component.circularity < 0.11
-) {
-return null;
-}
-if (
-center.meanLum <
-adaptiveWhiteLow - 18
-) {
-return null;
-}
-if (
-terrainContextScore <
-(strict ? 0.06 : 0.12) &&
-component.area > 7
-) {
-return null;
-}
+const ringWhitePenalty = sigmoidLike(ring1.whiteRatio, 0.16, 0.46);
+const topFramePenalty = 1 - verticalPrior;
+const relativeWidth = component.width / width;
+const relativeHeight = component.height / height;
+if (component.area > 430 && component.fill > 0.76) return null;
+if (relativeWidth > 0.16 || relativeHeight > 0.16) return null;
+if (component.aspect < 0.40 || component.aspect > 1.72) return null;
+if (component.area > 18 && component.circularity < 0.14) return null;
+if (center.meanLum < adaptiveWhiteLow - 18) return null;
+if (terrainContextScore < (strict ? 0.08 : 0.15) && component.area > 6) return null;
+if (component.area > 16 && radial.radialScore < 0.18) return null;
 let score =
-0.16 * whiteScore +
-0.13 * whiteCoverageScore +
-0.16 * roundScore +
-0.10 * compactScore +
-0.15 * contrastScore +
+0.14 * whiteScore +
+0.11 * whiteCoverageScore +
+0.15 * roundScore +
+0.08 * compactScore +
+0.12 * contrastScore +
 0.18 * terrainContextScore +
-0.05 * surfaceScore +
-0.05 * edgeContinuityScore +
-0.04 * verticalPrior -
-0.12 * yellowPenalty -
-0.12 * ringWhitePenalty -
-0.03 * topFramePenalty;
+0.10 * radial.radialScore +
+0.04 * radial.dimpleScore +
+0.03 * surfaceScore +
+0.04 * edgeContinuityScore +
+0.03 * verticalPrior -
+0.11 * yellowPenalty -
+0.11 * ringWhitePenalty -
+0.02 * topFramePenalty;
 if (component.area <= 12) {
 score +=
 0.06 * contrastScore +
-0.07 * terrainContextScore +
-0.04 * whiteCoverageScore -
+0.08 * terrainContextScore +
+0.04 * whiteCoverageScore +
+0.03 * radial.edgeScore -
 0.02 * roundScore;
 }
 if (component.area > 30) {
 score +=
 0.04 * roundScore +
-0.03 * compactScore;
+0.04 * compactScore +
+0.04 * radial.radialScore +
+0.02 * radial.dimpleScore;
 }
-score = Math.max(
-0,
-Math.min(
-1,
-score
-)
-);
+score = Math.max(0, Math.min(1, score));
 return {
 score,
 detail: {
@@ -1710,7 +1464,9 @@ yellowPenalty,
 ringWhitePenalty,
 terrainContextScore,
 whiteCoverageScore,
-roundScore
+roundScore,
+radialScore: radial.radialScore,
+dimpleScore: radial.dimpleScore
 }
 };
 }
@@ -1759,8 +1515,8 @@ continue;
 }
 const threshold =
 strict
-? 0.34
-: 0.395;
+? 0.36
+: 0.42;
 if (
 scored.score <
 threshold
@@ -1908,29 +1664,12 @@ tracks = tracks.filter(t => t.missed <= TRACK_MAX_MISSED && t.confidence > 0.03)
 }
 function getVisibleTracks() {
 return tracks.filter(track => {
-if (
-track.confidence <
-SHOW_THRESHOLD
-) {
-return false;
-}
-if (track.score < 0.38) {
-return false;
-}
-if (
-track.age < 3 &&
-track.confidence < 0.80
-) {
-return false;
-}
-if (
-(track.lastDetail?.terrainContextScore ?? 0) < 0.12
-) {
-return false;
-}
-if (isExcluded(track.x, track.y)) {
-return false;
-}
+if (track.confidence < SHOW_THRESHOLD) return false;
+if (track.score < 0.40) return false;
+if (track.age < 4 && track.confidence < 0.84) return false;
+if ((track.lastDetail?.terrainContextScore ?? 0) < 0.16) return false;
+if ((track.lastDetail?.radialScore ?? 0.45) < 0.16 && track.radius > 7) return false;
+if (isExcluded(track.x, track.y)) return false;
 return true;
 });
 }
@@ -1959,120 +1698,52 @@ ctx.stroke();
 ctx.restore();
 }
 function applyNightBlueTint(data, frameWidth, frameHeight) {
-const adaptiveWhite =
-getAdaptiveWhiteThreshold(
-false
-);
-const mask =
-latestVegetationMask;
+const adaptiveWhite = getAdaptiveWhiteThreshold(false);
+const mask = latestVegetationMask;
 const canTint =
+terrainModel.tintEnabled &&
+terrainModel.ready &&
+terrainModel.sceneConfidence >= 0.48 &&
 mask &&
 mask.data &&
 mask.width > 0 &&
-mask.height > 0 &&
-terrainModel.sceneConfidence >= 0.08;
-const maskScaleX =
-canTint
-? mask.width / frameWidth
-: 0;
-const maskScaleY =
-canTint
-? mask.height / frameHeight
-: 0;
+mask.height > 0;
+const maskScaleX = canTint ? mask.width / frameWidth : 0;
+const maskScaleY = canTint ? mask.height / frameHeight : 0;
 for (let y = 0; y < frameHeight; y++) {
-const maskY =
-canTint
-? Math.min(
-mask.height - 1,
-Math.floor(y * maskScaleY)
-)
+const maskY = canTint
+? Math.min(mask.height - 1, Math.floor(y * maskScaleY))
 : 0;
-const maskRow =
-maskY *
-(canTint ? mask.width : 0);
+const maskRow = maskY * (canTint ? mask.width : 0);
 for (let x = 0; x < frameWidth; x++) {
-const index =
-(y * frameWidth + x) * 4;
+const index = (y * frameWidth + x) * 4;
 const r = data[index];
 const g = data[index + 1];
 const b = data[index + 2];
-const whiteConfidence =
-whiteBallPixelConfidence(
-r,
-g,
-b,
-adaptiveWhite
-);
-if (whiteConfidence >= 0.58) {
-const currentLuminance =
-luminance(r, g, b);
-const boost =
-currentLuminance > 205
-? 8
-: 4;
+const whiteConfidence = whiteBallPixelConfidence(r, g, b, adaptiveWhite);
+if (whiteConfidence >= 0.62) {
+const currentLuminance = luminance(r, g, b);
+const boost = currentLuminance > 205 ? 8 : 4;
 data[index] = clamp(r + boost);
 data[index + 1] = clamp(g + boost);
 data[index + 2] = clamp(b + boost);
 continue;
 }
-if (!canTint) {
-continue;
-}
-const maskX = Math.min(
-mask.width - 1,
-Math.floor(x * maskScaleX)
-);
-if (!mask.data[maskRow + maskX]) {
-continue;
-}
-const affinity =
-terrainAffinityFast(
-r,
-g,
-b
-);
-const minimumAffinity =
-terrainModel.sceneConfidence < 0.26
-? 0.68
-: terrainModel.sceneConfidence < 0.46
-? 0.48
-: 0.34;
-if (affinity < minimumAffinity) {
-continue;
-}
-const currentLuminance =
-luminance(r, g, b);
-const texture = Math.max(
-0.38,
-Math.min(
-1.72,
-currentLuminance / 92
-)
-);
+if (!canTint) continue;
+const maskX = Math.min(mask.width - 1, Math.floor(x * maskScaleX));
+if (!mask.data[maskRow + maskX]) continue;
+const affinity = terrainAffinityFast(r, g, b);
+if (affinity < 0.50) continue;
+const currentLuminance = luminance(r, g, b);
+const texture = Math.max(0.40, Math.min(1.68, currentLuminance / 92));
 const targetR = 24 * texture;
 const targetG = 35 * texture;
 const targetB = 61 * texture;
-const sceneStrength = clamp01(
-(
-terrainModel.sceneConfidence - 0.08
-) / 0.70
-);
-const blend =
-0.34 +
-0.34 * affinity +
-0.20 * sceneStrength;
-data[index] = clamp(
-r * (1 - blend) +
-targetR * blend
-);
-data[index + 1] = clamp(
-g * (1 - blend) +
-targetG * blend
-);
-data[index + 2] = clamp(
-b * (1 - blend) +
-targetB * blend
-);
+const sceneStrength = clamp01((terrainModel.sceneConfidence - 0.46) / 0.42);
+const blend = Math.min(0.88, 0.58 + 0.20 * affinity + 0.10 * sceneStrength);
+data[index] = clamp(r * (1 - blend) + targetR * blend);
+data[index + 1] = clamp(g * (1 - blend) + targetG * blend);
+data[index + 2] = clamp(b * (1 - blend) + targetB * blend);
 }
 }
 }
@@ -2281,6 +1952,7 @@ tracks = [];
 exclusionZones = [];
 terrainModel = createDefaultTerrainModel();
 latestVegetationMask = null;
+vegetationHistories.clear();
 buildTerrainLut();
 zoomState = { scale: 1, targetScale: 1, centerX: .5, centerY: .5 };
 inspectionState = null;
@@ -2325,6 +1997,7 @@ tracks = [];
 exclusionZones = [];
 terrainModel = createDefaultTerrainModel();
 latestVegetationMask = null;
+vegetationHistories.clear();
 buildTerrainLut();
 zoomState = { scale: 1, targetScale: 1, centerX: .5, centerY: .5 };
 updateZoomUi();
