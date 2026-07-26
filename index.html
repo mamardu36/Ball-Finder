@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" /><title>Ball Finder</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"><style>:root{--ink:#0b0e17;--deep:#0e1420;--slate:#141c2e;--card:#1a2238;--border:rgba(255,255,255,0.07);--gold:#e8a830;--gold2:#c88820;--goldf:#f4c060;--blue:#3a7bd5;--blue2:#2860b8;--white:#eef2f8;--muted:#6a7a96;--ok:#28c96a;--warn:#e8a030;--danger:#e84040;}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}html,body{height:100%;font-family:'DM Sans',sans-serif;overflow:hidden;background:var(--ink);color:var(--white);}.screen{display:none;width:100%;height:100%;}.screen.active{display:flex;flex-direction:column;}#homeScreen{background:var(--deep);position:relative;overflow:hidden;justify-content:flex-end;}.atmo{position:absolute;inset:0;pointer-events:none;}.atmo-glow-gold{position:absolute;top:-8%;right:-12%;width:55vw;height:55vw;max-width:380px;max-height:380px;border-radius:50%;background:radial-gradient(circle,rgba(232,168,48,0.14) 0%,transparent 68%);}.atmo-glow-blue{position:absolute;top:20%;left:-18%;width:50vw;height:50vw;max-width:320px;max-height:320px;border-radius:50%;background:radial-gradient(circle,rgba(58,123,213,0.10) 0%,transparent 68%);}.atmo-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:42px 42px;}.horizon{position:absolute;top:44%;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(232,168,48,0.25) 35%,rgba(232,168,48,0.25) 65%,transparent);}.fairway-wrap{position:absolute;bottom:0;left:0;right:0;height:58%;}.fairway-wrap svg{position:absolute;bottom:0;left:0;width:100%;height:100%;}.hero-ball{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);z-index:3;}.ball-shadow{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);width:56px;height:10px;border-radius:50%;background:rgba(0,0,0,0.5);filter:blur(6px);animation:shadowPulse 3s ease-in-out infinite;}@keyframes shadowPulse{0%,100%{transform:translateX(-50%) scaleX(0.8);opacity:0.5;}50%{transform:translateX(-50%) scaleX(1.1);opacity:0.25;}}.ball-sphere{width:68px;height:68px;border-radius:50%;background:radial-gradient(circle at 36% 30%,#ffffff 0%,#e8eee8 48%,#c4d4c4 100%);box-shadow:0 0 0 1px rgba(255,255,255,0.3),0 0 28px rgba(232,168,48,0.30),0 12px 30px rgba(0,0,0,0.55);animation:ballFloat 3s ease-in-out infinite;position:relative;}.ball-sphere::after{content:'';position:absolute;inset:0;border-radius:50%;background-image:radial-gradient(circle,rgba(0,0,0,0.07) 1px,transparent 1px);background-size:9px 9px;background-position:4px 4px;}@keyframes ballFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}.scan-ring{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);width:128px;height:128px;z-index:2;}.scan-ring svg{width:100%;height:100%;animation:ringRotate 12s linear infinite;}@keyframes ringRotate{to{transform:rotate(360deg);}}.ring-inner{position:absolute;inset:18px;border-radius:50%;border:1px solid rgba(232,168,48,0.2);}.corner-marks{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);width:160px;height:160px;z-index:2;}.corner-marks::before,.corner-marks::after,.cm-b::before,.cm-b::after{content:'';position:absolute;width:14px;height:14px;border-color:rgba(232,168,48,0.6);border-style:solid;}.corner-marks::before{top:0;left:0;border-width:2px 0 0 2px;}.corner-marks::after{top:0;right:0;border-width:2px 2px 0 0;}.cm-b::before{bottom:0;left:0;border-width:0 0 2px 2px;}.cm-b::after{bottom:0;right:0;border-width:0 2px 2px 0;}.home-panel{position:relative;z-index:4;padding:30px 26px calc(env(safe-area-inset-bottom,0px) + 36px);display:flex;flex-direction:column;gap:22px;background:linear-gradient(0deg,var(--deep) 72%,transparent);}.eyebrow{display:flex;align-items:center;gap:10px;}.eyebrow-line{width:28px;height:2px;background:var(--gold);border-radius:2px;}.eyebrow-text{font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);}.home-title{font-family:'Barlow Condensed',sans-serif;font-size:clamp(3.6rem,15vw,5.8rem);font-weight:800;line-height:0.88;letter-spacing:-0.01em;color:var(--white);}.home-title span{color:var(--gold);display:block;}.home-sub{font-size:0.92rem;color:var(--muted);line-height:1.6;max-width:32ch;}.stats-row{display:flex;gap:0;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:rgba(255,255,255,0.03);}.stat-item{flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:3px;border-right:1px solid var(--border);}.stat-item:last-child{border-right:none;}.stat-val{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:700;color:var(--white);letter-spacing:-0.02em;}.stat-label{font-size:0.72rem;color:var(--muted);font-weight:500;}.start-btn{appearance:none;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:1.15rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border-radius:16px;padding:20px 28px;color:var(--ink);background:linear-gradient(135deg,var(--goldf) 0%,var(--gold) 55%,var(--gold2) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.3),0 14px 28px rgba(200,136,32,0.35);display:flex;align-items:center;justify-content:center;gap:12px;transition:transform 0.13s,box-shadow 0.13s;}.start-btn:active{transform:scale(0.97);box-shadow:0 6px 12px rgba(200,136,32,0.2);}.home-panel>*{opacity:0;transform:translateY(16px);animation:riseUp 0.5s ease forwards;}.home-panel>*:nth-child(1){animation-delay:0.04s;}.home-panel>*:nth-child(2){animation-delay:0.10s;}.home-panel>*:nth-child(3){animation-delay:0.17s;}.home-panel>*:nth-child(4){animation-delay:0.24s;}.home-panel>*:nth-child(5){animation-delay:0.31s;}@keyframes riseUp{to{opacity:1;transform:none;}}#cameraScreen{position:fixed;inset:0;background:#000;overflow:hidden;}.viewer{position:absolute;inset:0;}canvas{width:100%;height:100%;display:block;background:#000;touch-action:none;object-fit:cover;}video{display:none;}.hud{position:absolute;inset:0;pointer-events:none;}.hud-top{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);left:16px;right:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}.glass-pill{display:flex;align-items:center;gap:8px;padding:10px 15px;border-radius:14px;background:rgba(11,14,23,0.62);border:1px solid rgba(255,255,255,0.10);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);}.live-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:blink 2s ease-in-out infinite;}@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.25;}}.hud-title{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.12em;color:var(--white);}.zoom-badge{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:0.06em;color:var(--gold);}.reticle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:92px;height:92px;opacity:0;transition:opacity 0.2s;}.reticle.active{opacity:1;}.ret-outer{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,255,255,0.88);box-shadow:0 0 20px rgba(255,255,255,0.2),inset 0 0 20px rgba(255,255,255,0.05);animation:retPop 0.3s ease forwards;}.ret-inner{position:absolute;inset:13px;border-radius:50%;border:1px solid rgba(232,168,48,0.7);}@keyframes retPop{0%{transform:scale(0.82);opacity:0;}70%{transform:scale(1.05);}100%{transform:scale(1);opacity:1;}}.scan-sweep{position:absolute;left:20%;right:20%;top:50%;height:2px;background:linear-gradient(90deg,transparent,rgba(232,168,48,0.9) 50%,transparent);box-shadow:0 0 10px rgba(232,168,48,0.5);opacity:0;}.scan-sweep.active{opacity:1;animation:sweep 0.65s ease-in-out forwards;}@keyframes sweep{0%{transform:translateY(-48px);opacity:0;}20%{opacity:1;}80%{opacity:1;}100%{transform:translateY(48px);opacity:0;}}.cam-bottom{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);display:flex;flex-direction:column;gap:10px;pointer-events:none;}.cam-actions{display:flex;gap:10px;pointer-events:auto;}.btn-ghost{appearance:none;border:1px solid rgba(255,255,255,0.14);border-radius:14px;padding:15px 16px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:600;cursor:pointer;color:rgba(255,255,255,0.75);background:rgba(11,14,23,0.60);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);white-space:nowrap;transition:background 0.13s;}.btn-ghost:active{background:rgba(30,40,60,0.80);}.btn-found{flex:1;appearance:none;border:none;border-radius:14px;padding:15px 20px;font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;cursor:pointer;color:var(--ink);background:linear-gradient(135deg,var(--goldf) 0%,var(--gold) 55%,var(--gold2) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.28),0 10px 22px rgba(200,136,32,0.40);transition:transform 0.12s;}.btn-found:active{transform:scale(0.97);}</style></head><body><section class="screen active" id="homeScreen"><div class="atmo"><div class="atmo-glow-gold"></div><div class="atmo-glow-blue"></div><div class="atmo-grid"></div><div class="horizon"></div></div><div class="fairway-wrap"><svg viewBox="0 0 390 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice"><defs><linearGradient id="rough" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#12281a"/><stop offset="100%" stop-color="#0a1610"/></linearGradient><linearGradient id="fairway" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1e5c30"/><stop offset="100%" stop-color="#122018"/></linearGradient><linearGradient id="green" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#267840"/><stop offset="100%" stop-color="#1a5028"/></linearGradient><radialGradient id="glow" cx="50%" cy="40%" r="50%"><stop offset="0%" stop-color="rgba(232,168,48,0.10)"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs><ellipse cx="195" cy="420" rx="340" ry="250" fill="url(#rough)"/><ellipse cx="195" cy="400" rx="200" ry="170" fill="url(#fairway)"/><ellipse cx="195" cy="380" rx="120" ry="100" fill="url(#green)"/><ellipse cx="195" cy="360" rx="340" ry="250" fill="url(#glow)"/><g opacity="0.06" stroke="#fff" stroke-width="1"><line x1="50"  y1="280" x2="340" y2="296"/><line x1="50"  y1="304" x2="340" y2="320"/><line x1="50"  y1="328" x2="340" y2="344"/><line x1="110" y1="260" x2="116" y2="380"/><line x1="152" y1="258" x2="158" y2="380"/><line x1="194" y1="256" x2="200" y2="380"/><line x1="236" y1="258" x2="242" y2="380"/><line x1="276" y1="262" x2="282" y2="380"/></g><line x1="194" y1="270" x2="194" y2="320" stroke="rgba(255,255,255,0.6)" stroke-width="1.8"/><polygon points="194,270 220,280 194,290" fill="#e8a830" opacity="0.9"/><ellipse cx="194" cy="321" rx="6" ry="2.2" fill="rgba(0,0,0,0.4)"/><circle cx="255" cy="302" r="5.5" fill="#fff" opacity="0.55"/><circle cx="144" cy="294" r="4"   fill="#fff" opacity="0.35"/><circle cx="218" cy="328" r="3.5" fill="#fff" opacity="0.28"/></svg></div><div class="scan-ring"><div class="ring-inner"></div><svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="64" cy="64" r="58" stroke="rgba(232,168,48,0.35)" stroke-width="1.5" stroke-dasharray="6 4"/><circle cx="64" cy="64" r="46" stroke="rgba(255,255,255,0.10)" stroke-width="1"/></svg></div><div class="corner-marks"><div class="cm-b"></div></div><div class="hero-ball"><div class="ball-sphere"></div><div class="ball-shadow"></div></div><div class="home-panel"><div class="eyebrow"><div class="eyebrow-line"></div><div class="eyebrow-text">Golf Vision · Détection terrain</div></div><h1 class="home-title">BALL<span>FINDER</span></h1><p class="home-sub">Repérez votre balle dans l'herbe en quelques secondes grâce à la détection visuelle intelligente.</p><button class="start-btn" id="startExperienceBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12a7 7 0 1 0 14 0A7 7 0 0 0 5 12Z" stroke="#0b0e17" stroke-width="1.8"/><path d="M10.5 9.5l4 2.5-4 2.5V9.5Z" fill="#0b0e17"/></svg>Lancer la recherche</button></div></section><section class="screen" id="cameraScreen"><div class="viewer"><canvas id="canvas"></canvas><video id="video" playsinline autoplay muted></video><div class="hud"><div class="hud-top"><div class="glass-pill"><div class="live-dot"></div><div class="hud-title">BALL FINDER</div></div><div class="glass-pill"><div class="zoom-badge" id="zoomPill">× 1.0</div></div></div><div class="reticle" id="focusRing"><div class="ret-outer"></div><div class="ret-inner"></div></div><div class="scan-sweep" id="scanLine"></div></div><div class="cam-bottom"><div class="cam-actions"><button class="btn-ghost" id="zoomOutBtn">↙ Dézoomer</button><button class="btn-found" id="ballFoundBtn">✓ Balle trouvée</button></div></div></div></section><script>
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" /><title>Ball Finder</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"><style>:root{--ink:#0b0e17;--deep:#0e1420;--slate:#141c2e;--card:#1a2238;--border:rgba(255,255,255,0.07);--gold:#e8a830;--gold2:#c88820;--goldf:#f4c060;--blue:#3a7bd5;--blue2:#2860b8;--white:#eef2f8;--muted:#6a7a96;--ok:#28c96a;--warn:#e8a030;--danger:#e84040;}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}html,body{height:100%;font-family:'DM Sans',sans-serif;overflow:hidden;background:var(--ink);color:var(--white);}.screen{display:none;width:100%;height:100%;}.screen.active{display:flex;flex-direction:column;}#homeScreen{background:var(--deep);position:relative;overflow:hidden;justify-content:flex-end;}.atmo{position:absolute;inset:0;pointer-events:none;}.atmo-glow-gold{position:absolute;top:-8%;right:-12%;width:55vw;height:55vw;max-width:380px;max-height:380px;border-radius:50%;background:radial-gradient(circle,rgba(232,168,48,0.14) 0%,transparent 68%);}.atmo-glow-blue{position:absolute;top:20%;left:-18%;width:50vw;height:50vw;max-width:320px;max-height:320px;border-radius:50%;background:radial-gradient(circle,rgba(58,123,213,0.10) 0%,transparent 68%);}.atmo-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:42px 42px;}.horizon{position:absolute;top:44%;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(232,168,48,0.25) 35%,rgba(232,168,48,0.25) 65%,transparent);}.fairway-wrap{position:absolute;bottom:0;left:0;right:0;height:58%;}.fairway-wrap svg{position:absolute;bottom:0;left:0;width:100%;height:100%;}.hero-ball{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);z-index:3;}.ball-shadow{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);width:56px;height:10px;border-radius:50%;background:rgba(0,0,0,0.5);filter:blur(6px);animation:shadowPulse 3s ease-in-out infinite;}@keyframes shadowPulse{0%,100%{transform:translateX(-50%) scaleX(0.8);opacity:0.5;}50%{transform:translateX(-50%) scaleX(1.1);opacity:0.25;}}.ball-sphere{width:68px;height:68px;border-radius:50%;background:radial-gradient(circle at 36% 30%,#ffffff 0%,#e8eee8 48%,#c4d4c4 100%);box-shadow:0 0 0 1px rgba(255,255,255,0.3),0 0 28px rgba(232,168,48,0.30),0 12px 30px rgba(0,0,0,0.55);animation:ballFloat 3s ease-in-out infinite;position:relative;}.ball-sphere::after{content:'';position:absolute;inset:0;border-radius:50%;background-image:radial-gradient(circle,rgba(0,0,0,0.07) 1px,transparent 1px);background-size:9px 9px;background-position:4px 4px;}@keyframes ballFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}.scan-ring{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);width:128px;height:128px;z-index:2;}.scan-ring svg{width:100%;height:100%;animation:ringRotate 12s linear infinite;}@keyframes ringRotate{to{transform:rotate(360deg);}}.ring-inner{position:absolute;inset:18px;border-radius:50%;border:1px solid rgba(232,168,48,0.2);}.corner-marks{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);width:160px;height:160px;z-index:2;}.corner-marks::before,.corner-marks::after,.cm-b::before,.cm-b::after{content:'';position:absolute;width:14px;height:14px;border-color:rgba(232,168,48,0.6);border-style:solid;}.corner-marks::before{top:0;left:0;border-width:2px 0 0 2px;}.corner-marks::after{top:0;right:0;border-width:2px 2px 0 0;}.cm-b::before{bottom:0;left:0;border-width:0 0 2px 2px;}.cm-b::after{bottom:0;right:0;border-width:0 2px 2px 0;}.home-panel{position:relative;z-index:4;padding:30px 26px calc(env(safe-area-inset-bottom,0px) + 36px);display:flex;flex-direction:column;gap:22px;background:linear-gradient(0deg,var(--deep) 72%,transparent);}.eyebrow{display:flex;align-items:center;gap:10px;}.eyebrow-line{width:28px;height:2px;background:var(--gold);border-radius:2px;}.eyebrow-text{font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);}.home-title{font-family:'Barlow Condensed',sans-serif;font-size:clamp(3.6rem,15vw,5.8rem);font-weight:800;line-height:0.88;letter-spacing:-0.01em;color:var(--white);}.home-title span{color:var(--gold);display:block;}.home-sub{font-size:0.92rem;color:var(--muted);line-height:1.6;max-width:32ch;}.ball-color-btn{appearance:none;border:1px solid var(--border);border-radius:16px;padding:14px 16px;background:rgba(255,255,255,0.035);color:var(--white);display:flex;align-items:center;justify-content:space-between;gap:14px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .14s,border-color .14s,transform .14s;}.ball-color-btn:active{transform:scale(.985);background:rgba(255,255,255,.06);}.ball-color-copy{display:flex;flex-direction:column;align-items:flex-start;gap:3px;}.ball-color-title{font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}.ball-color-value{display:flex;align-items:center;gap:9px;font-size:.92rem;font-weight:600;color:var(--white);}.ball-color-swatch{width:18px;height:18px;border-radius:50%;background:#f4f5f2;border:2px solid rgba(255,255,255,.65);box-shadow:0 0 0 1px rgba(0,0,0,.24),0 3px 8px rgba(0,0,0,.28);flex:0 0 auto;}.ball-color-arrow{font-size:1.35rem;line-height:1;color:var(--gold);transform:translateY(-1px);}.color-modal{position:fixed;inset:0;z-index:30;display:none;align-items:flex-end;justify-content:center;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 18px);}.color-modal.open{display:flex;}.color-backdrop{position:absolute;inset:0;background:rgba(4,7,12,.72);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);}.color-sheet{position:relative;width:min(100%,430px);border:1px solid rgba(255,255,255,.10);border-radius:22px;padding:20px;background:linear-gradient(155deg,#182238 0%,#0f1625 100%);box-shadow:0 24px 60px rgba(0,0,0,.55);}.color-sheet-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:17px;}.color-sheet-title{font-family:'Barlow Condensed',sans-serif;font-size:1.45rem;font-weight:800;letter-spacing:.03em;color:var(--white);}.color-sheet-sub{font-size:.78rem;color:var(--muted);line-height:1.45;margin-top:3px;}.color-close{appearance:none;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--white);width:35px;height:35px;border-radius:11px;font-size:1.15rem;cursor:pointer;}.color-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}.color-option{appearance:none;border:1px solid rgba(255,255,255,.08);border-radius:15px;padding:13px;background:rgba(255,255,255,.035);display:flex;align-items:center;gap:11px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;position:relative;}.color-option.selected{border-color:rgba(232,168,48,.75);background:rgba(232,168,48,.10);}.color-option.selected::after{content:'✓';position:absolute;right:11px;color:var(--gold);font-weight:800;}.color-option .ball-color-swatch{width:23px;height:23px;}.stats-row{display:flex;gap:0;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:rgba(255,255,255,0.03);}.stat-item{flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:3px;border-right:1px solid var(--border);}.stat-item:last-child{border-right:none;}.stat-val{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:700;color:var(--white);letter-spacing:-0.02em;}.stat-label{font-size:0.72rem;color:var(--muted);font-weight:500;}.start-btn{appearance:none;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:1.15rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border-radius:16px;padding:20px 28px;color:var(--ink);background:linear-gradient(135deg,var(--goldf) 0%,var(--gold) 55%,var(--gold2) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.3),0 14px 28px rgba(200,136,32,0.35);display:flex;align-items:center;justify-content:center;gap:12px;transition:transform 0.13s,box-shadow 0.13s;}.start-btn:active{transform:scale(0.97);box-shadow:0 6px 12px rgba(200,136,32,0.2);}.home-panel>*{opacity:0;transform:translateY(16px);animation:riseUp 0.5s ease forwards;}.home-panel>*:nth-child(1){animation-delay:0.04s;}.home-panel>*:nth-child(2){animation-delay:0.10s;}.home-panel>*:nth-child(3){animation-delay:0.17s;}.home-panel>*:nth-child(4){animation-delay:0.24s;}.home-panel>*:nth-child(5){animation-delay:0.31s;}@keyframes riseUp{to{opacity:1;transform:none;}}#cameraScreen{position:fixed;inset:0;background:#000;overflow:hidden;}.viewer{position:absolute;inset:0;}canvas{width:100%;height:100%;display:block;background:#000;touch-action:none;object-fit:cover;}video{display:none;}.hud{position:absolute;inset:0;pointer-events:none;}.hud-top{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);left:16px;right:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}.glass-pill{display:flex;align-items:center;gap:8px;padding:10px 15px;border-radius:14px;background:rgba(11,14,23,0.62);border:1px solid rgba(255,255,255,0.10);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);}.live-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:blink 2s ease-in-out infinite;}@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.25;}}.hud-title{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.12em;color:var(--white);}.zoom-badge{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:0.06em;color:var(--gold);}.reticle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:92px;height:92px;opacity:0;transition:opacity 0.2s;}.reticle.active{opacity:1;}.ret-outer{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,255,255,0.88);box-shadow:0 0 20px rgba(255,255,255,0.2),inset 0 0 20px rgba(255,255,255,0.05);animation:retPop 0.3s ease forwards;}.ret-inner{position:absolute;inset:13px;border-radius:50%;border:1px solid rgba(232,168,48,0.7);}@keyframes retPop{0%{transform:scale(0.82);opacity:0;}70%{transform:scale(1.05);}100%{transform:scale(1);opacity:1;}}.scan-sweep{position:absolute;left:20%;right:20%;top:50%;height:2px;background:linear-gradient(90deg,transparent,rgba(232,168,48,0.9) 50%,transparent);box-shadow:0 0 10px rgba(232,168,48,0.5);opacity:0;}.scan-sweep.active{opacity:1;animation:sweep 0.65s ease-in-out forwards;}@keyframes sweep{0%{transform:translateY(-48px);opacity:0;}20%{opacity:1;}80%{opacity:1;}100%{transform:translateY(48px);opacity:0;}}.cam-bottom{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);display:flex;flex-direction:column;gap:10px;pointer-events:none;}.cam-actions{display:flex;gap:10px;pointer-events:auto;}.btn-ghost{appearance:none;border:1px solid rgba(255,255,255,0.14);border-radius:14px;padding:15px 16px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:600;cursor:pointer;color:rgba(255,255,255,0.75);background:rgba(11,14,23,0.60);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);white-space:nowrap;transition:background 0.13s;}.btn-ghost:active{background:rgba(30,40,60,0.80);}.btn-found{flex:1;appearance:none;border:none;border-radius:14px;padding:15px 20px;font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;cursor:pointer;color:var(--ink);background:linear-gradient(135deg,var(--goldf) 0%,var(--gold) 55%,var(--gold2) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.28),0 10px 22px rgba(200,136,32,0.40);transition:transform 0.12s;}.btn-found:active{transform:scale(0.97);}</style></head><body><section class="screen active" id="homeScreen"><div class="atmo"><div class="atmo-glow-gold"></div><div class="atmo-glow-blue"></div><div class="atmo-grid"></div><div class="horizon"></div></div><div class="fairway-wrap"><svg viewBox="0 0 390 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice"><defs><linearGradient id="rough" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#12281a"/><stop offset="100%" stop-color="#0a1610"/></linearGradient><linearGradient id="fairway" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1e5c30"/><stop offset="100%" stop-color="#122018"/></linearGradient><linearGradient id="green" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#267840"/><stop offset="100%" stop-color="#1a5028"/></linearGradient><radialGradient id="glow" cx="50%" cy="40%" r="50%"><stop offset="0%" stop-color="rgba(232,168,48,0.10)"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs><ellipse cx="195" cy="420" rx="340" ry="250" fill="url(#rough)"/><ellipse cx="195" cy="400" rx="200" ry="170" fill="url(#fairway)"/><ellipse cx="195" cy="380" rx="120" ry="100" fill="url(#green)"/><ellipse cx="195" cy="360" rx="340" ry="250" fill="url(#glow)"/><g opacity="0.06" stroke="#fff" stroke-width="1"><line x1="50"  y1="280" x2="340" y2="296"/><line x1="50"  y1="304" x2="340" y2="320"/><line x1="50"  y1="328" x2="340" y2="344"/><line x1="110" y1="260" x2="116" y2="380"/><line x1="152" y1="258" x2="158" y2="380"/><line x1="194" y1="256" x2="200" y2="380"/><line x1="236" y1="258" x2="242" y2="380"/><line x1="276" y1="262" x2="282" y2="380"/></g><line x1="194" y1="270" x2="194" y2="320" stroke="rgba(255,255,255,0.6)" stroke-width="1.8"/><polygon points="194,270 220,280 194,290" fill="#e8a830" opacity="0.9"/><ellipse cx="194" cy="321" rx="6" ry="2.2" fill="rgba(0,0,0,0.4)"/><circle cx="255" cy="302" r="5.5" fill="#fff" opacity="0.55"/><circle cx="144" cy="294" r="4"   fill="#fff" opacity="0.35"/><circle cx="218" cy="328" r="3.5" fill="#fff" opacity="0.28"/></svg></div><div class="scan-ring"><div class="ring-inner"></div><svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="64" cy="64" r="58" stroke="rgba(232,168,48,0.35)" stroke-width="1.5" stroke-dasharray="6 4"/><circle cx="64" cy="64" r="46" stroke="rgba(255,255,255,0.10)" stroke-width="1"/></svg></div><div class="corner-marks"><div class="cm-b"></div></div><div class="hero-ball"><div class="ball-sphere"></div><div class="ball-shadow"></div></div><div class="home-panel"><div class="eyebrow"><div class="eyebrow-line"></div><div class="eyebrow-text">Golf Vision · Détection terrain</div></div><h1 class="home-title">BALL<span>FINDER</span></h1><p class="home-sub">Repérez votre balle dans l'herbe en quelques secondes grâce à la détection visuelle intelligente.</p><button class="ball-color-btn" id="ballColorBtn" type="button" aria-haspopup="dialog" aria-controls="colorModal"><span class="ball-color-copy"><span class="ball-color-title">Couleur de la balle</span><span class="ball-color-value"><span class="ball-color-swatch" id="selectedColorSwatch"></span><span id="selectedColorLabel">Blanche</span></span></span><span class="ball-color-arrow">›</span></button><button class="start-btn" id="startExperienceBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12a7 7 0 1 0 14 0A7 7 0 0 0 5 12Z" stroke="#0b0e17" stroke-width="1.8"/><path d="M10.5 9.5l4 2.5-4 2.5V9.5Z" fill="#0b0e17"/></svg>Lancer la recherche</button></div></section><div class="color-modal" id="colorModal" aria-hidden="true"><div class="color-backdrop" id="colorBackdrop"></div><div class="color-sheet" role="dialog" aria-modal="true" aria-labelledby="colorSheetTitle"><div class="color-sheet-header"><div><div class="color-sheet-title" id="colorSheetTitle">Choisir la couleur</div><div class="color-sheet-sub">Le filtre du terrain et le moteur de détection s’adaptent automatiquement.</div></div><button class="color-close" id="colorCloseBtn" type="button" aria-label="Fermer">×</button></div><div class="color-grid" id="colorGrid"><button class="color-option" type="button" data-ball-color="white"><span class="ball-color-swatch" style="background:#f4f5f2"></span>Blanche</button><button class="color-option" type="button" data-ball-color="yellow"><span class="ball-color-swatch" style="background:#f5e642"></span>Jaune</button><button class="color-option" type="button" data-ball-color="orange"><span class="ball-color-swatch" style="background:#ff8a24"></span>Orange</button><button class="color-option" type="button" data-ball-color="red"><span class="ball-color-swatch" style="background:#ef3d43"></span>Rouge</button><button class="color-option" type="button" data-ball-color="pink"><span class="ball-color-swatch" style="background:#ff72b4"></span>Rose</button><button class="color-option" type="button" data-ball-color="blue"><span class="ball-color-swatch" style="background:#3f7bff"></span>Bleue</button></div></div></div><section class="screen" id="cameraScreen"><div class="viewer"><canvas id="canvas"></canvas><video id="video" playsinline autoplay muted></video><div class="hud"><div class="hud-top"><div class="glass-pill"><div class="live-dot"></div><div class="hud-title">BALL FINDER</div></div><div class="glass-pill"><div class="zoom-badge" id="zoomPill">× 1.0</div></div></div><div class="reticle" id="focusRing"><div class="ret-outer"></div><div class="ret-inner"></div></div><div class="scan-sweep" id="scanLine"></div></div><div class="cam-bottom"><div class="cam-actions"><button class="btn-ghost" id="zoomOutBtn">↙ Dézoomer</button><button class="btn-found" id="ballFoundBtn">✓ Balle trouvée</button></div></div></div></section><script>
 const homeScreen   = document.getElementById("homeScreen");
 const cameraScreen = document.getElementById("cameraScreen");
 const video        = document.getElementById("video");
@@ -7,6 +7,13 @@ const ctx          = canvas.getContext("2d", { willReadFrequently: true });
 const zoomPill     = document.getElementById("zoomPill");
 const focusRing    = document.getElementById("focusRing");
 const scanLine     = document.getElementById("scanLine");
+const ballColorBtn = document.getElementById("ballColorBtn");
+const selectedColorSwatch = document.getElementById("selectedColorSwatch");
+const selectedColorLabel = document.getElementById("selectedColorLabel");
+const colorModal = document.getElementById("colorModal");
+const colorBackdrop = document.getElementById("colorBackdrop");
+const colorCloseBtn = document.getElementById("colorCloseBtn");
+const colorOptions = [...document.querySelectorAll("[data-ball-color]")];
 let stream = null, videoTrack = null, rafId = null, frameCounter = 0;
 let latestRawFrame = null, latestDetectedCandidates = [];
 let exclusionZones = [], inspectionState = null, pinchState = null;
@@ -58,9 +65,121 @@ let terrainModel = createDefaultTerrainModel();
 let terrainLut = new Uint8Array(4096);
 let latestVegetationMask = null;
 const vegetationHistories = new Map();
-const ballTarget = {
-mode: "white"
+const BALL_PROFILES = {
+white: {
+label: "Blanche",
+swatch: "#f4f5f2",
+mode: "white",
+terrainTint: [24, 35, 61],
+marker: [232, 168, 48],
+hue: null,
+tolerance: 0,
+minSat: 0,
+minValue: 0.42,
+threshold: 0.42
+},
+yellow: {
+label: "Jaune",
+swatch: "#f5e642",
+mode: "yellow",
+terrainTint: [36, 24, 79],
+marker: [80, 220, 255],
+hue: 56,
+tolerance: 34,
+minSat: 0.30,
+minValue: 0.34,
+threshold: 0.46
+},
+orange: {
+label: "Orange",
+swatch: "#ff8a24",
+mode: "orange",
+terrainTint: [9, 42, 61],
+marker: [72, 220, 255],
+hue: 28,
+tolerance: 27,
+minSat: 0.34,
+minValue: 0.30,
+threshold: 0.47
+},
+red: {
+label: "Rouge",
+swatch: "#ef3d43",
+mode: "red",
+terrainTint: [5, 43, 42],
+marker: [100, 245, 215],
+hue: 0,
+tolerance: 30,
+minSat: 0.30,
+minValue: 0.22,
+threshold: 0.45
+},
+pink: {
+label: "Rose",
+swatch: "#ff72b4",
+mode: "pink",
+terrainTint: [6, 49, 58],
+marker: [92, 225, 245],
+hue: 335,
+tolerance: 38,
+minSat: 0.24,
+minValue: 0.34,
+threshold: 0.44
+},
+blue: {
+label: "Bleue",
+swatch: "#3f7bff",
+mode: "blue",
+terrainTint: [42, 16, 24],
+marker: [255, 180, 70],
+hue: 218,
+tolerance: 42,
+minSat: 0.26,
+minValue: 0.24,
+threshold: 0.45
+}
 };
+const savedBallColor = localStorage.getItem("ball-finder-ball-color");
+const ballTarget = {
+mode: BALL_PROFILES[savedBallColor] ? savedBallColor : "white"
+};
+function getBallProfile() {
+return BALL_PROFILES[ballTarget.mode] || BALL_PROFILES.white;
+}
+function circularHueDistance(a, b) {
+const distance = Math.abs(a - b) % 360;
+return Math.min(distance, 360 - distance);
+}
+function resetDetectionState() {
+tracks = [];
+exclusionZones = [];
+latestDetectedCandidates = [];
+nextTrackId = 1;
+}
+function updateBallColorUi() {
+const profile = getBallProfile();
+selectedColorLabel.textContent = profile.label;
+selectedColorSwatch.style.background = profile.swatch;
+for (const option of colorOptions) {
+option.classList.toggle("selected", option.dataset.ballColor === ballTarget.mode);
+}
+}
+function openColorModal() {
+colorModal.classList.add("open");
+colorModal.setAttribute("aria-hidden", "false");
+}
+function closeColorModal() {
+colorModal.classList.remove("open");
+colorModal.setAttribute("aria-hidden", "true");
+}
+function selectBallColor(mode) {
+if (!BALL_PROFILES[mode]) return;
+ballTarget.mode = mode;
+localStorage.setItem("ball-finder-ball-color", mode);
+updateBallColorUi();
+resetDetectionState();
+closeColorModal();
+}
 let lastDisplayTime = 0;
 let lastAnalysisTime = 0;
 let lastCalibrationTime = 0;
@@ -709,15 +828,25 @@ g,
 b,
 whiteThreshold
 ) {
-if (ballTarget.mode === "white") {
-return whiteBallPixelConfidence(
-r,
-g,
-b,
-whiteThreshold
-);
+const profile = getBallProfile();
+if (profile.mode === "white") {
+return whiteBallPixelConfidence(r, g, b, whiteThreshold);
 }
-return 0;
+const hsv = rgbToHsv(r, g, b);
+if (hsv.v < profile.minValue * 0.72) return 0;
+const hueDistance = circularHueDistance(hsv.h, profile.hue);
+const hueScore = clamp01(1 - hueDistance / profile.tolerance);
+if (hueScore <= 0) return 0;
+const saturationFloor = profile.minSat * (hsv.v >= 0.72 ? 0.58 : 0.82);
+if (hsv.s < saturationFloor) return 0;
+const saturationScore = clamp01((hsv.s - saturationFloor) / Math.max(0.08, 0.88 - saturationFloor));
+const valueScore = clamp01((hsv.v - profile.minValue * 0.72) / Math.max(0.12, 0.92 - profile.minValue * 0.72));
+const highlightAllowance = hsv.v >= 0.76 && hueScore >= 0.58 ? 0.12 : 0;
+return clamp01(
+hueScore *
+(0.52 + 0.28 * saturationScore + 0.20 * valueScore) +
+highlightAllowance
+);
 }
 function calibrateTerrain(frameData, w, h) {
 const samples = [];
@@ -1172,6 +1301,7 @@ if (!terrainMask[index] && neighbours >= 6) refinedTerrainMask[index] = 255;
 terrainMask.set(refinedTerrainMask);
 const radius = strict ? 2 : 3;
 const flowerReject = strict ? 5 : 8;
+const rejectYellowFlowers = ballTarget.mode !== "yellow" && ballTarget.mode !== "orange";
 for (let y = radius; y < pH - radius; y++) {
 for (let x = radius; x < pW - radius; x++) {
 const index = y * pW + x;
@@ -1183,7 +1313,7 @@ for (let dx = -radius; dx <= radius; dx++) {
 if (flowerYellowMask[row + x + dx]) flowerNeighbours++;
 }
 }
-if (flowerNeighbours >= flowerReject) whiteMask[index] = 0;
+if (rejectYellowFlowers && flowerNeighbours >= flowerReject) whiteMask[index] = 0;
 }
 }
 const closedWhiteMask = new Uint8Array(whiteMask);
@@ -1301,6 +1431,9 @@ let white = 0;
 let terrain = 0;
 let yellow = 0;
 let chromaSum = 0;
+let redSum = 0;
+let greenSum = 0;
+let blueSum = 0;
 const xStart =
 Math.max(
 0,
@@ -1379,6 +1512,9 @@ currentLuminance *
 currentLuminance;
 chromaSum +=
 currentChroma;
+redSum += r;
+greenSum += g;
+blueSum += b;
 if (whiteMask[pixelIndex]) {
 white++;
 }
@@ -1396,6 +1532,9 @@ count: 0,
 meanLum: 0,
 varLum: 0,
 meanChroma: 0,
+meanR: 0,
+meanG: 0,
+meanB: 0,
 whiteRatio: 0,
 terrainRatio: 0,
 yellowRatio: 0
@@ -1421,6 +1560,9 @@ meanLuminance
 ),
 meanChroma:
 chromaSum / count,
+meanR: redSum / count,
+meanG: greenSum / count,
+meanB: blueSum / count,
 whiteRatio:
 white / count,
 terrainRatio:
@@ -1466,7 +1608,8 @@ const edge = sampleLum(centerX + cos * radius * 0.88, centerY + sin * radius * 0
 const outer = sampleLum(centerX + cos * radius * 1.30, centerY + sin * radius * 1.30);
 innerValues.push(inner);
 outerValues.push(outer);
-edgeDrops.push((inner + edge) * 0.5 - outer);
+const signedDrop = (inner + edge) * 0.5 - outer;
+edgeDrops.push(ballTarget.mode === "white" ? signedDrop : Math.abs(signedDrop));
 }
 function mean(values) {
 return values.reduce((sum, value) => sum + value, 0) / Math.max(1, values.length);
@@ -1483,7 +1626,11 @@ const dropDeviation = deviation(edgeDrops, dropMean);
 const innerDeviation = deviation(innerValues, innerMean);
 const contrastScore = sigmoidLike(dropMean, 5, 58);
 const consistencyScore = 1 - sigmoidLike(dropDeviation, 10, 42);
-const brightnessSeparation = sigmoidLike(innerMean - outerMean, 5, 62);
+const brightnessSeparation = sigmoidLike(
+ballTarget.mode === "white" ? innerMean - outerMean : Math.abs(innerMean - outerMean),
+5,
+62
+);
 const radialScore = clamp01(
 0.43 * contrastScore +
 0.34 * consistencyScore +
@@ -1511,6 +1658,8 @@ terrainMask,
 yellowMask,
 strict = false
 ) {
+const profile = getBallProfile();
+const isWhiteTarget = profile.mode === "white";
 const centerX = component.cx;
 const centerY = component.cy;
 const radius = Math.max(1.6, Math.min(18, component.radiusEstimate));
@@ -1531,11 +1680,22 @@ const normalizedY = centerY / height;
 const verticalPrior = Math.max(0, Math.min(1, (normalizedY - 0.06) / 0.84));
 const adaptiveWhiteLow = getAdaptiveWhiteThreshold(strict) - 12;
 const adaptiveWhiteHigh = Math.min(255, adaptiveWhiteLow + 82);
+const averageTargetScore = targetBallPixelConfidence(
+center.meanR,
+center.meanG,
+center.meanB,
+getAdaptiveWhiteThreshold(strict)
+);
 const whiteScore = sigmoidLike(center.meanLum, adaptiveWhiteLow, adaptiveWhiteHigh) * (1 - sigmoidLike(center.meanChroma, 24, 78));
-const whiteCoverageScore = sigmoidLike(
+const targetCoverageScore = sigmoidLike(
 center.whiteRatio,
-component.area <= 12 ? 0.10 : 0.30,
-component.area <= 12 ? 0.62 : 0.86
+component.area <= 12 ? 0.10 : 0.27,
+component.area <= 12 ? 0.62 : 0.84
+);
+const targetIsolationScore = sigmoidLike(
+center.whiteRatio - ring1.whiteRatio,
+0.05,
+0.55
 );
 const roundScore = component.area <= 12
 ? sigmoidLike(1 - Math.abs(1 - component.aspect), 0.18, 0.90)
@@ -1543,8 +1703,12 @@ const roundScore = component.area <= 12
 const compactScore = component.area <= 12
 ? sigmoidLike(component.fill, 0.13, 0.60)
 : 0.50 * sigmoidLike(component.fill, 0.32, 0.90) + 0.50 * sigmoidLike(component.circularity, 0.24, 0.92);
-const contrast = center.meanLum - ring1.meanLum;
-const contrastScore = sigmoidLike(contrast, 8, 66);
+const signedContrast = center.meanLum - ring1.meanLum;
+const contrastScore = sigmoidLike(
+isWhiteTarget ? signedContrast : Math.abs(signedContrast),
+isWhiteTarget ? 8 : 5,
+isWhiteTarget ? 66 : 54
+);
 const terrainContextScore =
 0.64 * sigmoidLike(ring1.terrainRatio, 0.12, 0.72) +
 0.36 * sigmoidLike(ring2.terrainRatio, 0.12, 0.76);
@@ -1552,11 +1716,13 @@ const surfaceScore = 1 - sigmoidLike(center.varLum, 1700, 5200);
 const edgeContinuityScore =
 0.64 * sigmoidLike(continuity.continuity, 0.28, 0.94) +
 0.36 * (1 - sigmoidLike(continuity.roughness, 0.14, 0.72));
-const yellowPenalty = Math.max(
+const yellowPenalty = isWhiteTarget
+? Math.max(
 sigmoidLike(ring1.yellowRatio, 0.04, 0.20),
 sigmoidLike(center.yellowRatio, 0.03, 0.14)
-);
-const ringWhitePenalty = sigmoidLike(ring1.whiteRatio, 0.16, 0.46);
+)
+: 0;
+const ringTargetPenalty = sigmoidLike(ring1.whiteRatio, 0.16, 0.48);
 const topFramePenalty = 1 - verticalPrior;
 const relativeWidth = component.width / width;
 const relativeHeight = component.height / height;
@@ -1564,12 +1730,15 @@ if (component.area > 430 && component.fill > 0.76) return null;
 if (relativeWidth > 0.16 || relativeHeight > 0.16) return null;
 if (component.aspect < 0.40 || component.aspect > 1.72) return null;
 if (component.area > 18 && component.circularity < 0.14) return null;
-if (center.meanLum < adaptiveWhiteLow - 18) return null;
+if (isWhiteTarget && center.meanLum < adaptiveWhiteLow - 18) return null;
+if (!isWhiteTarget && averageTargetScore < 0.22 && center.whiteRatio < 0.22) return null;
 if (terrainContextScore < (strict ? 0.08 : 0.15) && component.area > 6) return null;
-if (component.area > 16 && radial.radialScore < 0.18) return null;
-let score =
+if (component.area > 16 && radial.radialScore < (isWhiteTarget ? 0.18 : 0.15)) return null;
+let score;
+if (isWhiteTarget) {
+score =
 0.14 * whiteScore +
-0.11 * whiteCoverageScore +
+0.11 * targetCoverageScore +
 0.15 * roundScore +
 0.08 * compactScore +
 0.12 * contrastScore +
@@ -1580,15 +1749,35 @@ let score =
 0.04 * edgeContinuityScore +
 0.03 * verticalPrior -
 0.11 * yellowPenalty -
-0.11 * ringWhitePenalty -
+0.11 * ringTargetPenalty -
 0.02 * topFramePenalty;
+} else {
+score =
+0.15 * averageTargetScore +
+0.14 * targetCoverageScore +
+0.08 * targetIsolationScore +
+0.17 * roundScore +
+0.09 * compactScore +
+0.08 * contrastScore +
+0.19 * terrainContextScore +
+0.11 * radial.radialScore +
+0.03 * radial.dimpleScore +
+0.03 * surfaceScore +
+0.04 * edgeContinuityScore +
+0.02 * verticalPrior -
+0.09 * ringTargetPenalty -
+0.02 * topFramePenalty;
+if (profile.mode === "yellow" || profile.mode === "orange") {
+score += 0.035 * roundScore + 0.025 * radial.radialScore + 0.025 * targetIsolationScore;
+}
+}
 if (component.area <= 12) {
 score +=
-0.06 * contrastScore +
-0.08 * terrainContextScore +
-0.04 * whiteCoverageScore +
-0.03 * radial.edgeScore -
-0.02 * roundScore;
+0.055 * contrastScore +
+0.075 * terrainContextScore +
+0.04 * targetCoverageScore +
+0.025 * radial.edgeScore -
+0.018 * roundScore;
 }
 if (component.area > 30) {
 score +=
@@ -1602,9 +1791,13 @@ return {
 score,
 detail: {
 yellowPenalty,
-ringWhitePenalty,
+ringWhitePenalty: ringTargetPenalty,
+ringTargetPenalty,
 terrainContextScore,
-whiteCoverageScore,
+whiteCoverageScore: targetCoverageScore,
+targetCoverageScore,
+targetColorScore: averageTargetScore,
+targetIsolationScore,
 roundScore,
 radialScore: radial.radialScore,
 dimpleScore: radial.dimpleScore
@@ -1654,10 +1847,10 @@ strict
 if (!scored) {
 continue;
 }
-const threshold =
-strict
-? 0.36
-: 0.42;
+const profile = getBallProfile();
+const threshold = strict
+? Math.max(0.37, profile.threshold - 0.04)
+: profile.threshold;
 if (
 scored.score <
 threshold
@@ -1835,8 +2028,9 @@ ctx.save();
 ctx.lineCap = "round";
 ctx.lineJoin = "round";
 ctx.lineWidth = 2;
+const marker = getBallProfile().marker;
 ctx.strokeStyle =
-`rgba(232,168,48,${alpha})`;
+`rgba(${marker[0]},${marker[1]},${marker[2]},${alpha})`;
 ctx.beginPath();
 ctx.moveTo(left, top + cornerLength);
 ctx.lineTo(left, top);
@@ -1870,8 +2064,9 @@ ctx.lineTo(right - 2, bottom - cornerLength);
 ctx.stroke();
 ctx.restore();
 }
-function applyNightBlueTint(data, frameWidth, frameHeight) {
+function applyAdaptiveTerrainTint(data, frameWidth, frameHeight) {
 const adaptiveWhite = getAdaptiveWhiteThreshold(false);
+const profile = getBallProfile();
 const mask = latestVegetationMask;
 const canTint =
 terrainModel.tintEnabled &&
@@ -1893,13 +2088,22 @@ const index = (y * frameWidth + x) * 4;
 const r = data[index];
 const g = data[index + 1];
 const b = data[index + 2];
-const whiteConfidence = whiteBallPixelConfidence(r, g, b, adaptiveWhite);
-if (whiteConfidence >= 0.62) {
+const targetConfidence = targetBallPixelConfidence(r, g, b, adaptiveWhite);
+if (targetConfidence >= 0.58) {
+if (profile.mode === "white") {
 const currentLuminance = luminance(r, g, b);
 const boost = currentLuminance > 205 ? 8 : 4;
 data[index] = clamp(r + boost);
 data[index + 1] = clamp(g + boost);
 data[index + 2] = clamp(b + boost);
+} else {
+const currentLum = Math.max(1, luminance(r, g, b));
+const brightnessBoost = 1 + 0.08 * targetConfidence;
+const mean = (r + g + b) / 3;
+data[index] = clamp((mean + (r - mean) * 1.12) * brightnessBoost);
+data[index + 1] = clamp((mean + (g - mean) * 1.12) * brightnessBoost);
+data[index + 2] = clamp((mean + (b - mean) * 1.12) * brightnessBoost);
+}
 continue;
 }
 if (!canTint) continue;
@@ -1909,9 +2113,9 @@ const affinity = terrainAffinityFast(r, g, b);
 if (affinity < 0.24) continue;
 const currentLuminance = luminance(r, g, b);
 const texture = Math.max(0.40, Math.min(1.68, currentLuminance / 92));
-const targetR = 24 * texture;
-const targetG = 35 * texture;
-const targetB = 61 * texture;
+const targetR = profile.terrainTint[0] * texture;
+const targetG = profile.terrainTint[1] * texture;
+const targetB = profile.terrainTint[2] * texture;
 const sceneStrength = clamp01((terrainModel.sceneConfidence - 0.46) / 0.42);
 const blend = Math.min(0.88, 0.58 + 0.20 * affinity + 0.10 * sceneStrength);
 data[index] = clamp(r * (1 - blend) + targetR * blend);
@@ -1959,8 +2163,12 @@ return;
 }
 const best = strictCands[0];
 const d = best.detail || {};
-const daisyLikelihood = (d.yellowPenalty ?? 0) * 0.65 + (d.ringWhitePenalty ?? 0) * 0.35;
-if (best.score >= 0.58 && daisyLikelihood < 0.28) {
+const isWhiteTarget = ballTarget.mode === "white";
+const daisyLikelihood = isWhiteTarget
+? (d.yellowPenalty ?? 0) * 0.65 + (d.ringTargetPenalty ?? d.ringWhitePenalty ?? 0) * 0.35
+: 0;
+const strictAcceptThreshold = isWhiteTarget ? 0.58 : 0.60;
+if (best.score >= strictAcceptThreshold && (!isWhiteTarget || daisyLikelihood < 0.28)) {
 tracks.push({
 id: nextTrackId++,
 x: best.x,
@@ -1975,7 +2183,10 @@ vy: 0,
 lastSeen: performance.now(),
 lastDetail: best.detail
 });
-} else if (daisyLikelihood >= 0.28 || (d.ringWhitePenalty ?? 0) > 0.32) {
+} else if (
+(isWhiteTarget && daisyLikelihood >= 0.28) ||
+(d.ringTargetPenalty ?? d.ringWhitePenalty ?? 0) > 0.36
+) {
 exclusionZones.push({ x: best.x, y: best.y, radius: Math.max(26, best.radius * 2.0) });
 if (exclusionZones.length > MAX_EXCLUSIONS) exclusionZones.shift();
 }
@@ -2011,7 +2222,7 @@ calibrateTerrain(latestRawFrame, fw, fh);
 latestDetectedCandidates = detectMultiScale(latestRawFrame, fw, fh, false);
 updateTracks(latestDetectedCandidates);
 }
-applyNightBlueTint(full.data, fw, fh);
+applyAdaptiveTerrainTint(full.data, fw, fh);
 updateZoom();
 renderProcessedFrame(full, fw, fh);
 const visibleTracks = getVisibleTracks()
@@ -2181,7 +2392,18 @@ zoomState.targetScale = 1;
 if (cameraZoomSupport?.usingNativeZoom) await applyNativeZoom();
 }
 buildTerrainLut();
+updateBallColorUi();
+ballColorBtn.addEventListener("click", openColorModal);
+colorBackdrop.addEventListener("click", closeColorModal);
+colorCloseBtn.addEventListener("click", closeColorModal);
+for (const option of colorOptions) {
+option.addEventListener("click", () => selectBallColor(option.dataset.ballColor));
+}
+document.addEventListener("keydown", event => {
+if (event.key === "Escape") closeColorModal();
+});
 document.getElementById("startExperienceBtn").addEventListener("click", async () => {
+closeColorModal();
 showScreen("camera");
 await startCamera();
 });
