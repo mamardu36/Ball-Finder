@@ -1237,6 +1237,7 @@ function expandVegetationMask(seedMask, affinityMask, data, width, height) {
 const pixelCount = width * height;
 const allowed = new Uint8Array(pixelCount);
 const compatibility = new Uint8Array(pixelCount);
+const textureSupport = new Uint8Array(pixelCount);
 const dryScene =
 terrainModel.allowDryTerrain &&
 terrainModel.dryBladeRatio >= Math.max(0.025, terrainModel.greenAnchorRatio * 0.75);
@@ -1266,10 +1267,20 @@ integral[y0 * stride + x1 + 1] -
 integral[(y1 + 1) * stride + x0] +
 integral[y0 * stride + x0];
 }
-for (let index = 0; index < pixelCount; index++) {
+function readLum(x, y) {
+const px = Math.max(0, Math.min(width - 1, x));
+const py = Math.max(0, Math.min(height - 1, y));
+const index = (py * width + px) * 4;
+return luminance(data[index], data[index + 1], data[index + 2]);
+}
+const seedIntegral = buildIntegral(seedMask);
+for (let y = 0; y < height; y++) {
+for (let x = 0; x < width; x++) {
+const index = y * width + x;
 if (seedMask[index]) {
 allowed[index] = 255;
 compatibility[index] = 255;
+textureSupport[index] = 255;
 continue;
 }
 const dataIndex = index * 4;
@@ -1288,11 +1299,11 @@ for (const centroid of terrainModel.centroids) {
 const distance = featureDistance(feature, centroid);
 nearestCentroid = Math.max(
 nearestCentroid,
-clamp01(1 - distance / (dryPrior >= greenPrior ? 0.49 : 0.43))
+clamp01(1 - distance / (dryPrior >= greenPrior ? 0.46 : 0.42))
 );
 }
-const learnedSupport = nearestCentroid * (0.46 + 0.54 * botanicalPrior);
-const seasonalSupport = dryScene ? dryPrior * 0.78 : dryPrior * 0.52;
+const learnedSupport = nearestCentroid * (0.44 + 0.56 * botanicalPrior);
+const seasonalSupport = dryScene ? dryPrior * 0.76 : dryPrior * 0.48;
 const score = Math.max(
 affinity,
 learnedSupport,
@@ -1300,12 +1311,80 @@ greenPrior * 0.62,
 seasonalSupport
 );
 compatibility[index] = Math.round(clamp01(score) * 255);
-const greenAllowed = greenPrior >= 0.18 && score >= 0.18;
-const dryAllowed = dryScene && dryPrior >= 0.23 && score >= 0.20;
+const centerLum = readLum(x, y);
+const leftLum = readLum(x - 1, y);
+const rightLum = readLum(x + 1, y);
+const upLum = readLum(x, y - 1);
+const downLum = readLum(x, y + 1);
+const diagonalA = Math.abs(readLum(x + 1, y + 1) - readLum(x - 1, y - 1));
+const diagonalB = Math.abs(readLum(x + 1, y - 1) - readLum(x - 1, y + 1));
+const horizontal = Math.abs(rightLum - leftLum);
+const vertical = Math.abs(downLum - upLum);
+const fineMean = (horizontal + vertical + diagonalA + diagonalB) / 4;
+const coarseMean = (
+Math.abs(centerLum - readLum(x - 2, y)) +
+Math.abs(centerLum - readLum(x + 2, y)) +
+Math.abs(centerLum - readLum(x, y - 2)) +
+Math.abs(centerLum - readLum(x, y + 2))
+) / 4;
+const localValues = [
+centerLum,
+leftLum,
+rightLum,
+upLum,
+downLum,
+readLum(x - 1, y - 1),
+readLum(x + 1, y + 1),
+readLum(x + 1, y - 1),
+readLum(x - 1, y + 1)
+];
+let localMinimum = 255;
+let localMaximum = 0;
+for (const value of localValues) {
+if (value < localMinimum) localMinimum = value;
+if (value > localMaximum) localMaximum = value;
+}
+const localRange = localMaximum - localMinimum;
+const directionCount = [horizontal, vertical, diagonalA, diagonalB]
+.filter(value => value >= 4.5).length;
+const fineTexture = clamp01((fineMean - 1.8) / 15.5);
+const coarseTexture = clamp01((coarseMean - 2.0) / 21.0);
+const rangeTexture = clamp01((localRange - 5.0) / 25.0);
+const orientationDiversity = directionCount / 4;
+const textureScore = clamp01(
+0.38 * fineTexture +
+0.27 * coarseTexture +
+0.20 * rangeTexture +
+0.15 * orientationDiversity
+);
+textureSupport[index] = Math.round(textureScore * 255);
+const closeSeeds = countAround(seedIntegral, x, y, 2);
+const mediumSeeds = countAround(seedIntegral, x, y, 4);
+const enclosedByVegetation = closeSeeds >= 4 || mediumSeeds >= 15;
+const flatDrySurface =
+dryPrior >= greenPrior &&
+textureScore < 0.105 &&
+localRange < 10 &&
+mediumSeeds < 12;
+const greenAllowed =
+greenPrior >= 0.18 &&
+score >= 0.18 &&
+(textureScore >= 0.085 || enclosedByVegetation || affinity >= 0.76);
+const dryAllowed =
+dryScene &&
+dryPrior >= 0.23 &&
+score >= 0.21 &&
+!flatDrySurface &&
+(
+textureScore >= 0.18 ||
+enclosedByVegetation ||
+(closeSeeds >= 2 && affinity >= 0.56)
+);
 if (greenAllowed || dryAllowed) allowed[index] = 255;
 }
+}
 let grown = new Uint8Array(seedMask);
-const growthPasses = dryScene ? 7 : 5;
+const growthPasses = dryScene ? 6 : 5;
 for (let pass = 0; pass < growthPasses; pass++) {
 const integral = buildIntegral(grown);
 const next = new Uint8Array(grown);
@@ -1315,11 +1394,18 @@ const index = y * width + x;
 if (grown[index] || !allowed[index]) continue;
 const closeNeighbours = countAround(integral, x, y, 1);
 const mediumNeighbours = countAround(integral, x, y, 2);
+const wideNeighbours = countAround(integral, x, y, 3);
 const score = compatibility[index] / 255;
+const texture = textureSupport[index] / 255;
+const surrounded = closeNeighbours >= 5 || mediumNeighbours >= 17;
+const texturedGrowth = dryScene
+? texture >= 0.17
+: texture >= 0.075;
 if (
-closeNeighbours >= 2 ||
-(closeNeighbours >= 1 && score >= (dryScene ? 0.34 : 0.43)) ||
-(mediumNeighbours >= (dryScene ? 5 : 7) && score >= (dryScene ? 0.24 : 0.31))
+surrounded ||
+(closeNeighbours >= 2 && texturedGrowth && score >= (dryScene ? 0.25 : 0.31)) ||
+(closeNeighbours >= 1 && texture >= (dryScene ? 0.27 : 0.15) && score >= (dryScene ? 0.35 : 0.41)) ||
+(wideNeighbours >= (dryScene ? 22 : 27) && score >= (dryScene ? 0.23 : 0.29))
 ) {
 next[index] = 255;
 }
@@ -1337,24 +1423,48 @@ const xEnd = Math.min(width, bx + blockSize);
 let total = 0;
 let maskHits = 0;
 let allowedHits = 0;
+let textureHits = 0;
+let strongTextureHits = 0;
 for (let y = by; y < yEnd; y++) {
 for (let x = bx; x < xEnd; x++) {
 const index = y * width + x;
 total++;
 if (grown[index]) maskHits++;
 if (allowed[index]) allowedHits++;
+if (textureSupport[index] >= 38) textureHits++;
+if (textureSupport[index] >= 68) strongTextureHits++;
 }
 }
 const maskRatio = total ? maskHits / total : 0;
 const allowedRatio = total ? allowedHits / total : 0;
+const textureRatio = total ? textureHits / total : 0;
+const strongTextureRatio = total ? strongTextureHits / total : 0;
+const botanicalBlock = dryScene
+? (
+textureRatio >= 0.18 ||
+strongTextureRatio >= 0.07 ||
+maskRatio >= 0.38
+)
+: (
+textureRatio >= 0.10 ||
+maskRatio >= 0.30
+);
 if (
-maskRatio >= (dryScene ? 0.10 : 0.15) &&
-allowedRatio >= (dryScene ? 0.42 : 0.52)
+botanicalBlock &&
+maskRatio >= (dryScene ? 0.11 : 0.14) &&
+allowedRatio >= (dryScene ? 0.40 : 0.50)
 ) {
 for (let y = by; y < yEnd; y++) {
 for (let x = bx; x < xEnd; x++) {
 const index = y * width + x;
-if (allowed[index] && compatibility[index] >= (dryScene ? 48 : 58)) {
+if (
+allowed[index] &&
+compatibility[index] >= (dryScene ? 50 : 58) &&
+(
+textureSupport[index] >= (dryScene ? 28 : 20) ||
+maskRatio >= 0.42
+)
+) {
 next[index] = 255;
 }
 }
@@ -1375,17 +1485,90 @@ const mediumHits = countAround(integral, x, y, 2) - (grown[index] ? 1 : 0);
 const wideHits = countAround(integral, x, y, 3) - (grown[index] ? 1 : 0);
 if (
 !grown[index] &&
-allowed[index] &&
 (
-closeHits >= 4 ||
-mediumHits >= (dryScene ? 10 : 13) ||
-wideHits >= (dryScene ? 20 : 25)
+allowed[index] ||
+compatibility[index] >= (dryScene ? 56 : 66)
+) &&
+(
+closeHits >= 5 ||
+mediumHits >= (dryScene ? 15 : 17) ||
+wideHits >= (dryScene ? 31 : 34)
 )
 ) {
 next[index] = 255;
 }
-if (grown[index] && closeHits === 0 && mediumHits < 3 && wideHits < 6) {
+if (grown[index] && closeHits === 0 && mediumHits < 3 && wideHits < 7) {
 next[index] = 0;
+}
+}
+}
+grown = next;
+}
+if (dryScene) {
+const visited = new Uint8Array(pixelCount);
+const queue = new Int32Array(pixelCount);
+for (let start = 0; start < pixelCount; start++) {
+if (!grown[start] || visited[start]) continue;
+let queueStart = 0;
+let queueEnd = 0;
+queue[queueEnd++] = start;
+visited[start] = 1;
+const component = [];
+let textureHits = 0;
+let seedHits = 0;
+while (queueStart < queueEnd) {
+const index = queue[queueStart++];
+component.push(index);
+if (textureSupport[index] >= 38) textureHits++;
+if (seedMask[index]) seedHits++;
+const x = index % width;
+const y = (index / width) | 0;
+for (let dy = -1; dy <= 1; dy++) {
+for (let dx = -1; dx <= 1; dx++) {
+if (!dx && !dy) continue;
+const nx = x + dx;
+const ny = y + dy;
+if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+const neighbour = ny * width + nx;
+if (!grown[neighbour] || visited[neighbour]) continue;
+visited[neighbour] = 1;
+queue[queueEnd++] = neighbour;
+}
+}
+}
+const area = component.length;
+const textureRatio = area ? textureHits / area : 0;
+const seedRatio = area ? seedHits / area : 0;
+const largeFlatPlane =
+area >= Math.max(28, Math.floor(pixelCount * 0.012)) &&
+textureRatio < 0.095 &&
+seedRatio < 0.055;
+const veryLargeFlatPlane =
+area >= Math.floor(pixelCount * 0.08) &&
+textureRatio < 0.13 &&
+seedRatio < 0.085;
+if (largeFlatPlane || veryLargeFlatPlane) {
+for (const index of component) grown[index] = 0;
+}
+}
+}
+for (let pass = 0; pass < 2; pass++) {
+const integral = buildIntegral(grown);
+const next = new Uint8Array(grown);
+for (let y = 2; y < height - 2; y++) {
+for (let x = 2; x < width - 2; x++) {
+const index = y * width + x;
+if (grown[index]) continue;
+const closeHits = countAround(integral, x, y, 1);
+const mediumHits = countAround(integral, x, y, 2);
+if (
+closeHits >= 7 ||
+(
+mediumHits >= 21 &&
+(allowed[index] || compatibility[index] >= 48)
+)
+) {
+next[index] = 255;
 }
 }
 }
@@ -1393,7 +1576,6 @@ grown = next;
 }
 return grown;
 }
-
 function updateTemporalVegetationMask(
 candidateMask,
 affinityMask,
@@ -2396,6 +2578,15 @@ const maskScaleY = canTint ? mask.height / frameHeight : 0;
 const dryScene =
 terrainModel.allowDryTerrain &&
 terrainModel.dryBladeRatio >= Math.max(0.025, terrainModel.greenAnchorRatio * 0.75);
+const protectionTracks = getVisibleTracks()
+.sort((a, b) => b.confidence - a.confidence)
+.slice(0, 3)
+.map(track => ({
+x: track.x,
+y: track.y,
+radius: Math.max(10, Math.min(44, track.radius * 1.70)),
+radiusSquared: Math.pow(Math.max(10, Math.min(44, track.radius * 1.70)), 2)
+}));
 if (canTint && !mask.softData) {
 const stride = mask.width + 1;
 const integral = new Uint32Array(stride * (mask.height + 1));
@@ -2437,7 +2628,30 @@ const r = data[index];
 const g = data[index + 1];
 const b = data[index + 2];
 const targetConfidence = targetBallPixelConfidence(r, g, b, adaptiveWhite);
-if (targetConfidence >= 0.58) {
+const globalProtectionThreshold = profile.mode === "white" ? 0.90 : 0.86;
+const trackedProtectionThreshold = profile.mode === "white" ? 0.36 : 0.46;
+let insideTrackedBall = false;
+if (
+targetConfidence >= trackedProtectionThreshold &&
+protectionTracks.length
+) {
+for (const track of protectionTracks) {
+const dx = x - track.x;
+const dy = y - track.y;
+if (
+Math.abs(dx) <= track.radius &&
+Math.abs(dy) <= track.radius &&
+dx * dx + dy * dy <= track.radiusSquared
+) {
+insideTrackedBall = true;
+break;
+}
+}
+}
+if (
+targetConfidence >= globalProtectionThreshold ||
+insideTrackedBall
+) {
 if (profile.mode === "white") {
 const currentLuminance = luminance(r, g, b);
 const boost = currentLuminance > 205 ? 8 : 4;
