@@ -1,11 +1,11 @@
-<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" /><title>Ball Finder</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"><style>:root{--ink:#0b0e17;--deep:#0e1420;--slate:#141c2e;--card:#1a2238;--border:rgba(255,255,255,0.07);--gold:#e8a830;--gold2:#c88820;--goldf:#f4c060;--blue:#3a7bd5;--blue2:#2860b8;--white:#eef2f8;--muted:#6a7a96;--ok:#28c96a;--warn:#e8a030;--danger:#e84040;}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}html,body{height:100%;font-family:'DM Sans',sans-serif;overflow:hidden;background:var(--ink);color:var(--white);}.screen{display:none;width:100%;height:100%;}.screen.active{display:flex;flex-direction:column;}#homeScreen{background:var(--deep);position:relative;overflow:hidden;justify-content:flex-end;}.atmo{position:absolute;inset:0;pointer-events:none;}.atmo-glow-gold{position:absolute;top:-8%;right:-12%;width:55vw;height:55vw;max-width:380px;max-height:380px;border-radius:50%;background:radial-gradient(circle,rgba(232,168,48,0.14) 0%,transparent 68%);}.atmo-glow-blue{position:absolute;top:20%;left:-18%;width:50vw;height:50vw;max-width:320px;max-height:320px;border-radius:50%;background:radial-gradient(circle,rgba(58,123,213,0.10) 0%,transparent 68%);}.atmo-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:42px 42px;}.horizon{position:absolute;top:44%;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(232,168,48,0.25) 35%,rgba(232,168,48,0.25) 65%,transparent);}.fairway-wrap{position:absolute;bottom:0;left:0;right:0;height:58%;}.fairway-wrap svg{position:absolute;bottom:0;left:0;width:100%;height:100%;}.hero-ball{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);z-index:3;}.ball-shadow{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);width:56px;height:10px;border-radius:50%;background:rgba(0,0,0,0.5);filter:blur(6px);animation:shadowPulse 3s ease-in-out infinite;}@keyframes shadowPulse{0%,100%{transform:translateX(-50%) scaleX(0.8);opacity:0.5;}50%{transform:translateX(-50%) scaleX(1.1);opacity:0.25;}}.ball-sphere{width:68px;height:68px;border-radius:50%;background:radial-gradient(circle at 36% 30%,#ffffff 0%,#e8eee8 48%,#c4d4c4 100%);box-shadow:0 0 0 1px rgba(255,255,255,0.3),0 0 28px rgba(232,168,48,0.30),0 12px 30px rgba(0,0,0,0.55);animation:ballFloat 3s ease-in-out infinite;position:relative;}.ball-sphere::after{content:'';position:absolute;inset:0;border-radius:50%;background-image:radial-gradient(circle,rgba(0,0,0,0.07) 1px,transparent 1px);background-size:9px 9px;background-position:4px 4px;}@keyframes ballFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}.scan-ring{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);width:128px;height:128px;z-index:2;}.scan-ring svg{width:100%;height:100%;animation:ringRotate 12s linear infinite;}@keyframes ringRotate{to{transform:rotate(360deg);}}.ring-inner{position:absolute;inset:18px;border-radius:50%;border:1px solid rgba(232,168,48,0.2);}.corner-marks{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);width:160px;height:160px;z-index:2;}.corner-marks::before,.corner-marks::after,.cm-b::before,.cm-b::after{content:'';position:absolute;width:14px;height:14px;border-color:rgba(232,168,48,0.6);border-style:solid;}.corner-marks::before{top:0;left:0;border-width:2px 0 0 2px;}.corner-marks::after{top:0;right:0;border-width:2px 2px 0 0;}.cm-b::before{bottom:0;left:0;border-width:0 0 2px 2px;}.cm-b::after{bottom:0;right:0;border-width:0 2px 2px 0;}.home-panel{position:relative;z-index:4;padding:30px 26px calc(env(safe-area-inset-bottom,0px) + 36px);display:flex;flex-direction:column;gap:22px;background:linear-gradient(0deg,var(--deep) 72%,transparent);}.eyebrow{display:flex;align-items:center;gap:10px;}.eyebrow-line{width:28px;height:2px;background:var(--gold);border-radius:2px;}.eyebrow-text{font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);}.home-title{font-family:'Barlow Condensed',sans-serif;font-size:clamp(3.6rem,15vw,5.8rem);font-weight:800;line-height:0.88;letter-spacing:-0.01em;color:var(--white);}.home-title span{color:var(--gold);display:block;}.home-sub{font-size:0.92rem;color:var(--muted);line-height:1.6;max-width:32ch;}.ball-color-btn{appearance:none;border:1px solid var(--border);border-radius:16px;padding:14px 16px;background:rgba(255,255,255,0.035);color:var(--white);display:flex;align-items:center;justify-content:space-between;gap:14px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .14s,border-color .14s,transform .14s;}.ball-color-btn:active{transform:scale(.985);background:rgba(255,255,255,.06);}.ball-color-copy{display:flex;flex-direction:column;align-items:flex-start;gap:3px;}.ball-color-title{font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}.ball-color-value{display:flex;align-items:center;gap:9px;font-size:.92rem;font-weight:600;color:var(--white);}.ball-color-swatch{width:18px;height:18px;border-radius:50%;background:#f4f5f2;border:2px solid rgba(255,255,255,.65);box-shadow:0 0 0 1px rgba(0,0,0,.24),0 3px 8px rgba(0,0,0,.28);flex:0 0 auto;}.ball-color-arrow{font-size:1.35rem;line-height:1;color:var(--gold);transform:translateY(-1px);}.color-modal{position:fixed;inset:0;z-index:30;display:none;align-items:flex-end;justify-content:center;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 18px);}.color-modal.open{display:flex;}.color-backdrop{position:absolute;inset:0;background:rgba(4,7,12,.72);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);}.color-sheet{position:relative;width:min(100%,430px);border:1px solid rgba(255,255,255,.10);border-radius:22px;padding:20px;background:linear-gradient(155deg,#182238 0%,#0f1625 100%);box-shadow:0 24px 60px rgba(0,0,0,.55);}.color-sheet-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:17px;}.color-sheet-title{font-family:'Barlow Condensed',sans-serif;font-size:1.45rem;font-weight:800;letter-spacing:.03em;color:var(--white);}.color-sheet-sub{font-size:.78rem;color:var(--muted);line-height:1.45;margin-top:3px;}.color-close{appearance:none;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--white);width:35px;height:35px;border-radius:11px;font-size:1.15rem;cursor:pointer;}.color-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}.color-option{appearance:none;border:1px solid rgba(255,255,255,.08);border-radius:15px;padding:13px;background:rgba(255,255,255,.035);display:flex;align-items:center;gap:11px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;position:relative;}.color-option.selected{border-color:rgba(232,168,48,.75);background:rgba(232,168,48,.10);}.color-option.selected::after{content:'✓';position:absolute;right:11px;color:var(--gold);font-weight:800;}.color-option .ball-color-swatch{width:23px;height:23px;}.stats-row{display:flex;gap:0;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:rgba(255,255,255,0.03);}.stat-item{flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:3px;border-right:1px solid var(--border);}.stat-item:last-child{border-right:none;}.stat-val{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:700;color:var(--white);letter-spacing:-0.02em;}.stat-label{font-size:0.72rem;color:var(--muted);font-weight:500;}.start-btn{appearance:none;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:1.15rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border-radius:16px;padding:20px 28px;color:var(--ink);background:linear-gradient(135deg,var(--goldf) 0%,var(--gold) 55%,var(--gold2) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.3),0 14px 28px rgba(200,136,32,0.35);display:flex;align-items:center;justify-content:center;gap:12px;transition:transform 0.13s,box-shadow 0.13s;}.start-btn:active{transform:scale(0.97);box-shadow:0 6px 12px rgba(200,136,32,0.2);}.home-panel>*{opacity:0;transform:translateY(16px);animation:riseUp 0.5s ease forwards;}.home-panel>*:nth-child(1){animation-delay:0.04s;}.home-panel>*:nth-child(2){animation-delay:0.10s;}.home-panel>*:nth-child(3){animation-delay:0.17s;}.home-panel>*:nth-child(4){animation-delay:0.24s;}.home-panel>*:nth-child(5){animation-delay:0.31s;}@keyframes riseUp{to{opacity:1;transform:none;}}#cameraScreen{position:fixed;inset:0;background:#000;overflow:hidden;}.viewer{position:absolute;inset:0;}canvas{width:100%;height:100%;display:block;background:#000;touch-action:none;object-fit:cover;}video{display:none;}.hud{position:absolute;inset:0;pointer-events:none;}.hud-top{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);left:16px;right:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}.glass-pill{display:flex;align-items:center;gap:8px;padding:10px 15px;border-radius:14px;background:rgba(11,14,23,0.62);border:1px solid rgba(255,255,255,0.10);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);}.live-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:blink 2s ease-in-out infinite;}@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.25;}}.hud-title{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.12em;color:var(--white);}.zoom-badge{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:0.06em;color:var(--gold);}.reticle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:92px;height:92px;opacity:0;transition:opacity 0.2s;}.reticle.active{opacity:1;}.ret-outer{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,255,255,0.88);box-shadow:0 0 20px rgba(255,255,255,0.2),inset 0 0 20px rgba(255,255,255,0.05);animation:retPop 0.3s ease forwards;}.ret-inner{position:absolute;inset:13px;border-radius:50%;border:1px solid rgba(232,168,48,0.7);}@keyframes retPop{0%{transform:scale(0.82);opacity:0;}70%{transform:scale(1.05);}100%{transform:scale(1);opacity:1;}}.scan-sweep{position:absolute;left:20%;right:20%;top:50%;height:2px;background:linear-gradient(90deg,transparent,rgba(232,168,48,0.9) 50%,transparent);box-shadow:0 0 10px rgba(232,168,48,0.5);opacity:0;}.scan-sweep.active{opacity:1;animation:sweep 0.65s ease-in-out forwards;}@keyframes sweep{0%{transform:translateY(-48px);opacity:0;}20%{opacity:1;}80%{opacity:1;}100%{transform:translateY(48px);opacity:0;}}.cam-bottom{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);display:flex;flex-direction:column;gap:10px;pointer-events:none;}.cam-actions{display:flex;gap:10px;pointer-events:auto;}.btn-ghost{appearance:none;border:1px solid rgba(255,255,255,0.14);border-radius:14px;padding:15px 16px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:600;cursor:pointer;color:rgba(255,255,255,0.75);background:rgba(11,14,23,0.60);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);white-space:nowrap;transition:background 0.13s;}.btn-ghost:active{background:rgba(30,40,60,0.80);}.btn-found{flex:1;appearance:none;border:none;border-radius:14px;padding:15px 20px;font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;cursor:pointer;color:var(--ink);background:linear-gradient(135deg,var(--goldf) 0%,var(--gold) 55%,var(--gold2) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.28),0 10px 22px rgba(200,136,32,0.40);transition:transform 0.12s;}.btn-found:active{transform:scale(0.97);}
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" /><title>Ball Finder</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"><style>:root{--ink:#0b0e17;--deep:#0e1420;--slate:#141c2e;--card:#1a2238;--border:rgba(255,255,255,0.07);--gold:#e8a830;--gold2:#c88820;--goldf:#f4c060;--blue:#3a7bd5;--blue2:#2860b8;--white:#eef2f8;--muted:#6a7a96;--ok:#28c96a;--warn:#e8a030;--danger:#e84040;}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}html,body{height:100%;font-family:'DM Sans',sans-serif;overflow:hidden;background:var(--ink);color:var(--white);}.screen{display:none;width:100%;height:100%;}.screen.active{display:flex;flex-direction:column;}#homeScreen{background:var(--deep);position:relative;overflow:hidden;justify-content:flex-end;}.atmo{position:absolute;inset:0;pointer-events:none;}.atmo-glow-gold{position:absolute;top:-8%;right:-12%;width:55vw;height:55vw;max-width:380px;max-height:380px;border-radius:50%;background:radial-gradient(circle,rgba(232,168,48,0.14) 0%,transparent 68%);}.atmo-glow-blue{position:absolute;top:20%;left:-18%;width:50vw;height:50vw;max-width:320px;max-height:320px;border-radius:50%;background:radial-gradient(circle,rgba(58,123,213,0.10) 0%,transparent 68%);}.atmo-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:42px 42px;}.horizon{position:absolute;top:44%;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(232,168,48,0.25) 35%,rgba(232,168,48,0.25) 65%,transparent);}.fairway-wrap{position:absolute;bottom:0;left:0;right:0;height:58%;}.fairway-wrap svg{position:absolute;bottom:0;left:0;width:100%;height:100%;}.hero-ball{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);z-index:3;}.ball-shadow{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);width:56px;height:10px;border-radius:50%;background:rgba(0,0,0,0.5);filter:blur(6px);animation:shadowPulse 3s ease-in-out infinite;}@keyframes shadowPulse{0%,100%{transform:translateX(-50%) scaleX(0.8);opacity:0.5;}50%{transform:translateX(-50%) scaleX(1.1);opacity:0.25;}}.ball-sphere{width:68px;height:68px;border-radius:50%;background:radial-gradient(circle at 36% 30%,#ffffff 0%,#e8eee8 48%,#c4d4c4 100%);box-shadow:0 0 0 1px rgba(255,255,255,0.3),0 0 28px rgba(232,168,48,0.30),0 12px 30px rgba(0,0,0,0.55);animation:ballFloat 3s ease-in-out infinite;position:relative;}.ball-sphere::after{content:'';position:absolute;inset:0;border-radius:50%;background-image:radial-gradient(circle,rgba(0,0,0,0.07) 1px,transparent 1px);background-size:9px 9px;background-position:4px 4px;}@keyframes ballFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}.scan-ring{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);width:128px;height:128px;z-index:2;}.scan-ring svg{width:100%;height:100%;animation:ringRotate 12s linear infinite;}@keyframes ringRotate{to{transform:rotate(360deg);}}.ring-inner{position:absolute;inset:18px;border-radius:50%;border:1px solid rgba(232,168,48,0.2);}.corner-marks{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);width:160px;height:160px;z-index:2;}.corner-marks::before,.corner-marks::after,.cm-b::before,.cm-b::after{content:'';position:absolute;width:14px;height:14px;border-color:rgba(232,168,48,0.6);border-style:solid;}.corner-marks::before{top:0;left:0;border-width:2px 0 0 2px;}.corner-marks::after{top:0;right:0;border-width:2px 2px 0 0;}.cm-b::before{bottom:0;left:0;border-width:0 0 2px 2px;}.cm-b::after{bottom:0;right:0;border-width:0 2px 2px 0;}.home-panel{position:relative;z-index:4;padding:30px 26px calc(env(safe-area-inset-bottom,0px) + 36px);display:flex;flex-direction:column;gap:22px;background:linear-gradient(0deg,var(--deep) 72%,transparent);}.eyebrow{display:flex;align-items:center;gap:10px;}.eyebrow-line{width:28px;height:2px;background:var(--gold);border-radius:2px;}.eyebrow-text{font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);}.home-title{font-family:'Barlow Condensed',sans-serif;font-size:clamp(3.6rem,15vw,5.8rem);font-weight:800;line-height:0.88;letter-spacing:-0.01em;color:var(--white);}.home-title span{color:var(--gold);display:block;}.home-sub{font-size:0.92rem;color:var(--muted);line-height:1.6;max-width:32ch;}.ball-color-btn{appearance:none;border:1px solid var(--border);border-radius:16px;padding:14px 16px;background:rgba(255,255,255,0.035);color:var(--white);display:flex;align-items:center;justify-content:space-between;gap:14px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .14s,border-color .14s,transform .14s;}.ball-color-btn:active{transform:scale(.985);background:rgba(255,255,255,.06);}.ball-color-copy{display:flex;flex-direction:column;align-items:flex-start;gap:3px;}.ball-color-title{font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}.ball-color-value{display:flex;align-items:center;gap:9px;font-size:.92rem;font-weight:600;color:var(--white);}.ball-color-swatch{width:18px;height:18px;border-radius:50%;background:#f4f5f2;border:2px solid rgba(255,255,255,.65);box-shadow:0 0 0 1px rgba(0,0,0,.24),0 3px 8px rgba(0,0,0,.28);flex:0 0 auto;}.ball-color-arrow{font-size:1.35rem;line-height:1;color:var(--gold);transform:translateY(-1px);}.color-modal{position:fixed;inset:0;z-index:30;display:none;align-items:flex-end;justify-content:center;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 18px);}.color-modal.open{display:flex;}.color-backdrop{position:absolute;inset:0;background:rgba(4,7,12,.72);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);}.color-sheet{position:relative;width:min(100%,430px);border:1px solid rgba(255,255,255,.10);border-radius:22px;padding:20px;background:linear-gradient(155deg,#182238 0%,#0f1625 100%);box-shadow:0 24px 60px rgba(0,0,0,.55);}.color-sheet-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:17px;}.color-sheet-title{font-family:'Barlow Condensed',sans-serif;font-size:1.45rem;font-weight:800;letter-spacing:.03em;color:var(--white);}.color-sheet-sub{font-size:.78rem;color:var(--muted);line-height:1.45;margin-top:3px;}.color-close{appearance:none;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--white);width:35px;height:35px;border-radius:11px;font-size:1.15rem;cursor:pointer;}.color-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}.color-option{appearance:none;border:1px solid rgba(255,255,255,.08);border-radius:15px;padding:13px;background:rgba(255,255,255,.035);display:flex;align-items:center;gap:11px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;position:relative;}.color-option.selected{border-color:rgba(232,168,48,.75);background:rgba(232,168,48,.10);}.color-option.selected::after{content:'✓';position:absolute;right:11px;color:var(--gold);font-weight:800;}.color-option .ball-color-swatch{width:23px;height:23px;}.stats-row{display:flex;gap:0;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:rgba(255,255,255,0.03);}.stat-item{flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:3px;border-right:1px solid var(--border);}.stat-item:last-child{border-right:none;}.stat-val{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:700;color:var(--white);letter-spacing:-0.02em;}.stat-label{font-size:0.72rem;color:var(--muted);font-weight:500;}.start-btn{appearance:none;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:1.15rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;border-radius:16px;padding:20px 28px;color:var(--ink);background:linear-gradient(135deg,var(--goldf) 0%,var(--gold) 55%,var(--gold2) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.3),0 14px 28px rgba(200,136,32,0.35);display:flex;align-items:center;justify-content:center;gap:12px;transition:transform 0.13s,box-shadow 0.13s;}.start-btn:active{transform:scale(0.97);box-shadow:0 6px 12px rgba(200,136,32,0.2);}.home-panel>*{opacity:0;transform:translateY(16px);animation:riseUp 0.5s ease forwards;}.home-panel>*:nth-child(1){animation-delay:0.04s;}.home-panel>*:nth-child(2){animation-delay:0.10s;}.home-panel>*:nth-child(3){animation-delay:0.17s;}.home-panel>*:nth-child(4){animation-delay:0.24s;}.home-panel>*:nth-child(5){animation-delay:0.31s;}@keyframes riseUp{to{opacity:1;transform:none;}}#cameraScreen{position:fixed;inset:0;background:#000;overflow:hidden;}.viewer{position:absolute;inset:0;}video,canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}video{z-index:0;object-fit:fill;background:#000;}canvas{z-index:1;background:transparent;touch-action:none;} .hud{position:absolute;z-index:3;inset:0;pointer-events:none;}.hud-top{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);left:16px;right:16px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}.glass-pill{display:flex;align-items:center;gap:8px;padding:10px 15px;border-radius:14px;background:rgba(11,14,23,0.62);border:1px solid rgba(255,255,255,0.10);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);}.live-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:blink 2s ease-in-out infinite;}@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.25;}}.hud-title{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.12em;color:var(--white);}.zoom-badge{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:0.06em;color:var(--gold);}.reticle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:92px;height:92px;opacity:0;transition:opacity 0.2s;}.reticle.active{opacity:1;}.ret-outer{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,255,255,0.88);box-shadow:0 0 20px rgba(255,255,255,0.2),inset 0 0 20px rgba(255,255,255,0.05);animation:retPop 0.3s ease forwards;}.ret-inner{position:absolute;inset:13px;border-radius:50%;border:1px solid rgba(232,168,48,0.7);}@keyframes retPop{0%{transform:scale(0.82);opacity:0;}70%{transform:scale(1.05);}100%{transform:scale(1);opacity:1;}}.scan-sweep{position:absolute;left:20%;right:20%;top:50%;height:2px;background:linear-gradient(90deg,transparent,rgba(232,168,48,0.9) 50%,transparent);box-shadow:0 0 10px rgba(232,168,48,0.5);opacity:0;}.scan-sweep.active{opacity:1;animation:sweep 0.65s ease-in-out forwards;}@keyframes sweep{0%{transform:translateY(-48px);opacity:0;}20%{opacity:1;}80%{opacity:1;}100%{transform:translateY(48px);opacity:0;}}.cam-bottom{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);display:flex;flex-direction:column;gap:10px;pointer-events:none;}.cam-actions{display:flex;gap:10px;pointer-events:auto;}.btn-ghost{appearance:none;border:1px solid rgba(255,255,255,0.14);border-radius:14px;padding:15px 16px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:600;cursor:pointer;color:rgba(255,255,255,0.75);background:rgba(11,14,23,0.60);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);white-space:nowrap;transition:background 0.13s;}.btn-ghost:active{background:rgba(30,40,60,0.80);}.btn-found{flex:1;appearance:none;border:none;border-radius:14px;padding:15px 20px;font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;cursor:pointer;color:var(--ink);background:linear-gradient(135deg,var(--goldf) 0%,var(--gold) 55%,var(--gold2) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.28),0 10px 22px rgba(200,136,32,0.40);transition:transform 0.12s;}.btn-found:active{transform:scale(0.97);}
 .calibration-panel{position:absolute;z-index:12;top:calc(env(safe-area-inset-top,0px) + 70px);left:50%;transform:translateX(-50%) translateY(-8px);width:min(270px,calc(100% - 40px));padding:11px 13px;border:1px solid rgba(255,255,255,.13);border-radius:15px;background:rgba(11,14,23,.76);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 12px 28px rgba(0,0,0,.28);opacity:0;visibility:hidden;transition:opacity .18s,transform .18s;pointer-events:none}.calibration-panel.show{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}.calibration-line{display:flex;align-items:center;justify-content:space-between;gap:12px}.calibration-label{font-family:'Barlow Condensed',sans-serif;font-size:.96rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--white)}.calibration-percent{font-family:'Barlow Condensed',sans-serif;font-size:.88rem;font-weight:700;color:var(--gold)}.calibration-track{height:3px;margin-top:8px;border-radius:4px;overflow:hidden;background:rgba(255,255,255,.10)}.calibration-progress{height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,var(--gold2),var(--goldf));transition:width .12s linear}.feedback-panel{position:absolute;z-index:15;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 86px);display:flex;flex-direction:column;gap:10px;padding:13px;border:1px solid rgba(255,255,255,.13);border-radius:17px;background:rgba(11,14,23,.84);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 18px 38px rgba(0,0,0,.42);opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .16s,transform .16s;pointer-events:none}.feedback-panel.show{opacity:1;visibility:visible;transform:none;pointer-events:auto}.feedback-title{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.035em;color:var(--white);text-align:center}.feedback-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.feedback-btn{appearance:none;border-radius:12px;padding:12px 9px;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer}.feedback-btn.no{border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.84);background:rgba(255,255,255,.055)}.feedback-btn.yes{border:1px solid rgba(40,201,106,.46);color:#dffbea;background:rgba(40,201,106,.16)}.feedback-btn:active{transform:scale(.98)}
 </style></head><body><section class="screen active" id="homeScreen"><div class="atmo"><div class="atmo-glow-gold"></div><div class="atmo-glow-blue"></div><div class="atmo-grid"></div><div class="horizon"></div></div><div class="fairway-wrap"><svg viewBox="0 0 390 360" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice"><defs><linearGradient id="rough" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#12281a"/><stop offset="100%" stop-color="#0a1610"/></linearGradient><linearGradient id="fairway" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1e5c30"/><stop offset="100%" stop-color="#122018"/></linearGradient><linearGradient id="green" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#267840"/><stop offset="100%" stop-color="#1a5028"/></linearGradient><radialGradient id="glow" cx="50%" cy="40%" r="50%"><stop offset="0%" stop-color="rgba(232,168,48,0.10)"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs><ellipse cx="195" cy="420" rx="340" ry="250" fill="url(#rough)"/><ellipse cx="195" cy="400" rx="200" ry="170" fill="url(#fairway)"/><ellipse cx="195" cy="380" rx="120" ry="100" fill="url(#green)"/><ellipse cx="195" cy="360" rx="340" ry="250" fill="url(#glow)"/><g opacity="0.06" stroke="#fff" stroke-width="1"><line x1="50"  y1="280" x2="340" y2="296"/><line x1="50"  y1="304" x2="340" y2="320"/><line x1="50"  y1="328" x2="340" y2="344"/><line x1="110" y1="260" x2="116" y2="380"/><line x1="152" y1="258" x2="158" y2="380"/><line x1="194" y1="256" x2="200" y2="380"/><line x1="236" y1="258" x2="242" y2="380"/><line x1="276" y1="262" x2="282" y2="380"/></g><line x1="194" y1="270" x2="194" y2="320" stroke="rgba(255,255,255,0.6)" stroke-width="1.8"/><polygon points="194,270 220,280 194,290" fill="#e8a830" opacity="0.9"/><ellipse cx="194" cy="321" rx="6" ry="2.2" fill="rgba(0,0,0,0.4)"/><circle cx="255" cy="302" r="5.5" fill="#fff" opacity="0.55"/><circle cx="144" cy="294" r="4"   fill="#fff" opacity="0.35"/><circle cx="218" cy="328" r="3.5" fill="#fff" opacity="0.28"/></svg></div><div class="scan-ring"><div class="ring-inner"></div><svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="64" cy="64" r="58" stroke="rgba(232,168,48,0.35)" stroke-width="1.5" stroke-dasharray="6 4"/><circle cx="64" cy="64" r="46" stroke="rgba(255,255,255,0.10)" stroke-width="1"/></svg></div><div class="corner-marks"><div class="cm-b"></div></div><div class="hero-ball"><div class="ball-sphere"></div><div class="ball-shadow"></div></div><div class="home-panel"><div class="eyebrow"><div class="eyebrow-line"></div><div class="eyebrow-text">Golf Vision · Détection terrain</div></div><h1 class="home-title">BALL<span>FINDER</span></h1><p class="home-sub">Repérez votre balle dans l'herbe en quelques secondes grâce à la détection visuelle intelligente.</p><button class="ball-color-btn" id="ballColorBtn" type="button" aria-haspopup="dialog" aria-controls="colorModal"><span class="ball-color-copy"><span class="ball-color-title">Couleur de la balle</span><span class="ball-color-value"><span class="ball-color-swatch" id="selectedColorSwatch"></span><span id="selectedColorLabel">Blanche</span></span></span><span class="ball-color-arrow">›</span></button><button class="start-btn" id="startExperienceBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12a7 7 0 1 0 14 0A7 7 0 0 0 5 12Z" stroke="#0b0e17" stroke-width="1.8"/><path d="M10.5 9.5l4 2.5-4 2.5V9.5Z" fill="#0b0e17"/></svg>Lancer la recherche</button></div></section><div class="color-modal" id="colorModal" aria-hidden="true"><div class="color-backdrop" id="colorBackdrop"></div><div class="color-sheet" role="dialog" aria-modal="true" aria-labelledby="colorSheetTitle"><div class="color-sheet-header"><div><div class="color-sheet-title" id="colorSheetTitle">Choisir la couleur</div><div class="color-sheet-sub">Le filtre du terrain et le moteur de détection s’adaptent automatiquement.</div></div><button class="color-close" id="colorCloseBtn" type="button" aria-label="Fermer">×</button></div><div class="color-grid" id="colorGrid"><button class="color-option" type="button" data-ball-color="white"><span class="ball-color-swatch" style="background:#f4f5f2"></span>Blanche</button><button class="color-option" type="button" data-ball-color="yellow"><span class="ball-color-swatch" style="background:#f5e642"></span>Jaune</button><button class="color-option" type="button" data-ball-color="orange"><span class="ball-color-swatch" style="background:#ff8a24"></span>Orange</button><button class="color-option" type="button" data-ball-color="red"><span class="ball-color-swatch" style="background:#ef3d43"></span>Rouge</button><button class="color-option" type="button" data-ball-color="pink"><span class="ball-color-swatch" style="background:#ff72b4"></span>Rose</button><button class="color-option" type="button" data-ball-color="blue"><span class="ball-color-swatch" style="background:#3f7bff"></span>Bleue</button></div></div></div><section class="screen" id="cameraScreen"><div class="viewer"><canvas id="canvas"></canvas><video id="video" playsinline autoplay muted></video><div class="hud"><div class="hud-top"><div class="glass-pill"><div class="live-dot"></div><div class="hud-title">BALL FINDER</div></div><div class="glass-pill"><div class="zoom-badge" id="zoomPill">× 1.0</div></div></div><div class="reticle" id="focusRing"><div class="ret-outer"></div><div class="ret-inner"></div></div><div class="scan-sweep" id="scanLine"></div></div><div class="calibration-panel" id="calibrationPanel" aria-live="polite"><div class="calibration-line"><span class="calibration-label" id="calibrationLabel">Analyse du terrain…</span><span class="calibration-percent" id="calibrationPercent">0 %</span></div><div class="calibration-track"><div class="calibration-progress" id="calibrationProgress"></div></div></div><div class="feedback-panel" id="feedbackPanel" aria-hidden="true"><div class="feedback-title" id="feedbackTitle">Est-ce votre balle ?</div><div class="feedback-actions"><button class="feedback-btn no" id="feedbackNoBtn" type="button">Ce n’est pas une balle</button><button class="feedback-btn yes" id="feedbackYesBtn" type="button">C’est ma balle</button></div></div><div class="cam-bottom"><div class="cam-actions"><button class="btn-ghost" id="zoomOutBtn">↙ Dézoomer</button><button class="btn-found" id="ballFoundBtn">✓ Balle trouvée</button></div></div></div></section><script>
 const homeScreen   = document.getElementById("homeScreen");
 const cameraScreen = document.getElementById("cameraScreen");
 const video        = document.getElementById("video");
 const canvas       = document.getElementById("canvas");
-const ctx          = canvas.getContext("2d", { alpha: false, desynchronized: true });
+const ctx          = canvas.getContext("2d", { alpha: true, desynchronized: true });
 const zoomPill     = document.getElementById("zoomPill");
 const focusRing    = document.getElementById("focusRing");
 const scanLine     = document.getElementById("scanLine");
@@ -37,6 +37,11 @@ const CALIBRATION_TARGET_MS = 1600;
 const CALIBRATION_MAX_MS = 3000;
 const CALIBRATION_BOOT_INTERVAL_MS = 250;
 const CALIBRATION_REQUIRED_STABLE_FRAMES = 3;
+const SCENE_SAMPLE_INTERVAL_MS = 300;
+const TERRAIN_UPDATE_INTERVAL_MS = 620;
+const SCENE_CHANGE_REQUIRED_FRAMES = 2;
+const TERRAIN_LOST_REQUIRED_FRAMES = 2;
+const MAX_SAFE_MASK_RATIO = 0.62;
 const FEEDBACK_MEMORY_LIMIT = 24;
 const PROCESS_SCALE = .46;
 const MIN_ZOOM = 1, MAX_ZOOM = 3.2, STRICT_ANALYSIS_DELAY_MS = 260;
@@ -45,15 +50,15 @@ const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
 (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const CPU_THREADS = navigator.hardwareConcurrency || 4;
 const MOBILE_PERFORMANCE_MODE = IS_IOS || CPU_THREADS <= 4;
-const RENDER_MAX_DIMENSION = MOBILE_PERFORMANCE_MODE ? 720 : 900;
+const RENDER_MAX_DIMENSION = MOBILE_PERFORMANCE_MODE ? 640 : 800;
 const DISPLAY_INTERVAL_MS = 1000 / 30;
-const ANALYSIS_INTERVAL_MS = MOBILE_PERFORMANCE_MODE ? 210 : 165;
-const CALIBRATION_INTERVAL_MS = MOBILE_PERFORMANCE_MODE ? 1050 : 850;
+const ANALYSIS_INTERVAL_MS = MOBILE_PERFORMANCE_MODE ? 190 : 150;
+const CALIBRATION_INTERVAL_MS = TERRAIN_UPDATE_INTERVAL_MS;
 const ANALYSIS_SCALES = MOBILE_PERFORMANCE_MODE
-? [0.36, 0.49]
-: [0.40, 0.54, 0.66];
+? [0.38]
+: [0.42, 0.54];
 const ANALYSIS_INTERVAL_MAX_MS = MOBILE_PERFORMANCE_MODE ? 360 : 280;
-const SHOW_THRESHOLD = 0.60;
+const SHOW_THRESHOLD = 0.54;
 const TRACK_DECAY = 0.06;
 const TRACK_GAIN = 0.18;
 const TRACK_MAX_MISSED = 14;
@@ -94,6 +99,121 @@ let terrainModel = createDefaultTerrainModel();
 let terrainLut = new Uint8Array(4096);
 let latestVegetationMask = null;
 const vegetationHistories = new Map();
+
+function createSceneController() {
+return {
+mode: "calibrating",
+baseline: null,
+lastSignature: null,
+changeFrames: 0,
+lostFrames: 0,
+safeFrames: 0,
+lastSceneCheckAt: 0,
+lastTerrainUpdateAt: 0,
+lastMaskSafety: null,
+calibrationReason: "initial"
+};
+}
+let sceneController = createSceneController();
+function resetTerrainLearning() {
+terrainModel = createDefaultTerrainModel();
+latestVegetationMask = null;
+vegetationHistories.clear();
+tintOverlayDirty = true;
+buildTerrainLut();
+}
+function computeSceneSignature(frameData, width, height) {
+const data = frameData.data;
+const stepX = Math.max(6, Math.floor(width / 24));
+const stepY = Math.max(6, Math.floor(height / 18));
+let count = 0;
+let rSum = 0, gSum = 0, bSum = 0, lumSum = 0, satSum = 0;
+let topLum = 0, topCount = 0, bottomLum = 0, bottomCount = 0;
+let bright = 0, blue = 0, warm = 0;
+for (let y = Math.floor(stepY / 2); y < height; y += stepY) {
+for (let x = Math.floor(stepX / 2); x < width; x += stepX) {
+const index = (y * width + x) * 4;
+const r = data[index], g = data[index + 1], b = data[index + 2];
+const lum = luminance(r, g, b);
+const hsv = rgbToHsv(r, g, b);
+count++;
+rSum += r; gSum += g; bSum += b; lumSum += lum; satSum += hsv.s;
+if (y < height * 0.34) { topLum += lum; topCount++; }
+if (y > height * 0.66) { bottomLum += lum; bottomCount++; }
+if (lum > 205) bright++;
+if (b > r * 1.14 && b > g * 1.06) blue++;
+if (r > b * 1.28 && g > b * 1.16) warm++;
+}
+}
+const divisor = Math.max(1, count);
+return {
+r: rSum / divisor / 255,
+g: gSum / divisor / 255,
+b: bSum / divisor / 255,
+lum: lumSum / divisor / 255,
+sat: satSum / divisor,
+topLum: topLum / Math.max(1, topCount) / 255,
+bottomLum: bottomLum / Math.max(1, bottomCount) / 255,
+bright: bright / divisor,
+blue: blue / divisor,
+warm: warm / divisor
+};
+}
+function sceneSignatureDistance(a, b) {
+if (!a || !b) return 0;
+return (
+Math.abs(a.r - b.r) * 0.70 +
+Math.abs(a.g - b.g) * 0.70 +
+Math.abs(a.b - b.b) * 0.70 +
+Math.abs(a.lum - b.lum) * 1.25 +
+Math.abs(a.sat - b.sat) * 0.65 +
+Math.abs(a.topLum - b.topLum) * 0.55 +
+Math.abs(a.bottomLum - b.bottomLum) * 0.70 +
+Math.abs(a.bright - b.bright) * 0.45 +
+Math.abs(a.blue - b.blue) * 0.45 +
+Math.abs(a.warm - b.warm) * 0.35
+) / 6.45;
+}
+function blendSceneSignature(previous, current, amount = 0.10) {
+if (!previous) return { ...current };
+const result = {};
+for (const key of Object.keys(current)) {
+result[key] = previous[key] * (1 - amount) + current[key] * amount;
+}
+return result;
+}
+function assessVegetationMaskSafety(mask) {
+if (!mask?.data || !mask.width || !mask.height) {
+return { safe: false, ratio: 0, topRatio: 0, bottomRatio: 0 };
+}
+const { data, width, height } = mask;
+let total = 0, top = 0, bottom = 0;
+const topLimit = Math.floor(height * 0.33);
+const bottomStart = Math.floor(height * 0.66);
+for (let y = 0; y < height; y++) {
+const row = y * width;
+for (let x = 0; x < width; x++) {
+if (!data[row + x]) continue;
+total++;
+if (y < topLimit) top++;
+if (y >= bottomStart) bottom++;
+}
+}
+const pixels = Math.max(1, width * height);
+const topPixels = Math.max(1, width * topLimit);
+const bottomPixels = Math.max(1, width * (height - bottomStart));
+const ratio = total / pixels;
+const topRatio = top / topPixels;
+const bottomRatio = bottom / bottomPixels;
+const safe =
+ratio >= 0.006 &&
+ratio <= MAX_SAFE_MASK_RATIO &&
+bottomRatio >= 0.018 &&
+!(topRatio > 0.50 && bottomRatio < 0.08) &&
+!(ratio > 0.45 && bottomRatio < 0.12);
+return { safe, ratio, topRatio, bottomRatio };
+}
+
 const BALL_PROFILES = {
 white: {
 label: "Blanche",
@@ -277,76 +397,151 @@ persistFeedbackMemory();
 function updateCalibrationUi(timestamp = performance.now()) {
 if (!calibrationState.active) return;
 const elapsed = Math.max(0, timestamp - calibrationState.startedAt);
-let progress;
-if (elapsed <= CALIBRATION_TARGET_MS) {
-progress = Math.min(0.90, elapsed / CALIBRATION_TARGET_MS * 0.90);
-} else {
-progress = 0.90 + Math.min(0.09, (elapsed - CALIBRATION_TARGET_MS) / Math.max(1, CALIBRATION_MAX_MS - CALIBRATION_TARGET_MS) * 0.09);
-}
+const progress = elapsed < CALIBRATION_TARGET_MS
+? Math.min(0.88, elapsed / CALIBRATION_TARGET_MS * 0.88)
+: Math.min(0.94, 0.88 + (elapsed - CALIBRATION_TARGET_MS) / 5000 * 0.06);
 const percent = Math.round(progress * 100);
 calibrationProgress.style.width = `${percent}%`;
 calibrationPercent.textContent = `${percent} %`;
-calibrationLabel.textContent = terrainModel.sceneConfidence >= 0.48
-? "Terrain reconnu…"
-: "Analyse du terrain…";
+if (sceneController.calibrationReason === "scene-change") {
+calibrationLabel.textContent = "Changement de scène…";
+} else if (sceneController.calibrationReason === "terrain-lost") {
+calibrationLabel.textContent = "Terrain perdu — nouvelle analyse…";
+} else if (terrainModel.sceneConfidence >= 0.52) {
+calibrationLabel.textContent = "Vérification du terrain…";
+} else if (elapsed >= CALIBRATION_MAX_MS) {
+calibrationLabel.textContent = "Recherche du terrain…";
+} else {
+calibrationLabel.textContent = "Analyse du terrain…";
 }
-function beginInitialCalibration() {
+}
+function beginInitialCalibration(reason = "initial") {
+resetTerrainLearning();
+sceneController.mode = "calibrating";
+sceneController.baseline = null;
+sceneController.lastSignature = null;
+sceneController.changeFrames = 0;
+sceneController.lostFrames = 0;
+sceneController.safeFrames = 0;
+sceneController.lastSceneCheckAt = 0;
+sceneController.lastTerrainUpdateAt = 0;
+sceneController.lastMaskSafety = null;
+sceneController.calibrationReason = reason;
 calibrationState = createCalibrationState();
 calibrationState.active = true;
 calibrationState.startedAt = performance.now();
 calibrationPanel.classList.add("show");
-calibrationLabel.textContent = "Analyse du terrain…";
+calibrationLabel.textContent = reason === "initial"
+? "Analyse du terrain…"
+: "Changement de scène…";
 calibrationPercent.textContent = "0 %";
 calibrationProgress.style.width = "0%";
+tracks = [];
+exclusionZones = [];
 closeFeedbackPanel();
 }
-function finishInitialCalibration(reason = "complete") {
+function finishInitialCalibration(reason = "stable") {
 if (!calibrationState.active) return;
+const safety = assessVegetationMaskSafety(latestVegetationMask);
+if (!safety.safe) return;
 calibrationState.active = false;
 calibrationState.finishedReason = reason;
+sceneController.mode = "active";
+sceneController.safeFrames = 0;
+sceneController.lostFrames = 0;
+sceneController.changeFrames = 0;
+sceneController.lastMaskSafety = safety;
+terrainModel.ready = true;
+terrainModel.tintEnabled = true;
 calibrationProgress.style.width = "100%";
 calibrationPercent.textContent = "100 %";
-calibrationLabel.textContent = terrainModel.ready && terrainModel.sceneConfidence >= 0.42
-? "Terrain calibré"
-: "Recherche active";
-setTimeout(() => calibrationPanel.classList.remove("show"), 420);
+calibrationLabel.textContent = "Terrain calibré";
+setTimeout(() => {
+if (!calibrationState.active) calibrationPanel.classList.remove("show");
+}, 420);
 }
 function updateInitialCalibration(timestamp, frameData, width, height) {
 if (!calibrationState.active) return false;
 updateCalibrationUi(timestamp);
-if (timestamp - calibrationState.lastSampleAt >= CALIBRATION_BOOT_INTERVAL_MS) {
+if (timestamp - calibrationState.lastSampleAt < CALIBRATION_BOOT_INTERVAL_MS) return false;
 calibrationState.lastSampleAt = timestamp;
 calibrationState.samples += 1;
+const signature = computeSceneSignature(frameData, width, height);
+sceneController.lastSignature = signature;
 calibrateTerrain(frameData, width, height);
+if (terrainModel.sceneConfidence >= 0.44 && terrainModel.positiveFrames >= 2) {
+segmentMasks(frameData, width, height, MOBILE_PERFORMANCE_MODE ? 0.28 : 0.32, false, true);
+}
+const safety = assessVegetationMaskSafety(latestVegetationMask);
+sceneController.lastMaskSafety = safety;
 const reliable =
-terrainModel.sceneConfidence >= 0.48 &&
+terrainModel.sceneConfidence >= 0.54 &&
 terrainModel.positiveFrames >= 2 &&
-terrainModel.vegetationRatio >= 0.018;
+terrainModel.vegetationRatio >= 0.014 &&
+safety.safe;
 calibrationState.stableFrames = reliable
 ? calibrationState.stableFrames + 1
 : Math.max(0, calibrationState.stableFrames - 1);
-}
-const elapsed = timestamp - calibrationState.startedAt;
 if (
-elapsed >= CALIBRATION_MIN_MS &&
+(timestamp - calibrationState.startedAt) >= CALIBRATION_MIN_MS &&
 calibrationState.stableFrames >= CALIBRATION_REQUIRED_STABLE_FRAMES
 ) {
+sceneController.baseline = { ...signature };
 finishInitialCalibration("stable");
-return true;
-}
-if (elapsed >= CALIBRATION_MAX_MS) {
-finishInitialCalibration("timeout");
 return true;
 }
 return false;
 }
+
+function monitorActiveScene(timestamp, frameData, width, height) {
+if (sceneController.mode !== "active") return;
+if (timestamp - sceneController.lastSceneCheckAt >= SCENE_SAMPLE_INTERVAL_MS) {
+sceneController.lastSceneCheckAt = timestamp;
+const signature = computeSceneSignature(frameData, width, height);
+const baselineDistance = sceneSignatureDistance(sceneController.baseline, signature);
+const frameDistance = sceneSignatureDistance(sceneController.lastSignature, signature);
+sceneController.lastSignature = signature;
+if (baselineDistance >= 0.115 || frameDistance >= 0.095) {
+sceneController.changeFrames += 1;
+} else {
+sceneController.changeFrames = Math.max(0, sceneController.changeFrames - 1);
+sceneController.baseline = blendSceneSignature(sceneController.baseline, signature, 0.06);
+}
+if (sceneController.changeFrames >= SCENE_CHANGE_REQUIRED_FRAMES) {
+beginInitialCalibration("scene-change");
+return;
+}
+}
+if (timestamp - sceneController.lastTerrainUpdateAt < TERRAIN_UPDATE_INTERVAL_MS) return;
+sceneController.lastTerrainUpdateAt = timestamp;
+calibrateTerrain(frameData, width, height);
+segmentMasks(frameData, width, height, MOBILE_PERFORMANCE_MODE ? 0.28 : 0.32, false, true);
+const safety = assessVegetationMaskSafety(latestVegetationMask);
+sceneController.lastMaskSafety = safety;
+if (
+!safety.safe ||
+terrainModel.sceneConfidence < 0.32 ||
+!terrainModel.tintEnabled ||
+!terrainModel.ready
+) {
+sceneController.lostFrames += 1;
+latestVegetationMask = null;
+tintOverlayDirty = true;
+} else {
+sceneController.lostFrames = 0;
+}
+if (sceneController.lostFrames >= TERRAIN_LOST_REQUIRED_FRAMES) {
+beginInitialCalibration("terrain-lost");
+}
+}
+
 function closeFeedbackPanel() {
 selectedFeedbackTrackId = null;
 feedbackPanel.classList.remove("show");
 feedbackPanel.setAttribute("aria-hidden", "true");
 }
 function openFeedbackForTrack(track) {
-if (!track || calibrationState.active) return;
+if (!track) return;
 selectedFeedbackTrackId = track.id;
 feedbackTitle.textContent = `Est-ce votre balle ${getBallProfile().label.toLowerCase()} ?`;
 feedbackPanel.classList.add("show");
@@ -913,6 +1108,18 @@ cameraZoomSupport.usingNativeZoom = false;
 function updateZoom() {
 zoomState.scale += (zoomState.targetScale - zoomState.scale) * .22;
 if (Math.abs(zoomState.scale - zoomState.targetScale) < .01) zoomState.scale = zoomState.targetScale;
+if (!cameraZoomSupport?.usingNativeZoom) {
+const scale = Math.max(1, zoomState.scale);
+const originX = `${Math.round(zoomState.centerX * 100)}%`;
+const originY = `${Math.round(zoomState.centerY * 100)}%`;
+video.style.transformOrigin = `${originX} ${originY}`;
+canvas.style.transformOrigin = `${originX} ${originY}`;
+video.style.transform = `scale(${scale})`;
+canvas.style.transform = `scale(${scale})`;
+} else {
+video.style.transform = "none";
+canvas.style.transform = "none";
+}
 updateZoomUi();
 }
 function scheduleStrictAnalysis() {
@@ -1522,7 +1729,6 @@ grown = next;
 {
 const visited = new Uint8Array(pixelCount);
 const queue = new Int32Array(pixelCount);
-const componentFrame = { data };
 for (let start = 0; start < pixelCount; start++) {
 if (!grown[start] || visited[start]) continue;
 let queueStart = 0;
@@ -1569,29 +1775,6 @@ queue[queueEnd++] = neighbour;
 }
 }
 const area = component.length;
-let sampledBladeScore = 0;
-let sampledOrientation = 0;
-let detailedSamples = 0;
-if (area >= 18) {
-const sampleStep = Math.max(1, Math.floor(area / 14));
-for (let sampleIndex = 0; sampleIndex < area; sampleIndex += sampleStep) {
-const point = component[sampleIndex];
-const pointX = point % width;
-const pointY = (point / width) | 0;
-const metrics = localVegetationTextureMetrics(
-componentFrame,
-width,
-height,
-pointX,
-pointY
-);
-sampledBladeScore += metrics.bladeScore;
-sampledOrientation += metrics.orientationDiversity;
-detailedSamples++;
-}
-}
-const meanBladeScore = detailedSamples ? sampledBladeScore / detailedSamples : 0;
-const meanOrientation = detailedSamples ? sampledOrientation / detailedSamples : 0;
 const textureRatio = area ? textureHits / area : 0;
 const strongTextureRatio = area ? strongTextureHits / area : 0;
 const seedRatio = area ? seedHits / area : 0;
@@ -1626,19 +1809,7 @@ componentRatio >= 0.075 &&
 textureRatio < 0.18 &&
 seedRatio < 0.10 &&
 luminanceRange < 38;
-const detailedWallLike =
-componentRatio >= 0.012 &&
-rectangularity >= 0.38 &&
-meanBladeScore < 0.24 &&
-meanOrientation < 0.34 &&
-seedRatio < 0.11;
-if (
-largeFlatPlane ||
-rectangularWallLike ||
-upperDryPlane ||
-hugeWeakPlane ||
-detailedWallLike
-) {
+if (largeFlatPlane || rectangularWallLike || upperDryPlane || hugeWeakPlane) {
 for (const index of component) grown[index] = 0;
 }
 }
@@ -1736,174 +1907,67 @@ cleaned[index] = 255;
 history.confirmed.set(cleaned);
 return new Uint8Array(history.confirmed);
 }
-function segmentMasks(frameData, w, h, scale = PROCESS_SCALE, strict = false) {
+function segmentMasks(frameData, w, h, scale = PROCESS_SCALE, strict = false, updateTerrain = true) {
 const { img, pW, pH } = downscaleFrame(frameData, w, h, scale);
 const data = img.data;
 const whiteMask = new Uint8Array(pW * pH);
 const flowerYellowMask = new Uint8Array(pW * pH);
-const terrainMask = new Uint8Array(pW * pH);
+let terrainMask = new Uint8Array(pW * pH);
 const terrainAffinityMask = new Uint8Array(pW * pH);
 const whiteThreshold = getAdaptiveWhiteThreshold(strict);
-const targetPixelThreshold = strict ? 0.58 : 0.50;
+const targetPixelThreshold = strict ? 0.56 : 0.47;
 for (let dataIndex = 0, pixelIndex = 0; dataIndex < data.length; dataIndex += 4, pixelIndex++) {
-const r = data[dataIndex];
-const g = data[dataIndex + 1];
-const b = data[dataIndex + 2];
-const targetConfidence = targetBallPixelConfidence(r, g, b, whiteThreshold);
-if (targetConfidence >= targetPixelThreshold) {
+const r = data[dataIndex], g = data[dataIndex + 1], b = data[dataIndex + 2];
+if (targetBallPixelConfidence(r, g, b, whiteThreshold) >= targetPixelThreshold) {
 whiteMask[pixelIndex] = 255;
 }
-const terrainAffinity = terrainAffinityFast(r, g, b);
-terrainAffinityMask[pixelIndex] = Math.round(terrainAffinity * 255);
 const hsv = rgbToHsv(r, g, b);
-if (
-hsv.h >= 38 &&
-hsv.h <= 72 &&
-hsv.s >= 0.44 &&
-hsv.v >= 0.48 &&
-r > b + 24 &&
-g > b + 20
-) {
+if (hsv.h >= 38 && hsv.h <= 72 && hsv.s >= 0.44 && hsv.v >= 0.48 && r > b + 24 && g > b + 20) {
 flowerYellowMask[pixelIndex] = 255;
 }
+if (updateTerrain) {
+terrainAffinityMask[pixelIndex] = Math.round(terrainAffinityFast(r, g, b) * 255);
 }
-if (terrainModel.tintEnabled && terrainModel.sceneConfidence >= 0.48) {
-const dryScene =
-terrainModel.allowDryTerrain &&
-terrainModel.dryBladeRatio >= Math.max(0.025, terrainModel.greenAnchorRatio * 0.75);
-const requiredTerrain = strict
-? (dryScene ? 0.44 : 0.50)
-: (dryScene ? 0.34 : 0.42);
+}
+if (updateTerrain && terrainModel.tintEnabled && terrainModel.sceneConfidence >= 0.42) {
+const dryScene = terrainModel.allowDryTerrain && terrainModel.dryBladeRatio >= Math.max(0.02, terrainModel.greenAnchorRatio * 0.70);
 for (let y = 2; y < pH - 2; y++) {
 for (let x = 2; x < pW - 2; x++) {
 const index = y * pW + x;
 const affinity = terrainAffinityMask[index] / 255;
-if (affinity < requiredTerrain) continue;
-const dataIndex = index * 4;
-const r = data[dataIndex];
-const g = data[dataIndex + 1];
-const b = data[dataIndex + 2];
-const feature = getColorFeatures(r, g, b);
-const greenColor = strictGreenPrior(feature) >= (dryScene ? 0.34 : 0.42);
-const dryColor =
-terrainModel.allowDryTerrain &&
-dryGrassColorPrior(feature) >= (dryScene ? 0.34 : 0.46);
-if (!greenColor && !dryColor) continue;
-const centerLum = luminance(r, g, b);
-function lumAt(px, py) {
-const sampleIndex = (py * pW + px) * 4;
-return luminance(data[sampleIndex], data[sampleIndex + 1], data[sampleIndex + 2]);
-}
-const horizontal = Math.abs(lumAt(x + 1, y) - lumAt(x - 1, y));
-const vertical = Math.abs(lumAt(x, y + 1) - lumAt(x, y - 1));
-const diagonalA = Math.abs(lumAt(x + 1, y + 1) - lumAt(x - 1, y - 1));
-const diagonalB = Math.abs(lumAt(x + 1, y - 1) - lumAt(x - 1, y + 1));
-const coarseDifference = (
-Math.abs(centerLum - lumAt(x - 2, y)) +
-Math.abs(centerLum - lumAt(x + 2, y)) +
-Math.abs(centerLum - lumAt(x, y - 2)) +
-Math.abs(centerLum - lumAt(x, y + 2))
+if (affinity < (dryScene ? 0.35 : 0.42)) continue;
+const di = index * 4;
+const feature = getColorFeatures(data[di], data[di + 1], data[di + 2]);
+const green = strictGreenPrior(feature);
+const dry = terrainModel.allowDryTerrain ? dryGrassColorPrior(feature) : 0;
+if (green < 0.34 && dry < 0.40) continue;
+const lum = (px, py) => {
+const i = (py * pW + px) * 4;
+return luminance(data[i], data[i + 1], data[i + 2]);
+};
+const center = lum(x, y);
+const gradients = [
+Math.abs(lum(x + 1, y) - lum(x - 1, y)),
+Math.abs(lum(x, y + 1) - lum(x, y - 1)),
+Math.abs(lum(x + 1, y + 1) - lum(x - 1, y - 1)),
+Math.abs(lum(x + 1, y - 1) - lum(x - 1, y + 1))
+];
+const fine = gradients.reduce((sum, value) => sum + value, 0) / 4;
+const coarse = (
+Math.abs(center - lum(x - 2, y)) +
+Math.abs(center - lum(x + 2, y)) +
+Math.abs(center - lum(x, y - 2)) +
+Math.abs(center - lum(x, y + 2))
 ) / 4;
-const directionCount = [horizontal, vertical, diagonalA, diagonalB].filter(value => value >= 5.5).length;
-const fineTexture = clamp01(((horizontal + vertical + diagonalA + diagonalB) / 4 - 2.5) / 17);
-const coarseTexture = clamp01((coarseDifference - 3) / 24);
-const orientationDiversity = directionCount / 4;
-const textureScore = 0.48 * fineTexture + 0.28 * coarseTexture + 0.24 * orientationDiversity;
-if (greenColor) {
-if (textureScore < 0.18 && affinity < 0.78) continue;
-} else {
-const minimumDryTexture = dryScene ? 0.38 : 0.56;
-const minimumDryOrientation = dryScene ? 0.30 : 0.50;
-const minimumDryCoarse = dryScene ? 0.15 : 0.28;
-if (
-textureScore < minimumDryTexture ||
-orientationDiversity < minimumDryOrientation ||
-coarseTexture < minimumDryCoarse
-) continue;
-}
-let neighbours = 0;
-let neighbourAffinity = 0;
-for (let dy = -1; dy <= 1; dy++) {
-for (let dx = -1; dx <= 1; dx++) {
-if (!dx && !dy) continue;
-const neighbour = terrainAffinityMask[(y + dy) * pW + x + dx] / 255;
-if (neighbour >= requiredTerrain * 0.82) neighbours++;
-neighbourAffinity += neighbour;
+const directions = gradients.filter(value => value >= 5).length;
+const greenSeed = green >= 0.40 && (fine >= 3.1 || coarse >= 4.0 || affinity >= 0.82);
+const drySeed = dryScene && dry >= 0.46 && fine >= 5.0 && coarse >= 5.8 && directions >= 2;
+if (greenSeed || drySeed) terrainMask[index] = 255;
 }
 }
-const supportScore = neighbours / 8;
-const combinedConfidence =
-affinity * (0.58 + 0.22 * supportScore + 0.20 * textureScore) +
-(neighbourAffinity / 8) * 0.06;
-if (
-combinedConfidence >= requiredTerrain &&
-(neighbours >= 3 || affinity >= 0.84)
-) {
-terrainMask[index] = 255;
-}
-}
-}
-}
-const refinedTerrainMask = new Uint8Array(terrainMask);
-for (let y = 1; y < pH - 1; y++) {
-for (let x = 1; x < pW - 1; x++) {
-const index = y * pW + x;
-let neighbours = 0;
-for (let dy = -1; dy <= 1; dy++) {
-for (let dx = -1; dx <= 1; dx++) {
-if (!dx && !dy) continue;
-if (terrainMask[(y + dy) * pW + x + dx]) neighbours++;
-}
-}
-if (terrainMask[index] && neighbours <= 1) refinedTerrainMask[index] = 0;
-if (!terrainMask[index] && neighbours >= 6) refinedTerrainMask[index] = 255;
-}
-}
-terrainMask.set(refinedTerrainMask);
-const radius = strict ? 2 : 3;
-const flowerReject = strict ? 5 : 8;
-const rejectYellowFlowers = ballTarget.mode !== "yellow" && ballTarget.mode !== "orange";
-for (let y = radius; y < pH - radius; y++) {
-for (let x = radius; x < pW - radius; x++) {
-const index = y * pW + x;
-if (!whiteMask[index]) continue;
-let flowerNeighbours = 0;
-for (let dy = -radius; dy <= radius; dy++) {
-const row = (y + dy) * pW;
-for (let dx = -radius; dx <= radius; dx++) {
-if (flowerYellowMask[row + x + dx]) flowerNeighbours++;
-}
-}
-if (rejectYellowFlowers && flowerNeighbours >= flowerReject) whiteMask[index] = 0;
-}
-}
-const closedWhiteMask = new Uint8Array(whiteMask);
-for (let y = 1; y < pH - 1; y++) {
-for (let x = 1; x < pW - 1; x++) {
-const index = y * pW + x;
-if (whiteMask[index]) continue;
-let whiteNeighbours = 0;
-for (let dy = -1; dy <= 1; dy++) {
-for (let dx = -1; dx <= 1; dx++) {
-if (!dx && !dy) continue;
-if (whiteMask[(y + dy) * pW + x + dx]) whiteNeighbours++;
-}
-}
-if (whiteNeighbours >= 5) closedWhiteMask[index] = 255;
-}
-}
-whiteMask.set(closedWhiteMask);
-let finalTerrainMask = terrainMask;
-if (!strict) {
-finalTerrainMask = updateTemporalVegetationMask(
-terrainMask,
-terrainAffinityMask,
-data,
-pW,
-pH
-);
+terrainMask = updateTemporalVegetationMask(terrainMask, terrainAffinityMask, data, pW, pH);
 latestVegetationMask = {
-data: new Uint8Array(finalTerrainMask),
+data: new Uint8Array(terrainMask),
 width: pW,
 height: pH,
 frameWidth: w,
@@ -1911,15 +1975,50 @@ frameHeight: h,
 sceneConfidence: terrainModel.sceneConfidence
 };
 tintOverlayDirty = true;
+} else if (!updateTerrain && latestVegetationMask?.data) {
+const source = latestVegetationMask;
+for (let y = 0; y < pH; y++) {
+const sy = Math.min(source.height - 1, Math.floor(y / pH * source.height));
+for (let x = 0; x < pW; x++) {
+const sx = Math.min(source.width - 1, Math.floor(x / pW * source.width));
+terrainMask[y * pW + x] = source.data[sy * source.width + sx];
 }
-return {
-d: data,
-pW,
-pH,
-whiteMask,
-yellowMask: flowerYellowMask,
-terrainMask: finalTerrainMask
-};
+}
+}
+const radius = strict ? 2 : 3;
+const flowerReject = strict ? 5 : 8;
+const rejectYellowFlowers = ballTarget.mode !== "yellow" && ballTarget.mode !== "orange";
+for (let y = radius; y < pH - radius; y++) {
+for (let x = radius; x < pW - radius; x++) {
+const index = y * pW + x;
+if (!whiteMask[index]) continue;
+let yellowNeighbours = 0;
+for (let dy = -radius; dy <= radius; dy++) {
+const row = (y + dy) * pW;
+for (let dx = -radius; dx <= radius; dx++) {
+if (flowerYellowMask[row + x + dx]) yellowNeighbours++;
+}
+}
+if (rejectYellowFlowers && yellowNeighbours >= flowerReject) whiteMask[index] = 0;
+}
+}
+const closed = new Uint8Array(whiteMask);
+for (let y = 1; y < pH - 1; y++) {
+for (let x = 1; x < pW - 1; x++) {
+const index = y * pW + x;
+if (whiteMask[index]) continue;
+let neighbours = 0;
+for (let dy = -1; dy <= 1; dy++) {
+for (let dx = -1; dx <= 1; dx++) {
+if (!dx && !dy) continue;
+if (whiteMask[(y + dy) * pW + x + dx]) neighbours++;
+}
+}
+if (neighbours >= 5) closed[index] = 255;
+}
+}
+whiteMask.set(closed);
+return { d: data, pW, pH, whiteMask, yellowMask: flowerYellowMask, terrainMask };
 }
 function extractComponents(mask, W, H) {
 const visited = new Uint8Array(mask.length);
@@ -1948,7 +2047,7 @@ else if (!visited[n]) { visited[n] = 1; q[qE++] = n; }
 }
 if (boundary) perimeter++;
 }
-if (area < 3 || area > 3000) continue;
+if (area < 3 || area > Math.max(5000, Math.floor(W * H * 0.24))) continue;
 const width = maxX - minX + 1, height = maxY - minY + 1, aspect = width / height;
 const fill = area / (width * height);
 const radiusEstimate = Math.max(width, height) * 0.5;
@@ -2288,31 +2387,31 @@ const ringTargetPenalty = sigmoidLike(ring1.whiteRatio, 0.16, 0.48);
 const topFramePenalty = 1 - verticalPrior;
 const relativeWidth = component.width / width;
 const relativeHeight = component.height / height;
-if (component.area > 430 && component.fill > 0.76) return null;
-if (relativeWidth > 0.16 || relativeHeight > 0.16) return null;
+if (component.area > 900 && component.fill > 0.82 && component.circularity < 0.30) return null;
+if (relativeWidth > 0.40 || relativeHeight > 0.40) return null;
 if (component.aspect < 0.40 || component.aspect > 1.72) return null;
 if (component.area > 18 && component.circularity < 0.14) return null;
 if (isWhiteTarget && center.meanLum < adaptiveWhiteLow - 18) return null;
 if (!isWhiteTarget && averageTargetScore < 0.22 && center.whiteRatio < 0.22) return null;
-if (terrainContextScore < (strict ? 0.08 : 0.15) && component.area > 6) return null;
 if (component.area > 16 && radial.radialScore < (isWhiteTarget ? 0.18 : 0.15)) return null;
+if (isWhiteTarget && component.area > 180 && radial.radialScore < 0.28 && roundScore < 0.48) return null;
 let score;
 if (isWhiteTarget) {
 score =
-0.14 * whiteScore +
-0.11 * targetCoverageScore +
-0.15 * roundScore +
-0.08 * compactScore +
-0.12 * contrastScore +
-0.18 * terrainContextScore +
-0.10 * radial.radialScore +
-0.04 * radial.dimpleScore +
-0.03 * surfaceScore +
-0.04 * edgeContinuityScore +
-0.03 * verticalPrior -
-0.11 * yellowPenalty -
-0.11 * ringTargetPenalty -
-0.02 * topFramePenalty;
+0.17 * whiteScore +
+0.13 * targetCoverageScore +
+0.18 * roundScore +
+0.09 * compactScore +
+0.15 * contrastScore +
+0.05 * terrainContextScore +
+0.14 * radial.radialScore +
+0.035 * radial.dimpleScore +
+0.025 * surfaceScore +
+0.055 * edgeContinuityScore +
+0.02 * verticalPrior -
+0.09 * yellowPenalty -
+0.08 * ringTargetPenalty -
+0.01 * topFramePenalty;
 } else {
 score =
 0.15 * averageTargetScore +
@@ -2400,7 +2499,8 @@ frameData,
 width,
 height,
 scale,
-strict
+strict,
+false
 );
 const components =
 extractComponents(
@@ -2579,8 +2679,7 @@ if (isExcluded(track.x, track.y)) return false;
 if (track.userConfirmed) return true;
 if (track.confidence < SHOW_THRESHOLD) return false;
 if (track.score < 0.40) return false;
-if (track.age < 4 && track.confidence < 0.84) return false;
-if ((track.lastDetail?.terrainContextScore ?? 0) < 0.16) return false;
+if (track.age < 3 && track.confidence < 0.78) return false;
 if ((track.lastDetail?.radialScore ?? 0.45) < 0.16 && track.radius > 7) return false;
 return true;
 });
@@ -2646,15 +2745,15 @@ ctx.restore();
 }
 function rebuildTintOverlay() {
 const mask = latestVegetationMask;
+const safety = sceneController.lastMaskSafety || { safe: false };
 const canTint =
+sceneController.mode === "active" &&
 !calibrationState.active &&
 terrainModel.tintEnabled &&
 terrainModel.ready &&
-terrainModel.sceneConfidence >= 0.48 &&
-mask &&
-mask.data &&
-mask.width > 0 &&
-mask.height > 0;
+terrainModel.sceneConfidence >= 0.40 &&
+safety.safe &&
+mask?.data && mask.width > 0 && mask.height > 0;
 if (!canTint) {
 setCanvasSize(tintCanvas, 1, 1);
 tintCtx.clearRect(0, 0, 1, 1);
@@ -2664,79 +2763,38 @@ return;
 setCanvasSize(tintCanvas, mask.width, mask.height);
 const profile = getBallProfile();
 const overlay = tintCtx.createImageData(mask.width, mask.height);
-const overlayData = overlay.data;
-const source = mask.data;
-for (let index = 0; index < source.length; index++) {
-if (!source[index]) continue;
-const dataIndex = index * 4;
-overlayData[dataIndex] = profile.terrainTint[0];
-overlayData[dataIndex + 1] = profile.terrainTint[1];
-overlayData[dataIndex + 2] = profile.terrainTint[2];
-overlayData[dataIndex + 3] = 210;
+for (let index = 0; index < mask.data.length; index++) {
+if (!mask.data[index]) continue;
+const di = index * 4;
+overlay.data[di] = profile.terrainTint[0];
+overlay.data[di + 1] = profile.terrainTint[1];
+overlay.data[di + 2] = profile.terrainTint[2];
+overlay.data[di + 3] = 205;
 }
 tintCtx.putImageData(overlay, 0, 0);
-// La mise à l’échelle avec lissage adoucit le contour du masque sans filtre
-// coûteux et sans recalculer la texture sur chaque image vidéo.
 tintOverlayDirty = false;
 }
 function drawTintOverlay(fw, fh) {
 if (tintOverlayDirty) rebuildTintOverlay();
 const mask = latestVegetationMask;
 if (
+sceneController.mode !== "active" ||
 calibrationState.active ||
 !terrainModel.tintEnabled ||
 !terrainModel.ready ||
-terrainModel.sceneConfidence < 0.48 ||
-!mask ||
-tintCanvas.width <= 1 ||
-tintCanvas.height <= 1
+!(sceneController.lastMaskSafety?.safe) ||
+!mask || tintCanvas.width <= 1 || tintCanvas.height <= 1
 ) return;
 ctx.save();
-ctx.imageSmoothingEnabled = true;
-ctx.imageSmoothingQuality = "medium";
+ctx.imageSmoothingEnabled = false;
 ctx.globalCompositeOperation = "source-over";
-ctx.globalAlpha = 0.82;
-if (cameraZoomSupport?.usingNativeZoom || zoomState.scale <= 1.02) {
+ctx.globalAlpha = 0.80;
 ctx.drawImage(tintCanvas, 0, 0, fw, fh);
-} else {
-const { sx, sy, cropW, cropH } = getDigitalZoomCrop(fw, fh);
-const maskSx = sx / fw * tintCanvas.width;
-const maskSy = sy / fh * tintCanvas.height;
-const maskCropW = cropW / fw * tintCanvas.width;
-const maskCropH = cropH / fh * tintCanvas.height;
-ctx.drawImage(
-tintCanvas,
-maskSx,
-maskSy,
-maskCropW,
-maskCropH,
-0,
-0,
-fw,
-fh
-);
-}
 ctx.restore();
 }
 function renderVideoFrame(fw, fh) {
 setCanvasSize(canvas, fw, fh);
-ctx.save();
-ctx.globalCompositeOperation = "source-over";
-ctx.globalAlpha = 1;
-ctx.imageSmoothingEnabled = true;
-ctx.imageSmoothingQuality = "medium";
 ctx.clearRect(0, 0, fw, fh);
-if (cameraZoomSupport?.usingNativeZoom || zoomState.scale <= 1.02) {
-ctx.drawImage(video, 0, 0, fw, fh);
-} else {
-const { sx, sy, cropW, cropH } = getDigitalZoomCrop(fw, fh);
-const sourceX = sx / fw * video.videoWidth;
-const sourceY = sy / fh * video.videoHeight;
-const sourceW = cropW / fw * video.videoWidth;
-const sourceH = cropH / fh * video.videoHeight;
-ctx.drawImage(video, sourceX, sourceY, sourceW, sourceH, 0, 0, fw, fh);
-}
-ctx.restore();
 drawTintOverlay(fw, fh);
 }
 function analyzeAt(x, y) {
@@ -2801,60 +2859,38 @@ lastDisplayTime = timestamp;
 const dimensions = getRenderDimensions(video.videoWidth, video.videoHeight);
 const fw = dimensions.width;
 const fh = dimensions.height;
-const shouldAnalyze =
-timestamp - lastAnalysisTime >= dynamicAnalysisInterval;
-if (shouldAnalyze) {
+if (timestamp - lastAnalysisTime >= dynamicAnalysisInterval) {
 const analysisStartedAt = performance.now();
 lastAnalysisTime = timestamp;
 setCanvasSize(rawCanvas, fw, fh);
 rawCtx.imageSmoothingEnabled = true;
 rawCtx.imageSmoothingQuality = "medium";
 rawCtx.drawImage(video, 0, 0, fw, fh);
-const full = rawCtx.getImageData(0, 0, fw, fh);
-latestRawFrame = full;
+latestRawFrame = rawCtx.getImageData(0, 0, fw, fh);
 frameCounter += 1;
 if (calibrationState.active) {
 updateInitialCalibration(timestamp, latestRawFrame, fw, fh);
-latestDetectedCandidates = [];
-tracks = [];
 } else {
-if (timestamp - lastCalibrationTime >= CALIBRATION_INTERVAL_MS) {
-lastCalibrationTime = timestamp;
-calibrateTerrain(latestRawFrame, fw, fh);
+monitorActiveScene(timestamp, latestRawFrame, fw, fh);
 }
-if (terrainModel.ready && terrainModel.sceneConfidence >= 0.30) {
+// La balle est recherchée indépendamment du terrain et même pendant la calibration.
 latestDetectedCandidates = detectMultiScale(latestRawFrame, fw, fh, false);
 updateTracks(latestDetectedCandidates);
-} else {
-latestDetectedCandidates = [];
-updateTracks([]);
-}
-}
 lastAnalysisDuration = performance.now() - analysisStartedAt;
-if (lastAnalysisDuration > 78) {
-dynamicAnalysisInterval = Math.min(
-ANALYSIS_INTERVAL_MAX_MS,
-dynamicAnalysisInterval + 26
-);
-} else if (lastAnalysisDuration < 42) {
-dynamicAnalysisInterval = Math.max(
-ANALYSIS_INTERVAL_MS,
-dynamicAnalysisInterval - 8
-);
+if (lastAnalysisDuration > 76) {
+dynamicAnalysisInterval = Math.min(ANALYSIS_INTERVAL_MAX_MS, dynamicAnalysisInterval + 24);
+} else if (lastAnalysisDuration < 38) {
+dynamicAnalysisInterval = Math.max(ANALYSIS_INTERVAL_MS, dynamicAnalysisInterval - 7);
 }
 }
 if (calibrationState.active) updateCalibrationUi(timestamp);
 updateZoom();
 renderVideoFrame(fw, fh);
-if (!calibrationState.active) {
 const visibleTracks = getVisibleTracks()
 .sort((a, b) => b.confidence - a.confidence)
 .slice(0, 3);
 for (const track of visibleTracks) drawTrackHighlight(track);
-}
-if (inspectionState && inspectionState.until <= performance.now()) {
-inspectionState = null;
-}
+if (inspectionState && inspectionState.until <= performance.now()) inspectionState = null;
 }
 function handlePointerDown(e) {
 canvas.setPointerCapture?.(e.pointerId);
@@ -2969,9 +3005,10 @@ lastAnalysisTime = 0;
 lastCalibrationTime = 0;
 analysisScaleIndex = 0;
 calibrationState = createCalibrationState();
+sceneController = createSceneController();
 closeFeedbackPanel();
 updateZoomUi();
-beginInitialCalibration();
+beginInitialCalibration("initial");
 if (rafId) cancelAnimationFrame(rafId);
 rafId = requestAnimationFrame(processFrame);
 } catch (err) {
@@ -2994,6 +3031,8 @@ stream.getTracks().forEach(t => t.stop());
 stream = null;
 }
 video.srcObject = null;
+video.style.transform = "none";
+canvas.style.transform = "none";
 videoTrack = null;
 cameraZoomSupport = null;
 latestRawFrame = null;
@@ -3010,6 +3049,7 @@ vegetationHistories.clear();
 tintOverlayDirty = true;
 inspectionState = null;
 calibrationState = createCalibrationState();
+sceneController = createSceneController();
 calibrationPanel.classList.remove("show");
 calibrationProgress.style.width = "0%";
 closeFeedbackPanel();
