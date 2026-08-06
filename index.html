@@ -397,10 +397,10 @@ persistFeedbackMemory();
 function updateCalibrationUi(timestamp = performance.now()) {
 if (!calibrationState.active) return;
 const elapsed = Math.max(0, timestamp - calibrationState.startedAt);
-const progress = elapsed < CALIBRATION_TARGET_MS
-? Math.min(0.88, elapsed / CALIBRATION_TARGET_MS * 0.88)
-: Math.min(0.94, 0.88 + (elapsed - CALIBRATION_TARGET_MS) / 5000 * 0.06);
-const percent = Math.round(progress * 100);
+// La barre atteint toujours 100 % au bout de CALIBRATION_MAX_MS.
+// Elle ne reste donc plus bloquée à 94 % si le terrain est difficile.
+const progress = Math.min(1, elapsed / Math.max(1, CALIBRATION_MAX_MS));
+const percent = Math.min(100, Math.round(progress * 100));
 calibrationProgress.style.width = `${percent}%`;
 calibrationPercent.textContent = `${percent} %`;
 if (sceneController.calibrationReason === "scene-change") {
@@ -409,8 +409,6 @@ calibrationLabel.textContent = "Changement de scène…";
 calibrationLabel.textContent = "Terrain perdu — nouvelle analyse…";
 } else if (terrainModel.sceneConfidence >= 0.52) {
 calibrationLabel.textContent = "Vérification du terrain…";
-} else if (elapsed >= CALIBRATION_MAX_MS) {
-calibrationLabel.textContent = "Recherche du terrain…";
 } else {
 calibrationLabel.textContent = "Analyse du terrain…";
 }
@@ -443,7 +441,10 @@ closeFeedbackPanel();
 function finishInitialCalibration(reason = "stable") {
 if (!calibrationState.active) return;
 const safety = assessVegetationMaskSafety(latestVegetationMask);
-if (!safety.safe) return;
+if (!safety.safe) {
+finishCalibrationWithoutTerrain(null, "unsafe");
+return;
+}
 calibrationState.active = false;
 calibrationState.finishedReason = reason;
 sceneController.mode = "active";
@@ -459,6 +460,29 @@ calibrationLabel.textContent = "Terrain calibré";
 setTimeout(() => {
 if (!calibrationState.active) calibrationPanel.classList.remove("show");
 }, 420);
+}
+function finishCalibrationWithoutTerrain(signature = null, reason = "timeout") {
+if (!calibrationState.active) return;
+calibrationState.active = false;
+calibrationState.finishedReason = reason;
+sceneController.mode = "searching";
+sceneController.baseline = signature ? { ...signature } : null;
+sceneController.lastSignature = signature ? { ...signature } : null;
+sceneController.safeFrames = 0;
+sceneController.lostFrames = 0;
+sceneController.changeFrames = 0;
+sceneController.lastMaskSafety = null;
+sceneController.lastTerrainUpdateAt = 0;
+terrainModel.ready = false;
+terrainModel.tintEnabled = false;
+latestVegetationMask = null;
+tintOverlayDirty = true;
+calibrationProgress.style.width = "100%";
+calibrationPercent.textContent = "100 %";
+calibrationLabel.textContent = "Recherche de balle active";
+setTimeout(() => {
+if (!calibrationState.active) calibrationPanel.classList.remove("show");
+}, 650);
 }
 function updateInitialCalibration(timestamp, frameData, width, height) {
 if (!calibrationState.active) return false;
@@ -490,7 +514,57 @@ sceneController.baseline = { ...signature };
 finishInitialCalibration("stable");
 return true;
 }
+// Sortie de secours garantie : au bout de trois secondes la recherche de balle
+// démarre, même si le terrain ne peut pas encore être coloré en toute sécurité.
+if ((timestamp - calibrationState.startedAt) >= CALIBRATION_MAX_MS) {
+const timeoutSafe =
+safety.safe &&
+terrainModel.sceneConfidence >= 0.46 &&
+terrainModel.positiveFrames >= 1 &&
+terrainModel.vegetationRatio >= 0.010;
+sceneController.baseline = { ...signature };
+if (timeoutSafe) {
+finishInitialCalibration("timeout-safe");
+} else {
+finishCalibrationWithoutTerrain(signature, "timeout-searching");
+}
+return true;
+}
 return false;
+}
+
+function monitorSearchingScene(timestamp, frameData, width, height) {
+if (sceneController.mode !== "searching") return;
+if (timestamp - sceneController.lastTerrainUpdateAt < TERRAIN_UPDATE_INTERVAL_MS) return;
+sceneController.lastTerrainUpdateAt = timestamp;
+const signature = computeSceneSignature(frameData, width, height);
+sceneController.lastSignature = signature;
+calibrateTerrain(frameData, width, height);
+if (terrainModel.sceneConfidence >= 0.40 && terrainModel.positiveFrames >= 1) {
+segmentMasks(frameData, width, height, MOBILE_PERFORMANCE_MODE ? 0.28 : 0.32, false, true);
+} else {
+latestVegetationMask = null;
+tintOverlayDirty = true;
+}
+const safety = assessVegetationMaskSafety(latestVegetationMask);
+sceneController.lastMaskSafety = safety;
+const reliable =
+safety.safe &&
+terrainModel.sceneConfidence >= 0.50 &&
+terrainModel.positiveFrames >= 2 &&
+terrainModel.vegetationRatio >= 0.012;
+sceneController.safeFrames = reliable
+? sceneController.safeFrames + 1
+: Math.max(0, sceneController.safeFrames - 1);
+if (sceneController.safeFrames >= 2) {
+sceneController.mode = "active";
+sceneController.baseline = { ...signature };
+sceneController.changeFrames = 0;
+sceneController.lostFrames = 0;
+terrainModel.ready = true;
+terrainModel.tintEnabled = true;
+tintOverlayDirty = true;
+}
 }
 
 function monitorActiveScene(timestamp, frameData, width, height) {
@@ -2745,7 +2819,7 @@ ctx.restore();
 }
 function rebuildTintOverlay() {
 const mask = latestVegetationMask;
-const safety = sceneController.lastMaskSafety || { safe: false };
+const safety = assessVegetationMaskSafety(mask);
 const canTint =
 sceneController.mode === "active" &&
 !calibrationState.active &&
@@ -2782,7 +2856,7 @@ sceneController.mode !== "active" ||
 calibrationState.active ||
 !terrainModel.tintEnabled ||
 !terrainModel.ready ||
-!(sceneController.lastMaskSafety?.safe) ||
+!assessVegetationMaskSafety(mask).safe ||
 !mask || tintCanvas.width <= 1 || tintCanvas.height <= 1
 ) return;
 ctx.save();
@@ -2870,6 +2944,8 @@ latestRawFrame = rawCtx.getImageData(0, 0, fw, fh);
 frameCounter += 1;
 if (calibrationState.active) {
 updateInitialCalibration(timestamp, latestRawFrame, fw, fh);
+} else if (sceneController.mode === "searching") {
+monitorSearchingScene(timestamp, latestRawFrame, fw, fh);
 } else {
 monitorActiveScene(timestamp, latestRawFrame, fw, fh);
 }
