@@ -1,4 +1,4 @@
-const CACHE_NAME = "ball-finder-v13";
+const CACHE_NAME = "ball-finder-v14";
 
 const ASSETS = [
   "./",
